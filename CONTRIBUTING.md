@@ -23,7 +23,18 @@
 
 ---
 
-## 2. 文档驱动的开发
+## 2. 项目目录结构
+
+- `README.md`：产品与能力概览，快速理解 DIP 的定位
+- `hub`: DIP 应用与商店
+  - `hub/design/`：产品架构与界面设计稿（PDF），与实现保持一致
+  - `hub/backend/`：应用管理后端（FastAPI）
+  - `hub/frontend/`：前端代码目录（当前空目录，预留未来实现）
+  - `hub/openapi/`：OpenAPI 规范。
+
+---
+
+## 3. 文档驱动的开发
 
 本项目的贡献原则：设计优先。
 
@@ -39,7 +50,7 @@
 
 ---
 
-## 3. 提交信息（Commit Message）
+## 4. 提交信息（Commit Message）
 
 保持简洁明了，使用英文或简短中文均可，推荐格式：
 
@@ -61,7 +72,7 @@ docs: update contributing guide
 
 ---
 
-## 4. 提交 Pull Request
+## 5. 提交 Pull Request
 
 在创建 PR 前，请确保：
 
@@ -87,7 +98,7 @@ docs: update contributing guide
 
 ---
 
-## 5. 代码审查（Code Review）
+## 6. 代码审查（Code Review）
 
 * 维护者可能会提出修改建议，请根据评论进行更新
 * 更新 PR 时，建议继续在同一分支上提交新 commit
