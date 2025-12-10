@@ -25,12 +25,12 @@
 
 ## 2. 项目目录结构
 
-- `README.md`：产品与能力概览，快速理解 DIP 的定位
+- `README.md`：产品与能力概览，快速了解 DIP 的定位
 - `hub`: DIP 应用与商店
-  - `hub/design/`：产品架构与界面设计稿（PDF），与实现保持一致
-  - `hub/backend/`：应用管理后端（FastAPI）
-  - `hub/frontend/`：前端代码目录（当前空目录，预留未来实现）
-  - `hub/openapi/`：OpenAPI 规范。
+  - `hub/design/`：产品架构与功能设计
+  - `hub/backend/`：应用管理后端
+  - `hub/frontend/`：应用管理前端
+  - `hub/openapi/`：OpenAPI 规范
 
 ---
 
