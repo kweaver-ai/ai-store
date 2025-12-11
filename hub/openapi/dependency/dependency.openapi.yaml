@@ -54,23 +54,7 @@ paths:
     $ref: './auth/auth.paths.yaml#/paths/resource-operation'
   /api/authorization/v1/resource-type-operation:
     $ref: './auth/auth.paths.yaml#/paths/resource-type-operation'
-  # 义务类型管理
-  /api/authorization/v1/obligation-types:
-    $ref: './auth/auth.paths.yaml#/paths/obligation-types'
-  /api/authorization/v1/obligation-types/{id}:
-    $ref: './auth/auth.paths.yaml#/paths/obligation-types-id'
-  # 义务管理
-  /api/authorization/v1/obligations:
-    $ref: './auth/auth.paths.yaml#/paths/obligations'
-  /api/authorization/v1/obligations/{id}:
-    $ref: './auth/auth.paths.yaml#/paths/obligations-id'
-  /api/authorization/v1/obligations/{id}/{fields}:
-    $ref: './auth/auth.paths.yaml#/paths/obligations-id-fields'
-  # 义务查询
-  /api/authorization/v1/query-obligation-types:
-    $ref: './auth/auth.paths.yaml#/paths/query-obligation-types'
-  /api/authorization/v1/query-obligations:
-    $ref: './auth/auth.paths.yaml#/paths/query-obligations'
+
 
 components:
   schemas:

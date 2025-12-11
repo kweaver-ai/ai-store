@@ -53,6 +53,7 @@ paths:
           $ref: './auth.schemas.yaml#/components/responses/RespStd400'
         '500':
           $ref: './auth.schemas.yaml#/components/responses/RespStd500'
+
   resource-types:
     get:
       summary: 列举资源类型
@@ -88,6 +89,7 @@ paths:
           $ref: './auth.schemas.yaml#/components/responses/RespStd400'
         '500':
           $ref: './auth.schemas.yaml#/components/responses/RespStd500'
+
   resource-all-operation:
     get:
       summary: 获取资源所有操作
@@ -121,6 +123,7 @@ paths:
           $ref: './auth.schemas.yaml#/components/responses/RespStd400'
         '500':
           $ref: './auth.schemas.yaml#/components/responses/RespStd500'
+
   roles:
     get:
       summary: 列举角色
@@ -200,6 +203,7 @@ paths:
           $ref: './auth.schemas.yaml#/components/responses/RespStd400'
         '500':
           $ref: './auth.schemas.yaml#/components/responses/RespStd500'
+
   roles-id:
     parameters:
       - name: id
@@ -236,6 +240,7 @@ paths:
           $ref: './auth.schemas.yaml#/components/responses/RespStd400'
         '500':
           $ref: './auth.schemas.yaml#/components/responses/RespStd500'
+
   roles-id-fields:
     parameters:
       - name: id
@@ -270,6 +275,7 @@ paths:
           $ref: './auth.schemas.yaml#/components/responses/RespStd400'
         '500':
           $ref: './auth.schemas.yaml#/components/responses/RespStd500'
+
   resource-type-roles:
     get:
       summary: 获取指定资源类型的角色列表
@@ -316,6 +322,7 @@ paths:
           $ref: './auth.schemas.yaml#/components/responses/RespStd400'
         '500':
           $ref: './auth.schemas.yaml#/components/responses/RespStd500'
+
   role-members:
     parameters:
       - name: id
@@ -393,6 +400,7 @@ paths:
           $ref: './auth.schemas.yaml#/components/responses/RespStd400'
         '500':
           $ref: './auth.schemas.yaml#/components/responses/RespStd500'
+
   policy:
     get:
       summary: 列举策略
@@ -468,6 +476,7 @@ paths:
           $ref: './auth.schemas.yaml#/components/responses/RespStd400'
         '500':
           $ref: './auth.schemas.yaml#/components/responses/RespStd500'
+
   policy-ids:
     parameters:
       - name: ids
@@ -506,6 +515,7 @@ paths:
           $ref: './auth.schemas.yaml#/components/responses/RespStd400'
         '500':
           $ref: './auth.schemas.yaml#/components/responses/RespStd500'
+
   resource-policy:
     get:
       summary: 获取资源实例策略配置
@@ -542,16 +552,6 @@ paths:
           required: true
           schema:
             type: string
-        - name: include
-          description: 返回的额外信息
-          in: query
-          schema:
-            type: array
-            items:
-              type: string
-              enum:
-                - obligation_types
-                - obligations
       responses:
         '200':
           content:
@@ -563,6 +563,7 @@ paths:
           $ref: './auth.schemas.yaml#/components/responses/RespStd400'
         '500':
           $ref: './auth.schemas.yaml#/components/responses/RespStd500'
+
   accessor-policy:
     get:
       summary: 获取访问者策略配置
@@ -615,16 +616,6 @@ paths:
             maximum: 1000
             minimum: -1
             type: integer
-        - name: include
-          description: 返回的额外信息
-          in: query
-          schema:
-            type: array
-            items:
-              type: string
-              enum:
-                - obligation_types
-                - obligations
       responses:
         '200':
           content:
@@ -636,6 +627,7 @@ paths:
           $ref: './auth.schemas.yaml#/components/responses/RespStd400'
         '500':
           $ref: './auth.schemas.yaml#/components/responses/RespStd500'
+
   operation-check:
     post:
       summary: 单个决策
@@ -659,6 +651,7 @@ paths:
           $ref: './auth.schemas.yaml#/components/responses/RespStd400'
         '500':
           $ref: './auth.schemas.yaml#/components/responses/RespStd500'
+
   resource-operation:
     post:
       summary: 获取资源操作
@@ -682,6 +675,7 @@ paths:
           $ref: './auth.schemas.yaml#/components/responses/RespStd400'
         '500':
           $ref: './auth.schemas.yaml#/components/responses/RespStd500'
+
   resource-type-operation:
     post:
       summary: 获取资源类型操作
@@ -700,253 +694,6 @@ paths:
             application/json:
               schema:
                 $ref: './auth.schemas.yaml#/components/schemas/ResourceTypeOperationResult'
-          description: 接口调用成功
-        '400':
-          $ref: './auth.schemas.yaml#/components/responses/RespStd400'
-        '500':
-          $ref: './auth.schemas.yaml#/components/responses/RespStd500'
-  obligation-types:
-    get:
-      summary: 列举义务类型
-      description: 此接口支持用户账户调用。
-      tags:
-        - 义务类型管理
-      parameters:
-        - name: offset
-          description: 获取数据起始下标
-          in: query
-          schema:
-            format: int64
-            default: 0
-            minimum: 0
-            type: integer
-        - name: limit
-          description: 获取数据量
-          in: query
-          schema:
-            format: int64
-            default: 20
-            maximum: 1000
-            minimum: 1
-            type: integer
-        - name: resource_type
-          description: 资源类型
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: operation_id
-          description: 操作ID
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: './auth.schemas.yaml#/components/schemas/ListObligationTypeInfo'
-          description: 接口调用成功
-        '400':
-          $ref: './auth.schemas.yaml#/components/responses/RespStd400'
-        '500':
-          $ref: './auth.schemas.yaml#/components/responses/RespStd500'
-  obligation-types-id:
-    parameters:
-      - name: id
-        description: 义务类型唯一标识
-        in: path
-        required: true
-        schema:
-          type: string
-    put:
-      summary: 设置义务类型
-      description: 此接口支持用户账户调用。
-      tags:
-        - 义务类型管理
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: './auth.schemas.yaml#/components/schemas/ObligationTypeInfo'
-      responses:
-        '204':
-          description: 设置成功且无返回
-        '400':
-          $ref: './auth.schemas.yaml#/components/responses/RespStd400'
-        '500':
-          $ref: './auth.schemas.yaml#/components/responses/RespStd500'
-  obligations:
-    get:
-      summary: 列举义务
-      description: 此接口支持用户账户调用。
-      tags:
-        - 义务管理
-      parameters:
-        - name: offset
-          description: 获取数据起始下标
-          in: query
-          schema:
-            format: int64
-            default: 0
-            minimum: 0
-            type: integer
-        - name: limit
-          description: 获取数据量
-          in: query
-          schema:
-            format: int64
-            default: 20
-            maximum: 1000
-            minimum: 1
-            type: integer
-        - name: policy_id
-          description: 策略ID
-          in: query
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: './auth.schemas.yaml#/components/schemas/ListObligationInfo'
-          description: 接口调用成功
-        '400':
-          $ref: './auth.schemas.yaml#/components/responses/RespStd400'
-        '500':
-          $ref: './auth.schemas.yaml#/components/responses/RespStd500'
-    post:
-      summary: 创建义务
-      description: 此接口支持用户账户调用。
-      tags:
-        - 义务管理
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: './auth.schemas.yaml#/components/schemas/CreateObligationInfo'
-      responses:
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: './auth.schemas.yaml#/components/schemas/ObligationIDInfo'
-          description: 创建成功
-        '400':
-          $ref: './auth.schemas.yaml#/components/responses/RespStd400'
-        '500':
-          $ref: './auth.schemas.yaml#/components/responses/RespStd500'
-  obligations-id:
-    parameters:
-      - name: id
-        description: 义务唯一标识
-        in: path
-        required: true
-        schema:
-          type: string
-    delete:
-      summary: 删除义务
-      description: 此接口支持用户账户调用。
-      tags:
-        - 义务管理
-      responses:
-        '204':
-          description: 删除成功且无返回
-        '400':
-          $ref: './auth.schemas.yaml#/components/responses/RespStd400'
-        '500':
-          $ref: './auth.schemas.yaml#/components/responses/RespStd500'
-  obligations-id-fields:
-    parameters:
-      - name: id
-        description: 义务唯一标识
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: fields
-        description: 修改字段名
-        in: path
-        required: true
-        schema:
-          type: array
-          items:
-            type: string
-    put:
-      summary: 修改义务
-      description: 此接口支持用户账户调用。
-      tags:
-        - 义务管理
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: './auth.schemas.yaml#/components/schemas/UpdateObligationInfo'
-      responses:
-        '204':
-          description: 修改成功且无返回
-        '400':
-          $ref: './auth.schemas.yaml#/components/responses/RespStd400'
-        '500':
-          $ref: './auth.schemas.yaml#/components/responses/RespStd500'
-  query-obligation-types:
-    get:
-      summary: 义务类型查询
-      description: 此接口支持用户账户调用。
-      tags:
-        - 义务查询
-      parameters:
-        - name: policy_ids
-          description: 策略ID列表
-          in: query
-          required: true
-          schema:
-            type: array
-            items:
-              type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: './auth.schemas.yaml#/components/schemas/PolicyObligationTypeArray'
-          description: 接口调用成功
-        '400':
-          $ref: './auth.schemas.yaml#/components/responses/RespStd400'
-        '500':
-          $ref: './auth.schemas.yaml#/components/responses/RespStd500'
-  query-obligations:
-    get:
-      summary: 义务查询
-      description: 此接口支持用户账户调用。
-      tags:
-        - 义务查询
-      parameters:
-        - name: policy_ids
-          description: 策略ID列表
-          in: query
-          required: true
-          schema:
-            type: array
-            items:
-              type: string
-        - name: obligation_type_id
-          description: 义务类型ID
-          in: query
-          schema:
-            type: string
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: './auth.schemas.yaml#/components/schemas/OperationObligationArray'
           description: 接口调用成功
         '400':
           $ref: './auth.schemas.yaml#/components/responses/RespStd400'
