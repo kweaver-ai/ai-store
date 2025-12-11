@@ -1,10 +1,12 @@
 openapi: 3.0.1
 
 info:
+  title: DIP-Hub 依赖的外部 API
   description: DIP-Hub 依赖的外部 API
   version: 1.0.0
 
 paths:
+  # ============ Deploy Installer API ============
   /internal/api/deploy-installer/v1/agents/image:
     $ref: './deploy-installer/deploy-installer.paths.yaml#/paths/agents/image'
   /internal/api/deploy-installer/v1/agents/chart:
@@ -12,9 +14,92 @@ paths:
   /internal/api/deploy-installer/v1/agents/release/{release-name}:
     $ref: './deploy-installer/deploy-installer.paths.yaml#/paths/agents/releases'
 
+  # ============ Hydra OAuth2 API ============
+  /admin/oauth2/introspect:
+    $ref: './hydra/hydra.paths.yaml#/paths/introspect'
+
+  # ============ Authorization API ============
+  # 资源类型管理
+  /api/authorization/v1/resource_type/{id}:
+    $ref: './auth/auth.paths.yaml#/paths/resource-type'
+  /api/authorization/v1/resource_type:
+    $ref: './auth/auth.paths.yaml#/paths/resource-types'
+  /api/authorization/v1/resource_all_operation:
+    $ref: './auth/auth.paths.yaml#/paths/resource-all-operation'
+  # 角色管理
+  /api/authorization/v1/roles:
+    $ref: './auth/auth.paths.yaml#/paths/roles'
+  /api/authorization/v1/roles/{id}:
+    $ref: './auth/auth.paths.yaml#/paths/roles-id'
+  /api/authorization/v1/roles/{id}/{fields}:
+    $ref: './auth/auth.paths.yaml#/paths/roles-id-fields'
+  /api/authorization/v1/resource_type_roles:
+    $ref: './auth/auth.paths.yaml#/paths/resource-type-roles'
+  # 角色成员管理
+  /api/authorization/v1/role-members/{id}:
+    $ref: './auth/auth.paths.yaml#/paths/role-members'
+  # 策略配置
+  /api/authorization/v1/policy:
+    $ref: './auth/auth.paths.yaml#/paths/policy'
+  /api/authorization/v1/policy/{ids}:
+    $ref: './auth/auth.paths.yaml#/paths/policy-ids'
+  /api/authorization/v1/resource-policy:
+    $ref: './auth/auth.paths.yaml#/paths/resource-policy'
+  /api/authorization/v1/accessor-policy:
+    $ref: './auth/auth.paths.yaml#/paths/accessor-policy'
+  # 策略决策
+  /api/authorization/v1/operation-check:
+    $ref: './auth/auth.paths.yaml#/paths/operation-check'
+  /api/authorization/v1/resource-operation:
+    $ref: './auth/auth.paths.yaml#/paths/resource-operation'
+  /api/authorization/v1/resource-type-operation:
+    $ref: './auth/auth.paths.yaml#/paths/resource-type-operation'
+  # 义务类型管理
+  /api/authorization/v1/obligation-types:
+    $ref: './auth/auth.paths.yaml#/paths/obligation-types'
+  /api/authorization/v1/obligation-types/{id}:
+    $ref: './auth/auth.paths.yaml#/paths/obligation-types-id'
+  # 义务管理
+  /api/authorization/v1/obligations:
+    $ref: './auth/auth.paths.yaml#/paths/obligations'
+  /api/authorization/v1/obligations/{id}:
+    $ref: './auth/auth.paths.yaml#/paths/obligations-id'
+  /api/authorization/v1/obligations/{id}/{fields}:
+    $ref: './auth/auth.paths.yaml#/paths/obligations-id-fields'
+  # 义务查询
+  /api/authorization/v1/query-obligation-types:
+    $ref: './auth/auth.paths.yaml#/paths/query-obligation-types'
+  /api/authorization/v1/query-obligations:
+    $ref: './auth/auth.paths.yaml#/paths/query-obligations'
+
 components:
   schemas:
+    # Deploy Installer Schemas
     InternalError:
       $ref: './deploy-installer/deploy-installer.schemas.yaml#/components/schemas/InternalError'
     ParameterError:
       $ref: './deploy-installer/deploy-installer.schemas.yaml#/components/schemas/ParameterError'
+
+    # Hydra Schemas
+    HydraErr:
+      $ref: './hydra/hydra.schemas.yaml#/components/schemas/Err'
+    IntrospectToken:
+      $ref: './hydra/hydra.schemas.yaml#/components/schemas/IntrospectToken'
+    OKTokenIntrospection:
+      $ref: './hydra/hydra.schemas.yaml#/components/schemas/OKTokenIntrospection'
+
+    # Authorization Schemas
+    AuthError:
+      $ref: './auth/auth.schemas.yaml#/components/schemas/Error'
+    Role:
+      $ref: './auth/auth.schemas.yaml#/components/schemas/Role'
+    Roles:
+      $ref: './auth/auth.schemas.yaml#/components/schemas/Roles'
+    CreateRoleInfo:
+      $ref: './auth/auth.schemas.yaml#/components/schemas/CreateRoleInfo'
+    PolicyInfo:
+      $ref: './auth/auth.schemas.yaml#/components/schemas/PolicyInfo'
+    CheckReq:
+      $ref: './auth/auth.schemas.yaml#/components/schemas/CheckReq'
+    CheckResult:
+      $ref: './auth/auth.schemas.yaml#/components/schemas/CheckResult'
