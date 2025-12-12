@@ -1,3 +1,1 @@
-# Tests
-# Contains unit tests and integration tests
-
+"""Test package for DIP Hub."""
