@@ -1,6 +1,7 @@
 paths:
   healthz:
     get:
+      operationId: healthCheck
       summary: 通用健康检查
       tags: [Health]
       responses:
@@ -9,6 +10,7 @@ paths:
 
   readyz:
     get:
+      operationId: readinessCheck
       summary: 就绪检查 (Readiness)
       tags: [Health]
       responses:

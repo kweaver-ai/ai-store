@@ -1,11 +1,27 @@
 openapi: 3.1.0
+
 info:
   title: DIP HUB 开放接口
   version: 1.0.0
 
+security:
+  - BearerAuth: []
+
 servers:
-  - url: /api/dip-hub/v1/
+  - url: /api/dip-hub/v1
 
 paths:
-  /applicaton:
-    $ref: "./hub/hub.paths.yaml#/paths/applicaton"
+  /applications:
+    $ref: "./hub/hub.paths.yaml#/paths/~1applications"
+
+  /applications/{key}:
+    $ref: "./hub/hub.paths.yaml#/paths/~1applications~1{key}"
+
+  /applications/{key}/config/{item}:
+    $ref: "./hub/hub.paths.yaml#/paths/~1applications~1{key}~1config~1{item}"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer

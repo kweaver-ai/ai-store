@@ -1,48 +1,91 @@
 paths:
-  applicaton:
+  /applications:
     post:
+      operationId: installApplication
       summary: 安装应用
       requestBody:
-        description: 应用安装信息
         required: true
         content:
           application/octet-stream:
             schema:
               type: string
               format: binary
+              description: 应用安装包二进制文件
       responses:
         "200":
           description: 安装成功
-    get:
-      summary: 获取应用列表
-      description: 在应用商店中获取已安装的应用列表
-      responses:
-        '200':
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    key:
-                      type: string
-                      title: 应用唯一标识
-                    name:
-                      type: string
-                      title: 应用名称
-                    description:
-                      type: string
-                      title: 应用描述
-                    version:
-                      type: string
-                      title: 应用版本
-                    icon:
-                      type: string
-                      title: 应用图标，Base64编码
-                    updated_by:
-                      type: string
-                      title: 更新者
-                    updated_at:
-                      type: timestamp
-                      title: 更新时间
+                $ref: './hub.schemas.yaml#/components/schemas/Application'
+        "400":
+          $ref: './hub.schemas.yaml#/components/errors/ParameterError'
+        "500":
+          $ref: './hub.schemas.yaml#/components/errors/InternalServerError'
+
+    get:
+      operationId: listApplications
+      summary: 获取应用列表
+      responses:
+        '200':
+          description: 获取已安装的应用列表
+          content:
+            application/json:
+              schema:
+                $ref: './hub.schemas.yaml#/components/schemas/ApplicationList'
+        "400":
+          $ref: './hub.schemas.yaml#/components/errors/ParameterError'
+        "500":
+          $ref: './hub.schemas.yaml#/components/errors/InternalServerError'
+
+  /applications/{key}:
+    delete:
+      operationId: uninstallApplication
+      summary: 卸载应用
+      parameters:
+        - in: path
+          name: key
+          description: 应用唯一标识
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: 卸载应用成功
+        "400":
+          $ref: './hub.schemas.yaml#/components/errors/ParameterError'
+        "500":
+          $ref: './hub.schemas.yaml#/components/errors/InternalServerError'
+  
+  /applications/{key}/config/{item}:
+    get:
+      operationId: getApplicationConfig
+      summary: 获取应用配置
+      parameters:
+        - name: key
+          in: path
+          description: 应用唯一标识
+          required: true
+          schema:
+            type: string
+        - name: item
+          in: path
+          description: 配置项名称
+          required: true
+          schema:
+            type: string
+            enum: [basic, ontologies, agents]
+      responses:
+        '200':
+          description: 返回应用配置的详细信息
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: './hub.schemas.yaml#/components/schemas/Application'
+                  - $ref: './hub.schemas.yaml#/components/schemas/OntologyConfigList'
+                  - $ref: './hub.schemas.yaml#/components/schemas/AgentConfigList'
+        "400":
+          $ref: './hub.schemas.yaml#/components/errors/ParameterError'
+        "500":
+          $ref: './hub.schemas.yaml#/components/errors/InternalServerError'

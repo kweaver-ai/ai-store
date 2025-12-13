@@ -1,2 +1,128 @@
 components:
   schemas:
+    Application:
+      summary: 单个应用信息
+      type: object
+      properties:
+        key:
+          type: string
+          title: 应用唯一标识
+        name:
+          type: string
+          title: 应用名称
+        description:
+          type: string
+          title: 应用描述
+        version:
+          type: string
+          title: 应用版本
+        icon:
+          type: string
+          title: 应用图标，Base64编码
+        category:
+          type: string
+          title: 应用所属分类
+        updated_by:
+          type: string
+          title: 更新者
+        updated_at:
+          type: string
+          format: date-time
+          title: 更新时间
+      example:
+        key: 'A9F3D12C7B8E90F4A6C1E2B7D8F0A3C5'
+        name: '智能故障分析'
+        description: 'DIP for ITOps 运维大脑应用'
+        version: '1.0.0'
+        icon: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+        category: 'DIP for ITOps'
+        updated_by: 'Zak'
+        updated_at: '2025-12-13T12:00:00Z'
+
+    ApplicationList:
+      summary: 应用列表
+      type: array
+      items:
+        $ref: '#/components/schemas/Application'
+
+    OntologyConfigList:
+      summary: 本体模型配置信息
+      type: object
+      properties:
+        item:
+          type: string
+          enum: [ontologies]
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                title: 本体唯一标识
+              name:
+                type: string
+                title: 本体名称
+              description:
+                type: string
+                title: 本体描述
+
+    AgentConfigList:
+      summary: 智能体配置信息
+      type: object
+      properties:
+        item:
+          type: string
+          enum: [agents]
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                title: 智能体 ID
+              name:
+                type: string
+                title: 智能体名称
+              description:
+                type: string
+                title: 智能体描述
+
+    ErrorResponse:
+      description: 接口错误信息
+      type: object
+      properties:
+        code:
+          description: 业务错误码
+          type: string
+        description:
+          description: 错误描述
+          type: string
+        solution:
+          description: 错误处理建议
+          type: string
+        detail:
+          description: 错误详细信息
+          type: object
+        link:
+          description: 错误帮助地址
+          type: string
+      required:
+        - code
+        - description
+
+  errors:
+    ParameterError:
+      description: 请求参数错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: 服务器内部错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
