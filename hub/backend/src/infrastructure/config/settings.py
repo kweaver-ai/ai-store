@@ -49,6 +49,24 @@ class Settings(BaseSettings):
     # 健康检查配置
     health_check_timeout: int = Field(default=5, description="健康检查超时时间（秒）")
 
+    # 临时文件配置
+    temp_dir: str = Field(default="/tmp/dip-hub", description="临时文件目录")
+
+    # 数据库配置
+    db_host: str = Field(default="localhost", description="数据库主机")
+    db_port: int = Field(default=3306, description="数据库端口")
+    db_name: str = Field(default="dip", description="数据库名称")
+    db_user: str = Field(default="root", description="数据库用户名")
+    db_password: str = Field(default="", description="数据库密码")
+
+    # Proton 部署服务配置
+    proton_url: str = Field(default="http://localhost", description="Proton 服务地址")
+    proton_timeout: int = Field(default=300, description="Proton 请求超时时间（秒）")
+
+    # ADP 平台配置
+    adp_url: str = Field(default="http://localhost:8081", description="ADP 服务地址")
+    adp_timeout: int = Field(default=60, description="ADP 请求超时时间（秒）")
+
 
 @lru_cache
 def get_settings() -> Settings:
