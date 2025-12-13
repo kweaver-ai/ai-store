@@ -1,5 +1,5 @@
 paths:
-  healthz:
+  /healthz:
     get:
       operationId: healthCheck
       summary: 通用健康检查
@@ -8,7 +8,7 @@ paths:
         "200":
           description: 服务健康
 
-  readyz:
+  /readyz:
     get:
       operationId: readinessCheck
       summary: 就绪检查 (Readiness)

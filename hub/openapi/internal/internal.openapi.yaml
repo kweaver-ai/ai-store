@@ -12,6 +12,6 @@ servers:
 paths:
   # 引用健康检查的 path 定义
   /healthz:
-    $ref: "./health/health.paths.yaml#/paths/healthz"
+    $ref: "./health/health.paths.yaml#~1paths~1healthz"
   /readyz:
-    $ref: "./health/health.paths.yaml#/paths/readyz"
+    $ref: "./health/health.paths.yaml#~1paths~1readyz"
