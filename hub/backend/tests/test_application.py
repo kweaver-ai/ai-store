@@ -207,6 +207,37 @@ class TestApplicationService:
         mock_port.get_application_by_key.assert_called_once_with("test-app-001")
         assert result == sample_application
 
+    @pytest.mark.asyncio
+    async def test_delete_application_calls_port(self):
+        """测试 delete_application 调用端口的方法。"""
+        # 创建 mock 端口
+        mock_port = AsyncMock()
+        mock_port.delete_application.return_value = True
+
+        # 创建服务
+        service = ApplicationService(mock_port)
+
+        # 调用方法
+        result = await service.delete_application("test-app-001")
+
+        # 验证
+        mock_port.delete_application.assert_called_once_with("test-app-001")
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_delete_application_raises_value_error_when_not_found(self):
+        """测试当应用不存在时 delete_application 抛出 ValueError。"""
+        # 创建 mock 端口
+        mock_port = AsyncMock()
+        mock_port.delete_application.side_effect = ValueError("应用不存在: nonexistent-key")
+
+        # 创建服务
+        service = ApplicationService(mock_port)
+
+        # 调用方法并验证异常
+        with pytest.raises(ValueError, match="应用不存在: nonexistent-key"):
+            await service.delete_application("nonexistent-key")
+
 
 class TestApplicationAdapter:
     """应用适配器测试。"""
@@ -329,3 +360,42 @@ class TestApplicationRouter:
             response = client.get(f"{test_settings.api_prefix}/applications/nonexistent-key")
 
             assert response.status_code == 404
+
+    def test_delete_application_endpoint_returns_204_when_successful(self, test_settings: Settings):
+        """测试删除应用成功时接口返回 204 状态码。"""
+        with patch('src.adapters.application_adapter.ApplicationAdapter.delete_application') as mock_delete:
+            mock_delete.return_value = True
+
+            app = create_app(test_settings)
+            client = TestClient(app)
+
+            response = client.delete(f"{test_settings.api_prefix}/applications/test-app-001")
+
+            assert response.status_code == 204
+            mock_delete.assert_called_once_with("test-app-001")
+
+    def test_delete_application_endpoint_returns_404_when_not_found(self, test_settings: Settings):
+        """测试当应用不存在时删除应用接口返回 404 状态码。"""
+        with patch('src.adapters.application_adapter.ApplicationAdapter.delete_application') as mock_delete:
+            mock_delete.side_effect = ValueError("应用不存在: nonexistent-key")
+
+            app = create_app(test_settings)
+            client = TestClient(app)
+
+            response = client.delete(f"{test_settings.api_prefix}/applications/nonexistent-key")
+
+            assert response.status_code == 404
+            assert "应用不存在" in response.json()["detail"]
+
+    def test_delete_application_endpoint_returns_500_on_error(self, test_settings: Settings):
+        """测试删除应用时发生异常接口返回 500 状态码。"""
+        with patch('src.adapters.application_adapter.ApplicationAdapter.delete_application') as mock_delete:
+            mock_delete.side_effect = Exception("数据库连接失败")
+
+            app = create_app(test_settings)
+            client = TestClient(app)
+
+            response = client.delete(f"{test_settings.api_prefix}/applications/test-app-001")
+
+            assert response.status_code == 500
+            assert "删除应用失败" in response.json()["detail"]

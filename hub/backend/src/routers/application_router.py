@@ -115,4 +115,41 @@ def create_application_router(application_service: ApplicationService) -> APIRou
                 detail=f"获取应用信息失败: {str(e)}"
             )
 
+    @router.delete(
+        "/applications/{key}",
+        summary="卸载应用",
+        status_code=status.HTTP_204_NO_CONTENT,
+        responses={
+            204: {"description": "卸载应用成功"},
+            404: {"description": "应用不存在"},
+            500: {"description": "服务器内部错误"},
+        }
+    )
+    async def delete_application(key: str):
+        """
+        卸载应用。
+
+        根据应用唯一标识删除应用，包括删除数据库中的应用记录。
+
+        参数:
+            key: 应用包唯一标识
+
+        异常:
+            HTTPException: 当应用不存在时返回 404
+        """
+        try:
+            await application_service.delete_application(key)
+            return None
+
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(e)
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"删除应用失败: {str(e)}"
+            )
+
     return router
