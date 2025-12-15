@@ -14,6 +14,26 @@ paths:
   /internal/api/deploy-installer/v1/agents/release/{release-name}:
     $ref: './deploy-installer/deploy-installer.paths.yaml#/paths/agents/releases'
 
+  # ============ Agent Factory API ============
+  /api/agent-factory/v3/agent:
+    $ref: './agent-factory/agent-factory.paths.yaml#/paths/agent'
+
+  # ============ Ontology Manager API ============
+  # Knowledge Networks
+  /api/ontology-manager/v1/knowledge-networks:
+    $ref: './ontology-manager/ontology-manager.paths.yaml#/paths/knowledge-networks'
+  /api/ontology-manager/v1/knowledge-networks/{kn_id}:
+    $ref: './ontology-manager/ontology-manager.paths.yaml#/paths/knowledge-networks-id'
+  # Object Types
+  /api/ontology-manager/v1/knowledge-networks/{kn_id}/object-types:
+    $ref: './ontology-manager/ontology-manager.paths.yaml#/paths/object-types'
+  # Relation Types
+  /api/ontology-manager/v1/knowledge-networks/{kn_id}/relation-types:
+    $ref: './ontology-manager/ontology-manager.paths.yaml#/paths/relation-types'
+  # Action Types
+  /api/ontology-manager/v1/knowledge-networks/{kn_id}/action-types:
+    $ref: './ontology-manager/ontology-manager.paths.yaml#/paths/action-types'
+
   # ============ Hydra OAuth2 API ============
   /admin/oauth2/introspect:
     $ref: './hydra/hydra.paths.yaml#/paths/introspect'
@@ -63,6 +83,46 @@ components:
       $ref: './deploy-installer/deploy-installer.schemas.yaml#/components/schemas/InternalError'
     ParameterError:
       $ref: './deploy-installer/deploy-installer.schemas.yaml#/components/schemas/ParameterError'
+
+    # Agent Factory Schemas
+    CreateAgentRequest:
+      $ref: './agent-factory/agent-factory.schemas.yaml#/components/schemas/CreateAgentRequest'
+    CreateAgentResponse:
+      $ref: './agent-factory/agent-factory.schemas.yaml#/components/schemas/CreateAgentResponse'
+    AgentFactoryError:
+      $ref: './agent-factory/agent-factory.schemas.yaml#/components/schemas/AgentFactoryError'
+
+    # Ontology Manager Schemas
+    # Knowledge Network
+    ReqKnowledgeNetwork:
+      $ref: './ontology-manager/ontology-manager.schemas.yaml#/components/schemas/ReqKnowledgeNetwork'
+    UpdateKnowledgeNetwork:
+      $ref: './ontology-manager/ontology-manager.schemas.yaml#/components/schemas/UpdateKnowledgeNetwork'
+    KnowledgeNetworkDetail:
+      $ref: './ontology-manager/ontology-manager.schemas.yaml#/components/schemas/KnowledgeNetworkDetail'
+    ListKN:
+      $ref: './ontology-manager/ontology-manager.schemas.yaml#/components/schemas/ListKN'
+    # Object Type
+    ObjectTypeDetail:
+      $ref: './ontology-manager/ontology-manager.schemas.yaml#/components/schemas/ObjectTypeDetail'
+    ListObjectTypes:
+      $ref: './ontology-manager/ontology-manager.schemas.yaml#/components/schemas/ListObjectTypes'
+    ObjectTypeSearchResponse:
+      $ref: './ontology-manager/ontology-manager.schemas.yaml#/components/schemas/ObjectTypeSearchResponse'
+    # Relation Type
+    RelationTypeDetail:
+      $ref: './ontology-manager/ontology-manager.schemas.yaml#/components/schemas/RelationTypeDetail'
+    ListRelationTypes:
+      $ref: './ontology-manager/ontology-manager.schemas.yaml#/components/schemas/ListRelationTypes'
+    RelationTypeSearchResponse:
+      $ref: './ontology-manager/ontology-manager.schemas.yaml#/components/schemas/RelationTypeSearchResponse'
+    # Action Type
+    ActionTypeDetail:
+      $ref: './ontology-manager/ontology-manager.schemas.yaml#/components/schemas/ActionTypeDetail'
+    ListActionTypes:
+      $ref: './ontology-manager/ontology-manager.schemas.yaml#/components/schemas/ListActionTypes'
+    ActionTypeSearchResponse:
+      $ref: './ontology-manager/ontology-manager.schemas.yaml#/components/schemas/ActionTypeSearchResponse'
 
     # Hydra Schemas
     HydraErr:
