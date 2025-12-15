@@ -1,7 +1,16 @@
-node_modules/
-dist/
-.rsbuild/
+# Local
 .DS_Store
-*.log
-.env
-.env.local
+*.local
+*.log*
+
+# Dist
+node_modules
+dist/
+
+# Profile
+.rspack-profile-*/
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+.idea

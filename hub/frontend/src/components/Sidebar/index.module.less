@@ -1,0 +1,85 @@
+// Ant Design Menu 全局样式覆盖（Tailwind 无法直接实现）
+:global(.ant-menu-light) {
+  background: transparent;
+}
+
+:global(.ant-menu-inline) {
+  border-inline-end: none !important;
+}
+
+:global(.ant-menu-item),
+:global(.ant-menu-submenu-title) {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 40px;
+  line-height: 40px;
+  margin-block: 4px;
+  border-radius: 8px;
+  color: #1f1f1f;
+  padding-inline: 12px !important;
+  font-size: 14px;
+}
+
+:global(.ant-menu-item::before),
+:global(.ant-menu-submenu-title::before) {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 3px;
+  height: 28px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #3fa9f5 0%, #126ee3 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+:global(.ant-menu-item:hover),
+:global(.ant-menu-submenu-title:hover) {
+  color: #126ee3;
+  background: #f5f8ff;
+}
+
+:global(.ant-menu-item-selected),
+:global(.ant-menu-submenu-selected > .ant-menu-submenu-title) {
+  color: #126ee3;
+  font-weight: 600;
+  background: linear-gradient(
+    90deg,
+    rgba(63, 169, 245, 0.08) 0%,
+    rgba(18, 110, 227, 0.12) 100%
+  );
+}
+
+:global(.ant-menu-item-selected::before),
+:global(.ant-menu-submenu-selected > .ant-menu-submenu-title::before) {
+  opacity: 1;
+}
+
+:global(.ant-menu-item-disabled) {
+  color: #8a90a5 !important;
+  background: transparent !important;
+  font-weight: 400;
+}
+
+:global(.ant-menu-item-disabled::before) {
+  opacity: 0;
+}
+
+:global(.ant-menu-divider) {
+  margin: 12px 0;
+  background: rgba(0, 0, 0, 0.1);
+  height: 1px;
+}
+
+:global(.ant-menu-inline-collapsed > .ant-menu-item .ant-menu-title-content),
+:global(
+    .ant-menu-inline-collapsed
+      > .ant-menu-submenu
+      > .ant-menu-submenu-title
+      .ant-menu-title-content
+  ) {
+  display: none;
+}

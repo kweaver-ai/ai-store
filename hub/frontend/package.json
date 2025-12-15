@@ -1,0 +1,49 @@
+{
+  "name": "dip-front",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rsbuild build",
+    "check": "biome check --write",
+    "dev": "rsbuild dev --open",
+    "format": "biome format --write",
+    "preview": "rsbuild preview"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^6.1.0",
+    "@anyshare/template": "7.3.5",
+    "@microsoft/fetch-event-source": "^2.0.1",
+    "antd": "^6.0.0",
+    "axios": "^1.13.2",
+    "classnames": "^2.5.1",
+    "dayjs": "^1.11.19",
+    "js-cookie": "^3.0.5",
+    "lodash": "^4.17.21",
+    "mac-scrollbar": "^0.13.8",
+    "qiankun": "^2.10.16",
+    "query-string": "^9.3.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-intl-universal": "^2.13.4",
+    "react-router-dom": "^7.9.6",
+    "react-virtualized-auto-sizer": "^1.0.26",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.2",
+    "@rsbuild/core": "^1.6.7",
+    "@rsbuild/plugin-less": "^1.5.0",
+    "@rsbuild/plugin-react": "^1.4.2",
+    "@rsbuild/plugin-svgr": "^1.2.3",
+    "@types/lodash": "^4.17.21",
+    "@types/node": "^24.10.1",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "autoprefixer": "^10.4.22",
+    "postcss": "^8.5.6",
+    "postinstall-postinstall": "^2.1.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.9.3"
+  }
+}
