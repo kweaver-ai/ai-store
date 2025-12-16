@@ -59,8 +59,7 @@ paths:
                   type: object
                   properties:
                     chart:
-                      type: object
-                      title: Chart信息
+                      $ref: './deploy-installer.schemas.yaml#/components/schemas/ChartInfo'
                     values:
                       type: object
                       title: Chart默认值
