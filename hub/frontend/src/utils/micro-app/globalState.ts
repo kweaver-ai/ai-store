@@ -10,6 +10,14 @@ type AllowedField = 'breadcrumb'
 /** 全局状态允许更新的字段 */
 const allowedFields: AllowedField[] = ['breadcrumb']
 
+/** 面包屑项接口 */
+export interface BreadcrumbItem {
+  key?: string
+  name: string
+  path?: string
+  icon?: string
+}
+
 /**
  * 微应用全局状态
  *
@@ -20,14 +28,16 @@ const allowedFields: AllowedField[] = ['breadcrumb']
  * - 微应用信息存储在 microAppStore 中，不在此状态中
  */
 export interface MicroAppGlobalState {
-  /** 当前语言，如 zh-CN / en-US */
-  lang: string
-  /** 面包屑导航数据 允许为微应用更新 */
-  breadcrumb?: Array<{
-    title: string
-    path?: string
+  /** 当前语言，如 zh-CN / en-US（仅主应用可更新，初始化时从 languageStore 读取） */
+  language: string
+  /** 面包屑导航数据（微应用可更新） */
+  breadcrumb?: Array<BreadcrumbItem>
+  /** Copilot 相关状态（仅主应用可更新，用于通知微应用 Copilot 事件） */
+  copilot?: {
+    /** Copilot 最近一次点击时间戳 */
+    clickedAt?: number
     [key: string]: any
-  }>
+  }
   /** 预留扩展字段 */
   [key: string]: any
 }
@@ -264,7 +274,7 @@ function getInitialState(): MicroAppGlobalState {
   }
 
   return {
-    lang,
+    language: lang,
     breadcrumb: [],
   }
 }

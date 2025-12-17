@@ -1,132 +1,142 @@
-import React, { useMemo } from 'react'
-import { Card, Tag, Dropdown, Avatar, Button } from 'antd'
-import { MoreOutlined } from '@ant-design/icons'
+import React, { useMemo, useState } from 'react'
+import { Card, Dropdown, Avatar, Button } from 'antd'
 import type { MenuProps } from 'antd'
-import { formatTimeSlash } from '@/utils/handle-function/FormatTime'
-import type { AppInfo } from '@/apis/app-development'
+import { formatTimeMinute } from '@/utils/handle-function/FormatTime'
+import type { Application } from '@/apis/dip-hub'
 import { ModeEnum } from './types'
-import { getAppCardMenuItems } from './utils'
+import { cardHeight, getAppCardMenuItems } from './utils'
+import IconFont from '../IconFont'
+import classNames from 'classnames'
 
 interface AppCardProps {
-  app: AppInfo
+  app: Application
   mode: ModeEnum.MyApp | ModeEnum.AppStore
-  cardWidth: number
-  onMenuClick?: (key: string, app: AppInfo) => void
-  onClick?: (app: AppInfo) => void
+  onMenuClick?: (key: string, app: Application) => void
 }
 
-const AppCard: React.FC<AppCardProps> = ({
-  app,
-  mode,
-  cardWidth,
-  onMenuClick,
-  onClick,
-}) => {
+const AppCard: React.FC<AppCardProps> = ({ app, mode, onMenuClick }) => {
+  const [menuOpen, setMenuOpen] = useState(false)
+
   const menuItems = useMemo(() => {
     return getAppCardMenuItems(mode, app) as MenuProps['items']
   }, [mode, app])
 
-  // 渲染状态标签（根据模式区分）
-  const renderStatusTag = () => {
-    // 应用商店模式：显示安装状态
-    // if (mode === ModeEnum.AppStore) {
-    //   const isInstalled = app.installed
-    //   return (
-    //     <Tag
-    //       className="rounded text-xs px-0.5 h-5.5 leading-5 border"
-    //       style={{
-    //         backgroundColor: isInstalled ? '#F6FFED' : '#126EE3',
-    //         color: isInstalled ? '#52C41A' : '#FFFFFF',
-    //         borderColor: isInstalled ? '#D9F7BE' : '#126EE3',
-    //       }}
-    //     >
-    //       {isInstalled ? '已安装' : '安装'}
-    //     </Tag>
-    //   )
-    // }
-
-    // 我的应用模式：不显示状态标签
-    return null
-  }
-
-  // 渲染版本标签
-  const renderVersionTag = () => {
-    return (
-      <Tag
-        className="rounded text-xs px-0.5 h-5.5 leading-5 border border-[rgba(0,0,0,0.15)]"
-        style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.02)',
-          color: 'rgba(0, 0, 0, 0.85)',
-        }}
-      >
-        {app.version || 'v0.0.1'}
-      </Tag>
-    )
-  }
-
-  // 渲染用户信息和更新时间
-  const renderUserInfo = () => {
-    const updateTime = app.updateTime ? formatTimeSlash(app.updateTime) : ''
-    const userName = app.createdByName || app.createdBy
-
-    return (
-      <div className="flex items-center gap-0.5 mb-0.5 text-xs text-[#92929d]">
-        {/* 用名称的第一个字母作为头像 */}
-        <Avatar size={24}>{userName?.charAt(0)}</Avatar>
-        <span className="mr-0.5">更新：{updateTime}</span>
-        <span>{userName}</span>
-      </div>
-    )
-  }
-
-  // 处理菜单点击
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
     onMenuClick?.(key as string, app)
   }
 
+  const updateTime = app.updated_at
+    ? formatTimeMinute(new Date(app.updated_at).getTime())
+    : ''
+  const userName = app.updated_by || ''
+
   return (
     <Card
-      className="rounded-[10px] border border-[rgba(0,0,0,0.1)] h-[171px] p-1 cursor-pointer transition-all hover:shadow-md"
-      style={{ width: cardWidth }}
-      hoverable
-      onClick={() => onClick?.(app)}
-      variant="borderless"
+      className="group rounded-xl border border-[var(--dip-border-color)] transition-all w-full"
+      style={{ height: cardHeight }}
+      styles={{
+        body: {
+          height: '100%',
+          padding: '16px 16px 12px 16px',
+          display: 'flex',
+          flexDirection: 'column',
+        },
+      }}
     >
-      <div className="flex justify-between items-start mb-0.5">
-        <div className="w-4 h-4 flex-shrink-0">
-          {/* 应用图标占位符 */}
-          <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg" />
+      <div className="flex gap-4 mb-2 flex-shrink-0">
+        {/* 应用图标 */}
+        <div className="w-16 h-16 flex-shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+          {app.icon ? (
+            <img
+              src={app.icon}
+              alt={app.name}
+              className="w-full h-full rounded-full object-cover"
+            />
+          ) : (
+            <span className="text-white text-base font-medium">
+              {app.name?.charAt(0)}
+            </span>
+          )}
         </div>
-        <div className="flex items-center gap-0.5">
-          {renderStatusTag()}
+        {/* 名称 + 版本号 + 描述 */}
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <div
+                className="text-sm font-medium mr-px truncate text-black"
+                title={app.name}
+              >
+                {app.name}
+              </div>
+              {mode === ModeEnum.MyApp && (
+                <Button
+                  color="default"
+                  variant="filled"
+                  className="bg-[#F9FAFC] text-[--dip-text-color-65] hover:!bg-[--dip-primary-color] hover:!text-[--dip-white]"
+                  onClick={() => {
+                    onMenuClick?.('use', app)
+                  }}
+                >
+                  <span className="text-xs">立即使用</span>
+                  <IconFont
+                    type="icon-dip-arrow-up"
+                    rotate={90}
+                    className="text-xs"
+                  />
+                </Button>
+              )}
+            </div>
+            {mode === ModeEnum.AppStore && (
+              <div className="w-fit rounded text-xs px-2 py-0.5 border border-[var(--dip-border-color-base)]">
+                {app.version}
+              </div>
+            )}
+            <p className="text-xs line-clamp-2" title={app.description}>
+              {app.description || '[暂无描述]'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col justify-end flex-1 h-0">
+        <div className="mb-2 h-px bg-[var(--dip-line-color)]" />
+        <div className="flex items-center justify-between">
+          {/* 更新信息 */}
+          <div className="flex items-center text-xs text-[var(--dip-text-color-45)]">
+            <Avatar size={24} className="flex-shrink-0 mr-2">
+              {userName.charAt(0)}
+            </Avatar>
+            <span className="truncate max-w-20 mr-4" title={userName}>
+              {userName}
+            </span>
+            <span>更新：{updateTime}</span>
+          </div>
+          {/* 更多操作 */}
           {menuItems && menuItems.length > 0 && (
             <Dropdown
               menu={{ items: menuItems, onClick: handleMenuClick }}
               trigger={['click']}
+              placement="bottomRight"
+              onOpenChange={(open) => {
+                setMenuOpen(open)
+              }}
             >
-              <Button
-                type="text"
-                icon={<MoreOutlined />}
-                className="w-1 h-1 p-0 flex items-center justify-center"
-                onClick={(e) => e.stopPropagation()}
-              />
+              <span
+                onClick={(e) => {
+                  e.stopPropagation()
+                }}
+                className={classNames(
+                  'w-6 h-6 flex items-center justify-center cursor-pointer text-[var(--dip-text-color-45)] hover:text-[var(--dip-text-color-85)] transition-opacity',
+                  menuOpen
+                    ? 'opacity-100 visible'
+                    : 'opacity-0 invisible group-hover:opacity-100 group-hover:visible'
+                )}
+              >
+                <IconFont type="icon-dip-gengduo" />
+              </span>
             </Dropdown>
           )}
         </div>
-      </div>
-
-      <div className="h-px bg-[rgba(0,0,0,0.04)] -mx-1 mb-0.5" />
-
-      {renderUserInfo()}
-
-      <div>
-        <h3 className="text-sm font-medium text-black m-0 mb-0.5 leading-[1.57]">
-          {app.appName}
-        </h3>
-        <p className="text-xs text-black leading-[1.67] m-0 mb-0.5 line-clamp-2">
-          {app.appDescription || ''}
-        </p>
-        <div className="flex items-center gap-0.5">{renderVersionTag()}</div>
       </div>
     </Card>
   )

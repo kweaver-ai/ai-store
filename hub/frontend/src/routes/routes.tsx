@@ -1,8 +1,9 @@
 import { lazy, type ReactNode } from 'react'
 import type { RouteObject } from 'react-router-dom'
-import { AppstoreOutlined, CodeOutlined } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
 import { ProtectedRoute } from './ProtectedRoute'
+import ApplicationIcon from '@/assets/images/applications.svg?react'
+import AppStoreIcon from '@/assets/images/app-store.svg?react'
 
 const MyApp = lazy(() => import('../pages/MyApp'))
 const AppStore = lazy(() => import('../pages/AppStore'))
@@ -14,8 +15,8 @@ export interface RouteConfig {
   label?: string
   icon?: ReactNode
   disabled?: boolean
+  /** 是否在侧边栏展示 */
   showInSidebar?: boolean
-  showInBreadcrumb?: boolean
   handle?: RouteObject['handle']
   children?: RouteConfig[]
 }
@@ -29,14 +30,13 @@ export const routeConfigs: RouteConfig[] = [
     path: 'my-app',
     key: 'my-app',
     label: '应用',
-    icon: <AppstoreOutlined />,
+    icon: <ApplicationIcon />,
     element: (
       <ProtectedRoute>
         <MyApp />
       </ProtectedRoute>
     ),
     showInSidebar: true,
-    showInBreadcrumb: true,
     handle: {
       layout: {
         hasSider: true,
@@ -48,14 +48,13 @@ export const routeConfigs: RouteConfig[] = [
     path: 'app-store',
     key: 'app-store',
     label: '应用商店',
-    icon: <CodeOutlined />,
+    icon: <AppStoreIcon />,
     element: (
       <ProtectedRoute>
         <AppStore />
       </ProtectedRoute>
     ),
     showInSidebar: true,
-    showInBreadcrumb: true,
     handle: {
       layout: {
         hasSider: true,
@@ -67,7 +66,7 @@ export const routeConfigs: RouteConfig[] = [
 
 /**
  * 根据路径获取路由配置
- * 支持动态路由匹配（如 /app/:name/*）
+ * 支持动态路由匹配（如 /application/:appKey/*）
  */
 export const getRouteByPath = (path: string): RouteConfig | undefined => {
   // 移除前导斜杠
@@ -77,16 +76,15 @@ export const getRouteByPath = (path: string): RouteConfig | undefined => {
   const exactMatch = routeConfigs.find((route) => route.path === normalizedPath)
   if (exactMatch) return exactMatch
 
-  // 匹配动态路由 /app/:name/*
-  const appRouteMatch = normalizedPath.match(/^app\/([^/]+)/)
+  // 匹配动态路由 /application/:appKey/*
+  const appRouteMatch = normalizedPath.match(/^application\/([^/]+)/)
   if (appRouteMatch) {
     // 返回一个虚拟的路由配置，用于微应用
     return {
       path: normalizedPath,
       key: `micro-app-${appRouteMatch[1]}`,
-      label: appRouteMatch[1], // 默认使用 name，后续可以从微应用列表获取
+      label: appRouteMatch[1], // 默认使用 appKey，后续可以从微应用列表获取
       showInSidebar: false,
-      showInBreadcrumb: true,
     }
   }
 
@@ -114,79 +112,4 @@ export const getSidebarMenuItems = (): MenuProps['items'] => {
     }))
 }
 
-/**
- * 面包屑项接口
- */
-export interface BreadcrumbItem {
-  title: string
-  path?: string
-  key?: string
-}
-
-/**
- * 根据路径生成完整的面包屑路径
- * @param path 当前路径
- * @param microAppName 微应用名称（如果是微应用路由）
- * @returns 面包屑项数组
- */
-export const getBreadcrumbByPath = (
-  path: string,
-  microAppName?: string
-): BreadcrumbItem[] => {
-  const items: BreadcrumbItem[] = []
-
-  // 始终包含首页
-  items.push({
-    title: '首页',
-    path: '/home',
-    key: 'home',
-  })
-
-  // 移除前导斜杠并分割路径
-  const normalizedPath = path.startsWith('/') ? path.slice(1) : path
-  const pathSegments = normalizedPath.split('/').filter(Boolean)
-
-  // 处理微应用路由 /app/:name/*
-  if (pathSegments[0] === 'app' && pathSegments[1]) {
-    const appName = microAppName || pathSegments[1]
-    items.push({
-      title: appName,
-      path: `/app/${pathSegments[1]}`,
-      key: `micro-app-${pathSegments[1]}`,
-    })
-
-    // 如果有子路径，可以继续处理（这里简化处理）
-    if (pathSegments.length > 2) {
-      items.push({
-        title: pathSegments.slice(2).join(' / '),
-        key: 'sub-path',
-      })
-    }
-    return items
-  }
-
-  // 处理普通路由
-  let currentPath = ''
-  for (const segment of pathSegments) {
-    currentPath = currentPath ? `${currentPath}/${segment}` : segment
-    const route = getRouteByPath(currentPath)
-
-    if (route && route.showInBreadcrumb) {
-      items.push({
-        title: route.label || segment,
-        path: `/${currentPath}`,
-        key: route.key || currentPath,
-      })
-    }
-  }
-
-  return items
-}
-
-/**
- * 根据路径获取面包屑名称（兼容旧接口）
- */
-export const getBreadcrumbNameByPath = (path: string): string => {
-  const route = getRouteByPath(path)
-  return route?.label || ''
-}
+// 这里保留路由配置和侧边栏菜单构建逻辑，面包屑由微应用全局状态驱动，详见 MicroAppHeader 与 micro-app/globalState.ts

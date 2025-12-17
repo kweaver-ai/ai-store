@@ -1,84 +1,123 @@
-import { useState, useRef, memo, useCallback } from 'react'
-import { Button, Spin } from 'antd'
-import AppGrid from './AppGrid'
-import { ModeEnum, type AppListStatus } from './types'
-import Empty from '../Empty'
-import loadFailed from '@/assets/images/load-failed.png'
+import { useState, useMemo, useCallback, memo, useEffect } from 'react'
+import { Row, Col, Tabs } from 'antd'
+import AutoSizer from 'react-virtualized-auto-sizer'
+import { computeColumnCount, gap } from './utils'
+import AppCard from './AppCard'
+import type { Application } from '@/apis/dip-hub'
+import { ModeEnum, ALL_TAB_KEY } from './types'
+import styles from './index.module.less'
 
 interface AppListProps {
   mode: ModeEnum.MyApp | ModeEnum.AppStore
-  searchValue?: string
-  renderEmpty?: () => React.ReactNode
+  /** 应用列表数据 */
+  apps: Application[]
+  /** 卡片菜单点击回调 */
+  onMenuClick?: (action: string, app: Application) => void
 }
 
 /**
- * AppList 容器组件
- * 统一处理 loading、error、empty 状态的
- * 使用此组件可以避免在每个使用 AppList 的地方重复处理状态逻辑
+ * AppList 组件
  */
-const AppList: React.FC<AppListProps> = ({
-  mode,
-  searchValue,
-  renderEmpty,
-}) => {
-  const [appListStatus, setAppListStatus] = useState<AppListStatus>({
-    loading: false,
-    error: null,
-    empty: false,
-  })
-  const appListRef = useRef<{ refresh: () => void } | null>(null)
+const AppList: React.FC<AppListProps> = ({ mode, apps, onMenuClick }) => {
+  const [activeTab, setActiveTab] = useState<string>(ALL_TAB_KEY)
 
-  const handleStatusChange = useCallback((status: AppListStatus) => {
-    setAppListStatus(status)
-  }, [])
+  // 根据后端返回的 category 动态分组
+  const { groupedApps, appTypes } = useMemo(() => {
+    const groups: Record<string, Application[]> = {
+      [ALL_TAB_KEY]: apps,
+    }
+    const typeSet = new Set<string>()
+
+    apps.forEach((app) => {
+      const appType = app.category
+      if (appType) {
+        typeSet.add(appType)
+        if (!groups[appType]) {
+          groups[appType] = []
+        }
+        groups[appType].push(app)
+      }
+    })
+
+    return {
+      groupedApps: groups,
+      appTypes: Array.from(typeSet),
+    }
+  }, [apps])
+
+  // 当 appTypes 变化时，如果当前 activeTab 不在列表中，重置为全部
+  useEffect(() => {
+    if (activeTab !== ALL_TAB_KEY && !appTypes.includes(activeTab)) {
+      setActiveTab(ALL_TAB_KEY)
+    }
+  }, [appTypes, activeTab])
+
+  // 当前 Tab 下的应用列表
+  const currentApps = useMemo(() => {
+    return groupedApps[activeTab] || []
+  }, [groupedApps, activeTab])
+
+  // 动态生成 Tab 配置
+  const tabItems = useMemo(() => {
+    const items = [
+      {
+        key: ALL_TAB_KEY,
+        label: `全部 (${apps.length})`,
+      },
+    ]
+
+    appTypes.forEach((type) => {
+      items.push({
+        key: type,
+        label: `${type} (${groupedApps[type]?.length || 0})`,
+      })
+    })
+
+    return items
+  }, [apps.length, appTypes, groupedApps])
+
+  /** 渲染应用卡片 */
+  const renderAppCard = useCallback(
+    (app: Application, width: number) => {
+      return (
+        <Col key={app.key} style={{ width, minWidth: width }}>
+          <AppCard
+            app={app}
+            mode={mode}
+            onMenuClick={(key) => onMenuClick?.(key, app)}
+          />
+        </Col>
+      )
+    },
+    [mode, onMenuClick]
+  )
 
   return (
-    <>
-      {/* 统一处理 loading、error、empty 状态 */}
-      {(appListStatus.loading ||
-        appListStatus.error ||
-        appListStatus.empty) && (
-        <div className="absolute inset-0 flex items-center justify-center z-10">
-          {appListStatus.loading ? (
-            <Spin size="large" />
-          ) : appListStatus.error ? (
-            <Empty iconSrc={loadFailed} desc={'加载失败'}>
-              <Button
-                type="primary"
-                onClick={() => {
-                  appListRef.current?.refresh()
-                }}
-              >
-                重试
-              </Button>
-            </Empty>
-          ) : appListStatus.empty ? (
-            renderEmpty ? (
-              renderEmpty()
-            ) : searchValue ? (
-              <Empty desc={`未找到"${searchValue}"相关应用`} />
-            ) : (
-              <Empty desc="暂无应用" />
+    <div className="mr-[-16px] flex flex-col h-0 flex-1">
+      <Tabs
+        activeKey={activeTab}
+        items={tabItems}
+        onChange={setActiveTab}
+        className={`flex-shrink-0 ${styles.tabs}`}
+        size="small"
+      />
+      <div className={styles.hideScrollbar}>
+        <AutoSizer style={{ width: 'calc(100% - 8px)' }} disableHeight>
+          {({ width }) => {
+            const count = computeColumnCount(width)
+            const calculatedCardWidth = width / count
+
+            return (
+              <Row gutter={[gap, gap]}>
+                {currentApps.map((app) =>
+                  renderAppCard(app, calculatedCardWidth)
+                )}
+              </Row>
             )
-          ) : null}
-        </div>
-      )}
-      {/* AppList 始终渲染，但通过状态控制是否显示内容 */}
-      <div
-        className={
-          appListStatus.loading || appListStatus.error || appListStatus.empty
-            ? 'opacity-0 pointer-events-none h-full'
-            : 'h-full'
-        }
-      >
-        <AppGrid
-          ref={appListRef}
-          mode={mode}
-          searchValue={searchValue}
-          onStatusChange={handleStatusChange}
-        />
+          }}
+        </AutoSizer>
       </div>
-    </>
+    </div>
   )
 }
 

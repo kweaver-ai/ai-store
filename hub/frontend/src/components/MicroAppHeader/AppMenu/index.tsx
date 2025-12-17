@@ -1,13 +1,13 @@
 import { useState, useRef, useCallback, useMemo } from 'react'
 import { Dropdown, message } from 'antd'
 import type { MenuProps } from 'antd'
-import { getAppListApi, type AppInfo } from '@/apis/app-development'
+import { getApplications, type Application } from '@/apis/dip-hub'
 
 /**
  * 导航菜单图标按钮组件
  */
 export const AppMenu = () => {
-  const [appList, setAppList] = useState<Array<AppInfo>>([])
+  const [appList, setAppList] = useState<Array<Application>>([])
   const fetchingRef = useRef(false) // 使用 ref 跟踪请求状态，避免状态更新延迟导致的重复请求
 
   // 点击时再请求应用列表
@@ -15,7 +15,7 @@ export const AppMenu = () => {
     if (fetchingRef.current) return
     fetchingRef.current = true
     try {
-      // await getAppListApi({})
+      // await getApplications({})
       // // setAppList(list)
       // setAppList(mockAppList)
     } catch (error: any) {
@@ -30,10 +30,10 @@ export const AppMenu = () => {
   }, [])
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
-    const app = appList.find((item) => item.appId === key)
-    if (app && app.appId) {
+    const app = appList.find((item) => item.key === key)
+    if (app && app.key) {
       // 以新标签页形式打开应用
-      window.open(`app/${app.appId}`, '_blank')
+      window.open(`/application/${app.key}`, '_blank')
     }
   }
 
@@ -41,15 +41,15 @@ export const AppMenu = () => {
     () =>
       Array.isArray(appList)
         ? appList.map((app) => ({
-            key: app.appId,
+            key: app.key,
             label: (
               <div className="flex items-center gap-2">
                 <img
-                  src={app.appIcon}
-                  alt={app.appName}
+                  src={app.icon}
+                  alt={app.name}
                   className="w-[4px] h-[4px]"
                 />
-                <span>{app.appName}</span>
+                <span>{app.name}</span>
               </div>
             ),
           }))
@@ -64,7 +64,7 @@ export const AppMenu = () => {
       placement="bottomLeft"
     >
       <button
-        className="flex items-center justify-center w-6 h-6 cursor-pointer bg-transparent border-0 p-0 text-black transition-opacity duration-200 hover:opacity-70 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex items-center justify-center w-6 h-6 cursor-pointer bg-transparent border-0 p-0 text-[--dip-text-color] transition-opacity duration-200 hover:text-[--dip-link-color] disabled:opacity-50 disabled:cursor-not-allowed"
         disabled={fetchingRef.current}
         onClick={fetchAppList}
       >

@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import Template from '@anyshare/template'
 import '@anyshare/template/style.css'
 // import Header from './Header' // 如需使用 header，取消注释

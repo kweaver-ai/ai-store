@@ -16,10 +16,14 @@ import { useAuthStore, usePreferenceStore } from '../../stores'
 import { useLanguageStore } from '../../stores/languageStore'
 import { useLanguage } from '@/hooks/useLanguage'
 import { getRouteByPath, routeConfigs } from '../../routes/routes'
-import { getMicroAppList } from '../../apis/micro-app'
-import type { MicroAppConfig } from '../../utils/micro-app/type'
+import {
+  getApplications,
+  pinMicroAppApi,
+  type Application,
+} from '@/apis/dip-hub'
 import type { MenuProps } from 'antd'
 import './index.module.less'
+import LogoIcon from '@/assets/images/logo.svg?react'
 
 const { Sider } = Layout
 
@@ -37,7 +41,7 @@ const Sidebar = ({ collapsed, onCollapse, topOffset = 0 }: SidebarProps) => {
   const { updateLanguage } = useLanguage()
   const { pinnedMicroApps, unpinMicroApp } = usePreferenceStore()
 
-  const [microApps, setMicroApps] = useState<MicroAppConfig[]>([])
+  const [microApps, setMicroApps] = useState<Application[]>([])
   const { fetchPinnedMicroApps } = usePreferenceStore()
 
   // 获取微应用列表和钉住的微应用
@@ -45,10 +49,10 @@ const Sidebar = ({ collapsed, onCollapse, topOffset = 0 }: SidebarProps) => {
     const fetchData = async () => {
       try {
         const [apps] = await Promise.all([
-          getMicroAppList(),
+          getApplications(),
           fetchPinnedMicroApps(),
         ])
-        setMicroApps(apps)
+        setMicroApps(apps.entries)
       } catch (error) {
         console.error('Failed to fetch data:', error)
       }
@@ -62,9 +66,9 @@ const Sidebar = ({ collapsed, onCollapse, topOffset = 0 }: SidebarProps) => {
     const route = getRouteByPath(pathname)
 
     // 如果是微应用路由
-    if (pathname.startsWith('/app/')) {
-      const appName = pathname.split('/')[2]
-      return `micro-app-${appName}`
+    if (pathname.startsWith('/application/')) {
+      const appKey = pathname.split('/')[2]
+      return `micro-app-${appKey}`
     }
 
     return route?.key || 'my-app'
@@ -72,8 +76,8 @@ const Sidebar = ({ collapsed, onCollapse, topOffset = 0 }: SidebarProps) => {
 
   const handleItemClick = (key: string) => {
     if (key.startsWith('micro-app-')) {
-      const appName = key.replace('micro-app-', '')
-      window.open(`/app/${appName}`, '_blank')
+      const appKey = key.replace('micro-app-', '')
+      window.open(`/application/${appKey}`, '_blank')
       return
     }
 
@@ -88,21 +92,21 @@ const Sidebar = ({ collapsed, onCollapse, topOffset = 0 }: SidebarProps) => {
   // 暂时移除，后续可以通过菜单项的额外操作按钮实现
 
   // 处理打开微应用
-  const handleOpenApp = useCallback((appName: string, e?: React.MouseEvent) => {
+  const handleOpenApp = useCallback((appKey: string, e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation()
     }
-    window.open(`/app/${appName}`, '_blank')
+    window.open(`/application/${appKey}`, '_blank')
   }, [])
 
   // 处理取消钉住
   const handleUnpin = useCallback(
-    async (appName: string, e?: React.MouseEvent) => {
+    async (appKey: string, e?: React.MouseEvent) => {
       if (e) {
         e.stopPropagation()
       }
       try {
-        await unpinMicroApp(appName)
+        await unpinMicroApp(appKey)
         message.success('已取消钉住')
       } catch (error) {
         console.error('Failed to unpin micro app:', error)
@@ -288,7 +292,6 @@ const Sidebar = ({ collapsed, onCollapse, topOffset = 0 }: SidebarProps) => {
       trigger={null}
       className="bg-white/85 backdrop-blur-[6px] shadow-[inset_-1px_0_0_rgba(0,0,0,0.1)]"
       style={{
-        position: 'fixed',
         left: 0,
         width: siderWidth,
         height: `calc(100vh - ${topOffset}px)`,
@@ -298,16 +301,7 @@ const Sidebar = ({ collapsed, onCollapse, topOffset = 0 }: SidebarProps) => {
     >
       <div className="flex flex-col h-full px-3 pt-3 pb-4">
         <div className="flex items-center justify-between gap-2 py-1 pb-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1C4DFA] to-[#3FA9F5] flex items-center justify-center text-white font-bold text-base shadow-[0_6px_16px_rgba(18,110,227,0.18)]">
-              <AppstoreOutlined />
-            </div>
-            {!collapsed && (
-              <span className="text-base text-[#126EE3] font-semibold whitespace-nowrap">
-                应用中心
-              </span>
-            )}
-          </div>
+          <LogoIcon />
           <Button
             type="text"
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -342,7 +336,11 @@ const Sidebar = ({ collapsed, onCollapse, topOffset = 0 }: SidebarProps) => {
           </div>
 
           <div className="mt-3 pt-3 border-t border-[rgba(0,0,0,0.1)]">
-            <Dropdown menu={{ items: userMenuItems }} placement="topLeft">
+            <Dropdown
+              menu={{ items: userMenuItems }}
+              placement="topLeft"
+              trigger={['click']}
+            >
               <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-[rgba(241,247,254,0.7)] cursor-pointer">
                 <Avatar
                   icon={<UserOutlined />}

@@ -1,0 +1,158 @@
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { Layout } from 'antd'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuthStore, useMicroAppStore } from '@/stores'
+import {
+  onMicroAppGlobalStateChange,
+  setMicroAppGlobalState,
+  type MicroAppGlobalState,
+} from '@/utils/micro-app/globalState'
+import type { BreadcrumbItem } from '@/utils/micro-app/globalState'
+import { AppMenu } from './AppMenu'
+import { Breadcrumb } from './Breadcrumb'
+import { CopilotButton } from './CopilotButton'
+import { UserInfo } from './UserInfo'
+
+const { Header: AntHeader } = Layout
+
+/**
+ * 微应用壳导航头（MicroAppHeader）
+ *
+ * - 只在微应用容器路由下使用（/application/:appKey/*）
+ * - 负责渲染：应用菜单 + 微应用图标和名称 + 微应用面包屑 + Copilot + 用户信息
+ */
+const MicroAppHeader = () => {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { userInfo } = useAuthStore()
+  const { currentMicroApp } = useMicroAppStore()
+
+  const [microAppBreadcrumb, setMicroAppBreadcrumb] = useState<
+    BreadcrumbItem[]
+  >([])
+
+  const isMicroAppRoute = location.pathname.startsWith('/application/')
+
+  // 监听微应用的全局状态（面包屑）
+  useEffect(() => {
+    if (!isMicroAppRoute) {
+      setMicroAppBreadcrumb([])
+      return
+    }
+
+    const unsubscribe = onMicroAppGlobalStateChange(
+      (state: MicroAppGlobalState) => {
+        if (state.breadcrumb) {
+          console.log('state.breadcrumb', state.breadcrumb)
+          setMicroAppBreadcrumb(state.breadcrumb)
+        }
+      },
+      true
+    )
+
+    return () => {
+      unsubscribe()
+    }
+  }, [isMicroAppRoute])
+
+  // 构建完整的面包屑项：首页图标（由 Breadcrumb 组件统一处理） / 微应用图标+名称 / 微应用传递的面包屑信息
+  const breadcrumbItems: BreadcrumbItem[] = useMemo(() => {
+    // 非微应用路由时，不展示任何微应用面包屑
+    if (!isMicroAppRoute) return []
+
+    const items: BreadcrumbItem[] = []
+
+    // 微应用根节点：应用图标 + 名称
+    if (currentMicroApp) {
+      items.push({
+        key: currentMicroApp.key,
+        name: currentMicroApp.name,
+        path: currentMicroApp.routeBasename,
+        icon: currentMicroApp.icon,
+      })
+    }
+
+    /**
+     * 微应用上报的 breadcrumb 数据形如：
+     * [
+     *   { key: 'alarm',   name: '告警与故障分析', path: '/alarm' },
+     *   { key: 'problem', name: '问题',           path: '/alarm/problem' },
+     * ]
+     *
+     * 这里的 path 视为「微应用内部路径」，需要统一挂载到 routeBasename 之下：
+     * - routeBasename: /application/:appKey
+     * - '/alarm'           -> /application/:appKey/alarm
+     * - '/alarm/problem'   -> /application/:appKey/alarm/problem
+     * - 'alarm'            -> /application/:appKey/alarm
+     */
+    if (microAppBreadcrumb.length > 0 && currentMicroApp?.routeBasename) {
+      const base = currentMicroApp.routeBasename.replace(/\/$/, '')
+
+      const processedItems = microAppBreadcrumb.map((item, index) => {
+        const itemPath = item.path
+        let fullPath = itemPath
+
+        if (itemPath) {
+          // 去掉前导斜杠，统一按相对路径处理
+          const cleaned = itemPath.replace(/^\/+/, '')
+          fullPath = cleaned ? `${base}/${cleaned}` : base
+        }
+
+        return {
+          key: item.key || `micro-breadcrumb-${index}`,
+          name: item.name,
+          path: fullPath,
+        }
+      })
+
+      items.push(...processedItems)
+    }
+
+    return items
+  }, [isMicroAppRoute, currentMicroApp, microAppBreadcrumb])
+
+  // 面包屑导航跳转
+  const handleBreadcrumbNavigate = useCallback(
+    (item: BreadcrumbItem) => {
+      if (!item.path) return
+      navigate(item.path)
+    },
+    [navigate]
+  )
+
+  // Copilot 按钮点击：通过全局状态通知微应用
+  const handleCopilotClick = useCallback(() => {
+    // 主应用通过全局状态下发「Copilot 被点击」事件
+    // 微应用在 props.onMicroAppStateChange 中监听 state.copilot 即可
+    setMicroAppGlobalState(
+      {
+        copilot: {
+          // 这里的结构由主应用约定，微应用按需解析即可
+          clickedAt: Date.now(),
+        },
+      },
+      { allowAllFields: true }
+    )
+  }, [])
+
+  return (
+    <AntHeader className="h-[52px] bg-white border-b border-gray-200 flex items-center justify-between px-3">
+      {/* 左侧：应用菜单和面包屑 */}
+      <div className="flex items-center gap-x-4">
+        <AppMenu />
+        <Breadcrumb
+          items={breadcrumbItems}
+          onNavigate={handleBreadcrumbNavigate}
+        />
+      </div>
+
+      {/* 右侧：Copilot 按钮和用户信息 */}
+      <div className="flex items-center gap-x-4">
+        {isMicroAppRoute && <CopilotButton onClick={handleCopilotClick} />}
+        <UserInfo username={userInfo?.username || userInfo?.name || 'Admin'} />
+      </div>
+    </AntHeader>
+  )
+}
+
+export default MicroAppHeader

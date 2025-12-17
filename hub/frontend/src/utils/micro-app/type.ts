@@ -1,15 +1,5 @@
 /**
- * 子应用配置类型定义
- */
-export interface MicroAppConfig {
-  /** 应用名称，项目的 package.json 中的 name */
-  name: string
-  /** 应用入口 URL */
-  entry: string
-}
-
-/**
- * 微应用 Props 接口
+ * 加载微应用时传递给微应用的 Props
  */
 export interface MicroAppProps {
   /** ========== 认证相关 ========== */
@@ -41,6 +31,10 @@ export interface MicroAppProps {
   /** ========== 语言 ========== */
   /** 当前语言（如 zh-CN, en-US） */
   language: string
+
+  /** ========== Copilot ========== */
+  /** Copilot 点击按钮方法 */
+  onCopilotClick: () => void
 
   /** ========== 全局状态管理 ========== */
   /** 设置全局状态（微应用可以通过此方法更新全局状态） */
