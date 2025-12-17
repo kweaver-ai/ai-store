@@ -3,17 +3,17 @@
  */
 export interface PageParams {
   /** 页码 */
-  offset: number
+  offset?: number
   /** 分页大小 */
-  limit: number
+  limit?: number
   /** 搜索关键词 */
   keyword?: string
 }
 
 /**
- * 分页响应
+ * 列表响应
  */
-export interface PageResponse<T> {
+export interface ListResponse<T> {
   /** 数据列表 */
   entries: T[]
   /** 总数 */

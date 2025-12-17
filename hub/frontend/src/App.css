@@ -1,26 +1,19 @@
+html,
 body {
   margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  line-height: 1;
   color: #fff;
   font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue',
     'PingFang SC', 'Microsoft YaHei', 'sans-serif';
 }
 
-.content {
-  display: flex;
-  min-height: 100vh;
-  line-height: 1;
-  text-align: center;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.content h1 {
-  font-size: 3.6rem;
-  font-weight: 700;
-}
-
-.content p {
-  font-size: 1.2rem;
-  font-weight: 400;
-  opacity: 0.5;
+#root {
+  width: 100vw;
+  height: 100vh;
 }

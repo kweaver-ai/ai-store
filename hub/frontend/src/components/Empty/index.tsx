@@ -1,6 +1,6 @@
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import empty from '@/assets/images/empty.svg'
-
+import loadFailed from '@/assets/images/load-failed.png'
 /**
  * 空 样式组件
  * @interface IEmpty
@@ -17,25 +17,39 @@ interface IEmpty
   desc?: React.ReactElement | string
   subDesc?: React.ReactElement | string
   children?: React.ReactElement
+  type?: 'empty' | 'search' | 'failed'
 }
 
 const Empty: React.FC<IEmpty> = ({
-  iconSrc = empty,
+  type = 'empty',
   iconHeight = 144,
-  desc = '抱歉，没有找到相关内容',
+  desc = '',
+  iconSrc,
   subDesc,
   children,
 }) => {
+  const icon = useMemo(() => {
+    if (iconSrc) {
+      return iconSrc
+    }
+    if (type === 'failed') {
+      return loadFailed
+    }
+    return empty
+  }, [type, iconSrc])
+
   return (
-    <div className="flex flex-col h-full w-full items-center justify-center gap-y-3">
+    <div className="flex flex-col h-full w-full items-center justify-center">
       <img
-        src={iconSrc}
+        src={icon}
         alt=""
         style={{ height: iconHeight, maxHeight: iconHeight }}
       />
-      <div className="leading-none font-medium text-black">{desc}</div>
+      {desc && (
+        <div className="font-medium text-[rgba(0,0,0,0.75)] mb-2">{desc}</div>
+      )}
       {subDesc && (
-        <div className="leading-none font-normal text-gray-500">{subDesc}</div>
+        <div className="font-normal text-[rgba(0,0,0,0.75)]">{subDesc}</div>
       )}
       {children}
     </div>

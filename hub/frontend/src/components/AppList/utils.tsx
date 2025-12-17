@@ -1,16 +1,20 @@
 import { PushpinFilled, PushpinOutlined } from '@ant-design/icons'
-import { AppFixedStatus, type AppInfo } from '@/apis/app-development'
-import { AppStoreActionEnum, ModeEnum } from './types'
+import type { Application } from '@/apis/dip-hub'
+import { ModeEnum } from './types'
+import { AppStoreActionEnum } from '@/pages/AppStore/types'
 import IconFont from '../IconFont'
+import { usePreferenceStore } from '@/stores'
 
 // 卡片的最小宽度
 export const minCardWidth = 380
 // 卡片的最大宽度
 export const maxCardWidth = 500
+// 卡片的高度
+export const cardHeight = 171
 // 卡片的间距
 export const gap = 16
 // 正常卡片的高度（包含间距）
-export const rowHeight = 171 + gap
+export const rowHeight = cardHeight + gap
 // loadingMore 行的高度
 export const loadingMoreRowHeight = 30
 
@@ -53,20 +57,23 @@ export const computeColumnCount = (
 }
 
 /** 我的应用操作菜单项 */
-export const getMyAppMenuItems = (app: AppInfo) => {
-  if (app.fixedStatus === AppFixedStatus.Fixed) {
+export const getMyAppMenuItems = (app: Application) => {
+  const { isPinned } = usePreferenceStore.getState()
+  const pinned = isPinned(app.key)
+
+  if (pinned) {
     return [
       {
-        key: AppFixedStatus.Unfixed,
+        key: 'unfix',
         label: '取消固定',
-        icon: <PushpinOutlined />,
+        icon: <PushpinOutlined className="text-[var(--dip-warning-color)]" />,
       },
     ]
   }
   return [
     {
-      key: AppFixedStatus.Fixed,
-      icon: <PushpinFilled />,
+      key: 'fix',
+      icon: <PushpinOutlined />,
       label: '固定',
     },
   ]
@@ -94,12 +101,13 @@ export const getAppStoreMenuItems = () => {
     {
       key: AppStoreActionEnum.Uninstall,
       icon: <IconFont type="icon-dip-trash" />,
+      danger: true,
       label: '卸载',
     },
   ]
 }
 
-export const getAppCardMenuItems = (mode: ModeEnum, app: AppInfo) => {
+export const getAppCardMenuItems = (mode: ModeEnum, app: Application) => {
   if (mode === ModeEnum.AppStore) {
     return getAppStoreMenuItems()
   }

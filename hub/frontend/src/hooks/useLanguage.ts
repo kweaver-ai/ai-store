@@ -65,7 +65,7 @@ export const useLanguage = () => {
     // 同步到微应用全局状态，通知所有微应用当前语言
     setMicroAppGlobalState(
       {
-        lang: fallbackLanguage,
+        language: fallbackLanguage,
       },
       { allowAllFields: true }
     )
@@ -80,7 +80,7 @@ export const useLanguage = () => {
         // 使用后端语言覆盖时，同步到微应用全局状态
         setMicroAppGlobalState(
           {
-            lang: serverLang,
+            language: serverLang,
           },
           { allowAllFields: true }
         )
@@ -104,7 +104,7 @@ export const useLanguage = () => {
       // 4. 同步到微应用全局状态，让所有微应用收到语言变更
       setMicroAppGlobalState(
         {
-          lang,
+          language: lang,
         },
         { allowAllFields: true }
       )

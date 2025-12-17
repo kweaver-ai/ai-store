@@ -22,8 +22,8 @@
 
 微应用统一挂载在：
 
-- `/app/:name/*`
-- 其中 `:name` 为微应用在配置中的唯一标识（对应 `MicroAppConfig.name`）
+- `/application/:appKey/*`
+- 其中 `:appKey` 为微应用的应用包唯一标识（对应 `Application.key`）
 - 采用 History 模式
 
 ---
@@ -107,9 +107,9 @@ export async function mount(props) {
 
   // 监听全局状态变化（返回取消监听的函数）
   const unsubscribe = onMicroAppStateChange((state, prev) => {
-    if (state.lang !== prev.lang) {
+    if (state.language !== prev.language) {
       // 语言变化处理
-      console.log('Language changed:', state.lang)
+      console.log('Language changed:', state.language)
     }
   }, true) // true 表示立即执行一次
 
@@ -129,13 +129,19 @@ export async function mount(props) {
 ```typescript
 interface MicroAppGlobalState {
   /** 当前语言，如 zh-CN / en-US（仅主应用可更新，初始化时从 languageStore 读取） */
-  lang: string
+  language: string
   /** 面包屑导航数据（微应用可更新） */
   breadcrumb?: Array<{
-    title: string
+    key?: string
+    name: string
     path?: string
-    [key: string]: any
+    icon?: string
   }>
+  /** Copilot 相关状态（仅主应用可更新，用于通知微应用 Copilot 事件） */
+  copilot?: {
+    clickedAt?: number
+    [key: string]: any
+  }
   /** 预留扩展字段 */
   [key: string]: any
 }
@@ -145,8 +151,8 @@ interface MicroAppGlobalState {
 
 ### 字段更新权限
 
-- **微应用只能更新**：`allowedFields` 中允许的字段（如 `breadcrumb`）
-- **主应用可以更新**：所有字段（如 `lang`）
+- **微应用只能更新**：`allowedFields` 中允许的字段（当前仅 `breadcrumb`）
+- **主应用可以更新**：所有字段（如 `language`、`copilot`）
 
 当前允许微应用更新的字段：
 
@@ -158,8 +164,8 @@ interface MicroAppGlobalState {
 // 通过 props
 props.setMicroAppState({
   breadcrumb: [
-    { title: '仪表盘', path: '/dashboard' },
-    { title: '数据详情', path: '/dashboard/detail' },
+    { key: 'dashboard', name: '仪表盘', path: '/dashboard' },
+    { key: 'detail', name: '数据详情', path: '/dashboard/detail' },
   ],
 })
 
@@ -176,10 +182,11 @@ props.setMicroAppState({
 ```typescript
 import { setMicroAppGlobalState } from '@/utils/micro-app/globalState'
 
-// 主应用更新语言（需要传入 allowAllFields: true）
+// 主应用更新语言或 Copilot 状态（需要传入 allowAllFields: true）
 setMicroAppGlobalState(
   {
-    lang: 'en-US',
+    language: 'en-US',
+    copilot: { clickedAt: Date.now() },
   },
   { allowAllFields: true }
 )
@@ -197,13 +204,18 @@ setMicroAppGlobalState(
 // 在微应用中监听（返回取消监听的函数）
 const unsubscribe = props.onMicroAppStateChange((state, prev) => {
   // 语言变化
-  if (state.lang !== prev.lang) {
+  if (state.language !== prev.language) {
     // 处理语言切换
   }
 
   // 面包屑变化
   if (state.breadcrumb !== prev.breadcrumb) {
     // 处理面包屑更新
+  }
+
+  // Copilot 事件
+  if (state.copilot !== prev.copilot && state.copilot?.clickedAt) {
+    // 处理 Copilot 点击
   }
 }, true) // true 表示立即执行一次
 
@@ -249,27 +261,33 @@ interface MicroAppConfig {
 
 ### 子应用端实现
 
-在路由守卫或路由变化时更新面包屑：
+在路由守卫或路由变化时更新面包屑（仅需关心「微应用内部路径」）：
 
 ```javascript
 // 通过 props
 props.setMicroAppState({
   breadcrumb: [
-    { title: '仪表盘', path: '/dashboard' },
-    { title: '数据详情', path: '/dashboard/detail' },
+    { key: 'alarm', name: '告警与故障分析', path: '/alarm' },
+    { key: 'problem', name: '问题', path: '/alarm/problem' },
   ],
 })
 ```
 
+主应用会自动将这些路径挂载到 `route.basename` 之下，例如：
+
+- `route.basename = /application/app-1`
+- `/alarm` -> `/application/app-1/alarm`
+- `/alarm/problem` -> `/application/app-1/alarm/problem`
+
 ### 主应用端实现
 
-主应用在 `Header` 组件中自动监听并渲染：
+主应用在 `MicroAppHeader` 组件中自动监听并渲染（简化示意，实际实现见代码）：
 
 ```typescript
 import { onMicroAppGlobalStateChange } from '@/utils/micro-app/globalState'
 import { useMicroAppStore } from '@/stores'
 
-const Header = () => {
+const MicroAppHeader = () => {
   const { currentMicroApp } = useMicroAppStore()
   const [microAppBreadcrumb, setMicroAppBreadcrumb] = useState([])
 
@@ -285,19 +303,9 @@ const Header = () => {
     }
   }, [])
 
-  // 构建完整面包屑（包含微应用名称）
-  const breadcrumbItems = currentMicroApp
-    ? [
-        { title: '首页', path: '/home' },
-        {
-          title: currentMicroApp.displayName,
-          path: currentMicroApp.routeBasename,
-        },
-        ...microAppBreadcrumb,
-      ]
-    : []
-
-  return <Breadcrumb items={breadcrumbItems} />
+  // 这里会先插入一条“微应用根”项（应用图标+名称），
+  // 再把微应用上报的 breadcrumb 映射到 /application/:appKey/... 下
+  // 最终通过 Breadcrumb 组件渲染（内部自动加首页图标）
 }
 ```
 

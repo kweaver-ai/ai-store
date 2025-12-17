@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { loadMicroApp, type MicroApp as QiankunMicroApp } from 'qiankun'
 import { message, Spin } from 'antd'
-import type { MicroAppConfig, MicroAppProps } from '../../utils/micro-app/type'
-import { useAuthStore } from '../../stores'
+import { useAuthStore, useMicroAppStore } from '../../stores'
 import { useLanguageStore } from '../../stores/languageStore'
 import { httpConfig, getAccessToken } from '../../utils/http/token-config'
 import {
@@ -11,7 +10,8 @@ import {
 } from '../../utils/micro-app/globalState'
 
 interface MicroAppComponentProps {
-  app: MicroAppConfig
+  // TODO: 类型待定
+  app: any
 }
 
 const MicroAppComponent = ({ app }: MicroAppComponentProps) => {
@@ -20,9 +20,10 @@ const MicroAppComponent = ({ app }: MicroAppComponentProps) => {
   const [loading, setLoading] = useState(true)
   const { userInfo } = useAuthStore()
   const { language } = useLanguageStore()
+  const { currentMicroApp } = useMicroAppStore()
 
   // 构建标准化的微应用 props（所有微应用统一使用此结构）
-  const microAppProps = useMemo<MicroAppProps>(
+  const microAppProps = useMemo<any>(
     () => ({
       // ========== 认证相关 ==========
       token: {
@@ -33,7 +34,7 @@ const MicroAppComponent = ({ app }: MicroAppComponentProps) => {
 
       // ========== 路由信息 ==========
       route: {
-        basename: `/app/${app.name}`,
+        basename: currentMicroApp?.routeBasename || `/application/${app.name}`,
       },
 
       // ========== 用户信息 ==========
@@ -47,6 +48,11 @@ const MicroAppComponent = ({ app }: MicroAppComponentProps) => {
       // ========== 语言 ==========
       language,
 
+      // ========== Copilot ==========
+      onCopilotClick: () => {
+        console.log('Copilot 点击按钮')
+      },
+
       // ========== 全局状态管理 ==========
       setMicroAppState: (state: Record<string, any>) => {
         // 微应用调用时，只允许更新 allowedFields 中的字段
@@ -59,11 +65,12 @@ const MicroAppComponent = ({ app }: MicroAppComponentProps) => {
         return onMicroAppGlobalStateChange(callback, fireImmediately)
       },
     }),
-    [app.name, app.entry, userInfo, language]
+    [app.name, app.entry, userInfo, language, currentMicroApp?.routeBasename]
   )
 
   // 只在应用配置变化时重新加载微应用
   useEffect(() => {
+    console.log('app', app)
     let isMounted = true
     let microAppInstance: QiankunMicroApp | null = null
 
@@ -174,7 +181,7 @@ const MicroAppComponent = ({ app }: MicroAppComponentProps) => {
   }, [app.name, app.entry, microAppProps])
 
   return (
-    <div className="h-full w-full relative">
+    <>
       <div
         ref={containerRef}
         className="h-full w-full"
@@ -186,7 +193,7 @@ const MicroAppComponent = ({ app }: MicroAppComponentProps) => {
           className="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center bg-white rounded-md z-10"
         />
       )}
-    </div>
+    </>
   )
 }
 

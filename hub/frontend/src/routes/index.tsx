@@ -5,7 +5,7 @@ import { routeConfigs } from './routes'
 import { ProtectedRoute } from './ProtectedRoute'
 
 const Login = lazy(() => import('../pages/Login'))
-const AppContainer = lazy(() => import('../pages/MicroAppContainer'))
+const MicroAppContainer = lazy(() => import('../pages/MicroAppContainer'))
 const GlobalLayout = lazy(() => import('../layout/GlobalLayout'))
 const NotFound = lazy(() => import('../pages/ErrorPage/NotFound'))
 const NoAccess = lazy(() => import('../pages/ErrorPage/NoAccess'))
@@ -17,25 +17,15 @@ const NoAccess = lazy(() => import('../pages/ErrorPage/NoAccess'))
 const generateRoutesFromConfig = (): RouteObject[] => {
   return routeConfigs
     .filter((route) => route.element !== null && route.element !== undefined)
-    .map(
-      ({
-        key,
-        label,
-        icon,
-        showInSidebar,
-        showInBreadcrumb,
-        disabled,
-        ...route
-      }) => {
-        const { element, path, handle, children } = route
-        return {
-          path,
-          element,
-          handle,
-          children,
-        } as RouteObject
-      }
-    )
+    .map(({ key, label, icon, showInSidebar, disabled, ...route }) => {
+      const { element, path, handle, children } = route
+      return {
+        path,
+        element,
+        handle,
+        children,
+      } as RouteObject
+    })
 }
 
 /**
@@ -65,10 +55,10 @@ export const router = createBrowserRouter([
       ...generateRoutesFromConfig(),
       // 动态路由（微应用容器）
       {
-        path: 'app/:name/*',
+        path: 'application/:appKey/*',
         element: (
           <ProtectedRoute>
-            <AppContainer />
+            <MicroAppContainer />
           </ProtectedRoute>
         ),
         handle: {
