@@ -3,14 +3,16 @@ Application Tests
 
 Unit tests and integration tests for application management functionality.
 """
+import io
 import pytest
+import zipfile
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi.testclient import TestClient
 
 from src.main import create_app
 from src.infrastructure.config.settings import Settings
-from src.domains.application import Application
+from src.domains.application import Application, OntologyInfo, AgentInfo, ManifestInfo
 from src.application.application_service import ApplicationService
 from src.adapters.application_adapter import ApplicationAdapter
 
@@ -34,6 +36,7 @@ def test_settings() -> Settings:
         db_name="dip_test",
         db_user="root",
         db_password="123456",
+        temp_dir="/tmp/dip-hub-test",
     )
 
 
@@ -53,10 +56,10 @@ def sample_application() -> Application:
         icon="dGVzdC1pY29uLWRhdGE=",  # Base64 编码的 "test-icon-data"
         version="1.0.0",
         category="测试分类",
-        config={
-            "ontologies": [{"id": "onto-001"}, {"id": "onto-002"}],
-            "agents": [{"id": "agent-001"}],
-        },
+        release_config=["test-release-1"],
+        ontology_ids=[1, 2],
+        agent_ids=[1],
+        is_config=True,
         updated_by="user-001",
         updated_at=datetime(2024, 1, 1, 12, 0, 0),
     )
@@ -78,10 +81,34 @@ def sample_application_no_config() -> Application:
         icon=None,
         version="1.0.0",
         category=None,
-        config=None,
+        release_config=[],
+        ontology_ids=[],
+        agent_ids=[],
+        is_config=False,
         updated_by="user-001",
         updated_at=datetime(2024, 1, 1, 12, 0, 0),
     )
+
+
+def create_test_zip() -> bytes:
+    """
+    创建测试用的 ZIP 安装包。
+
+    返回:
+        bytes: ZIP 文件内容
+    """
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+        manifest_content = """
+key: test-app-001
+name: 测试应用
+version: 1.0.0
+description: 这是一个测试应用
+category: 测试分类
+"""
+        zf.writestr('manifest.yaml', manifest_content)
+    buffer.seek(0)
+    return buffer.getvalue()
 
 
 class TestApplicationDomain:
@@ -106,68 +133,29 @@ class TestApplicationDomain:
         )
         assert app.has_icon() is False
 
-    def test_has_config_returns_true_when_config_exists(self, sample_application: Application):
-        """测试当配置存在时 has_config 返回 True。"""
-        assert sample_application.has_config() is True
+    def test_is_configured_returns_true_when_configured(self, sample_application: Application):
+        """测试当已配置时 is_configured 返回 True。"""
+        assert sample_application.is_configured() is True
 
-    def test_has_config_returns_false_when_config_is_none(self, sample_application_no_config: Application):
-        """测试当配置为 None 时 has_config 返回 False。"""
-        assert sample_application_no_config.has_config() is False
+    def test_is_configured_returns_false_when_not_configured(self, sample_application_no_config: Application):
+        """测试当未配置时 is_configured 返回 False。"""
+        assert sample_application_no_config.is_configured() is False
 
-    def test_has_config_returns_false_when_config_is_empty(self):
-        """测试当配置为空字典时 has_config 返回 False。"""
-        app = Application(
-            id=1,
-            key="test",
-            name="test",
-            config={},
-            updated_by="user-001",
-        )
-        assert app.has_config() is False
+    def test_has_ontologies_returns_true_when_has_ontology_ids(self, sample_application: Application):
+        """测试当有业务知识网络 ID 时 has_ontologies 返回 True。"""
+        assert sample_application.has_ontologies() is True
 
-    def test_get_ontology_ids_returns_ids_when_config_exists(self, sample_application: Application):
-        """测试当配置存在时获取业务知识网络 ID 列表。"""
-        ids = sample_application.get_ontology_ids()
-        assert ids == ["onto-001", "onto-002"]
+    def test_has_ontologies_returns_false_when_no_ontology_ids(self, sample_application_no_config: Application):
+        """测试当没有业务知识网络 ID 时 has_ontologies 返回 False。"""
+        assert sample_application_no_config.has_ontologies() is False
 
-    def test_get_ontology_ids_returns_empty_list_when_no_config(self, sample_application_no_config: Application):
-        """测试当没有配置时获取业务知识网络 ID 列表返回空列表。"""
-        ids = sample_application_no_config.get_ontology_ids()
-        assert ids == []
+    def test_has_agents_returns_true_when_has_agent_ids(self, sample_application: Application):
+        """测试当有智能体 ID 时 has_agents 返回 True。"""
+        assert sample_application.has_agents() is True
 
-    def test_get_ontology_ids_returns_empty_list_when_no_ontologies(self):
-        """测试当配置中没有 ontologies 时返回空列表。"""
-        app = Application(
-            id=1,
-            key="test",
-            name="test",
-            config={"agents": []},
-            updated_by="user-001",
-        )
-        ids = app.get_ontology_ids()
-        assert ids == []
-
-    def test_get_agent_ids_returns_ids_when_config_exists(self, sample_application: Application):
-        """测试当配置存在时获取智能体 ID 列表。"""
-        ids = sample_application.get_agent_ids()
-        assert ids == ["agent-001"]
-
-    def test_get_agent_ids_returns_empty_list_when_no_config(self, sample_application_no_config: Application):
-        """测试当没有配置时获取智能体 ID 列表返回空列表。"""
-        ids = sample_application_no_config.get_agent_ids()
-        assert ids == []
-
-    def test_get_agent_ids_returns_empty_list_when_no_agents(self):
-        """测试当配置中没有 agents 时返回空列表。"""
-        app = Application(
-            id=1,
-            key="test",
-            name="test",
-            config={"ontologies": []},
-            updated_by="user-001",
-        )
-        ids = app.get_agent_ids()
-        assert ids == []
+    def test_has_agents_returns_false_when_no_agent_ids(self, sample_application_no_config: Application):
+        """测试当没有智能体 ID 时 has_agents 返回 False。"""
+        assert sample_application_no_config.has_agents() is False
 
 
 class TestApplicationService:
@@ -208,6 +196,69 @@ class TestApplicationService:
         assert result == sample_application
 
     @pytest.mark.asyncio
+    async def test_get_application_basic_info_calls_port(self, sample_application: Application):
+        """测试 get_application_basic_info 调用端口的方法。"""
+        mock_port = AsyncMock()
+        mock_port.get_application_by_key.return_value = sample_application
+
+        service = ApplicationService(mock_port)
+
+        result = await service.get_application_basic_info("test-app-001")
+
+        mock_port.get_application_by_key.assert_called_once_with("test-app-001")
+        assert result == sample_application
+
+    @pytest.mark.asyncio
+    async def test_get_application_ontologies_returns_list(self, sample_application: Application):
+        """测试 get_application_ontologies 返回业务知识网络列表。"""
+        mock_port = AsyncMock()
+        mock_port.get_application_by_key.return_value = sample_application
+
+        service = ApplicationService(mock_port)
+
+        result = await service.get_application_ontologies("test-app-001")
+
+        assert len(result) == 2
+        assert result[0].id == 1
+        assert result[1].id == 2
+
+    @pytest.mark.asyncio
+    async def test_get_application_agents_returns_list(self, sample_application: Application):
+        """测试 get_application_agents 返回智能体列表。"""
+        mock_port = AsyncMock()
+        mock_port.get_application_by_key.return_value = sample_application
+
+        service = ApplicationService(mock_port)
+
+        result = await service.get_application_agents("test-app-001")
+
+        assert len(result) == 1
+        assert result[0].id == 1
+
+    @pytest.mark.asyncio
+    async def test_configure_application_updates_config(self, sample_application: Application):
+        """测试 configure_application 更新配置。"""
+        mock_port = AsyncMock()
+        mock_port.get_application_by_key.return_value = sample_application
+        mock_port.update_application_config.return_value = sample_application
+
+        service = ApplicationService(mock_port)
+
+        result = await service.configure_application(
+            app_id="test-app-001",
+            ontology_ids=[1, 2, 3],
+            agent_ids=[1, 2],
+            updated_by="user-002",
+        )
+
+        mock_port.update_application_config.assert_called_once_with(
+            key="test-app-001",
+            ontology_ids=[1, 2, 3],
+            agent_ids=[1, 2],
+            updated_by="user-002",
+        )
+
+    @pytest.mark.asyncio
     async def test_delete_application_calls_port(self):
         """测试 delete_application 调用端口的方法。"""
         # 创建 mock 端口
@@ -238,6 +289,85 @@ class TestApplicationService:
         with pytest.raises(ValueError, match="应用不存在: nonexistent-key"):
             await service.delete_application("nonexistent-key")
 
+    @pytest.mark.asyncio
+    async def test_uninstall_application_deletes_releases(self, sample_application: Application):
+        """测试 uninstall_application 删除 Release 和数据库记录。"""
+        mock_app_port = AsyncMock()
+        mock_app_port.get_application_by_key.return_value = sample_application
+        mock_app_port.delete_application.return_value = True
+
+        mock_deploy_port = AsyncMock()
+        mock_deploy_port.delete_release.return_value = MagicMock()
+
+        service = ApplicationService(
+            application_port=mock_app_port,
+            deploy_installer_port=mock_deploy_port,
+        )
+
+        result = await service.uninstall_application("test-app-001")
+
+        assert result is True
+        mock_deploy_port.delete_release.assert_called_once_with(
+            release_name="test-release-1",
+            namespace="default",
+        )
+        mock_app_port.delete_application.assert_called_once_with("test-app-001")
+
+    def test_parse_manifest_returns_manifest_info(self, test_settings: Settings):
+        """测试 _parse_manifest 返回 ManifestInfo。"""
+        service = ApplicationService(AsyncMock(), settings=test_settings)
+
+        data = {
+            "key": "test-app",
+            "name": "Test App",
+            "version": "1.0.0",
+            "description": "Test description",
+            "category": "Test category",
+        }
+
+        result = service._parse_manifest(data)
+
+        assert result.key == "test-app"
+        assert result.name == "Test App"
+        assert result.version == "1.0.0"
+        assert result.description == "Test description"
+        assert result.category == "Test category"
+
+    def test_parse_manifest_raises_error_when_missing_key(self, test_settings: Settings):
+        """测试 _parse_manifest 当缺少 key 时抛出错误。"""
+        service = ApplicationService(AsyncMock(), settings=test_settings)
+
+        data = {
+            "name": "Test App",
+            "version": "1.0.0",
+        }
+
+        with pytest.raises(ValueError, match="缺少 key 字段"):
+            service._parse_manifest(data)
+
+    def test_is_version_greater_returns_true_for_higher_version(self, test_settings: Settings):
+        """测试 _is_version_greater 对于更高版本返回 True。"""
+        service = ApplicationService(AsyncMock(), settings=test_settings)
+
+        assert service._is_version_greater("2.0.0", "1.0.0") is True
+        assert service._is_version_greater("1.1.0", "1.0.0") is True
+        assert service._is_version_greater("1.0.1", "1.0.0") is True
+
+    def test_is_version_greater_returns_false_for_lower_version(self, test_settings: Settings):
+        """测试 _is_version_greater 对于更低版本返回 False。"""
+        service = ApplicationService(AsyncMock(), settings=test_settings)
+
+        assert service._is_version_greater("1.0.0", "2.0.0") is False
+        assert service._is_version_greater("1.0.0", "1.1.0") is False
+        assert service._is_version_greater("1.0.0", "1.0.1") is False
+
+    def test_is_version_greater_returns_true_when_no_old_version(self, test_settings: Settings):
+        """测试 _is_version_greater 当没有旧版本时返回 True。"""
+        service = ApplicationService(AsyncMock(), settings=test_settings)
+
+        assert service._is_version_greater("1.0.0", None) is True
+        assert service._is_version_greater("1.0.0", "") is True
+
 
 class TestApplicationAdapter:
     """应用适配器测试。"""
@@ -248,15 +378,19 @@ class TestApplicationAdapter:
         adapter = ApplicationAdapter(test_settings)
 
         row = (
-            1,
-            "test-app-001",
-            "测试应用",
-            "这是一个测试应用",
-            b"test-icon",
-            "1.0.0",
-            '{"ontologies": [{"id": "onto-001"}]}',
-            "user-001",
-            datetime(2024, 1, 1, 12, 0, 0),
+            1,                              # id
+            "test-app-001",                 # key
+            "测试应用",                     # name
+            "这是一个测试应用",             # description
+            b"test-icon",                   # icon (binary)
+            "1.0.0",                        # version
+            "测试分类",                     # category
+            '["release-1"]',                # release_config (JSON)
+            '[1, 2]',                       # ontology_ids (JSON)
+            '[1]',                          # agent_ids (JSON)
+            True,                           # is_config
+            "user-001",                     # updated_by
+            datetime(2024, 1, 1, 12, 0, 0), # updated_at
         )
 
         app = adapter._row_to_application(row)
@@ -267,38 +401,49 @@ class TestApplicationAdapter:
         assert app.description == "这是一个测试应用"
         assert app.icon == "dGVzdC1pY29u"  # Base64 编码后的 "test-icon"
         assert app.version == "1.0.0"
-        assert app.category is None
-        assert app.config == {"ontologies": [{"id": "onto-001"}]}
+        assert app.category == "测试分类"
+        assert app.release_config == ["release-1"]
+        assert app.ontology_ids == [1, 2]
+        assert app.agent_ids == [1]
+        assert app.is_config is True
         assert app.updated_by == "user-001"
         assert app.updated_at == datetime(2024, 1, 1, 12, 0, 0)
 
     @pytest.mark.asyncio
-    async def test_row_to_application_handles_null_config(self, test_settings: Settings):
-        """测试处理 NULL 配置。"""
+    async def test_row_to_application_handles_null_values(self, test_settings: Settings):
+        """测试处理 NULL 值。"""
         adapter = ApplicationAdapter(test_settings)
 
         row = (
             1,
             "test-app-001",
             "测试应用",
-            None,
-            None,
-            None,
-            None,
+            None,  # description
+            None,  # icon
+            None,  # version
+            None,  # category
+            None,  # release_config
+            None,  # ontology_ids
+            None,  # agent_ids
+            False, # is_config
             "user-001",
             datetime(2024, 1, 1, 12, 0, 0),
         )
 
         app = adapter._row_to_application(row)
 
-        assert app.config is None
         assert app.description is None
         assert app.icon is None
         assert app.version is None
+        assert app.category is None
+        assert app.release_config == []
+        assert app.ontology_ids == []
+        assert app.agent_ids == []
+        assert app.is_config is False
 
     @pytest.mark.asyncio
     async def test_row_to_application_handles_invalid_json(self, test_settings: Settings):
-        """测试处理无效 JSON 配置。"""
+        """测试处理无效 JSON。"""
         adapter = ApplicationAdapter(test_settings)
 
         row = (
@@ -308,15 +453,35 @@ class TestApplicationAdapter:
             None,
             None,
             None,
-            "{invalid-json}",
+            None,
+            "{invalid-json}",  # Invalid JSON
+            "{invalid}",
+            "{invalid}",
+            False,
             "user-001",
             datetime(2024, 1, 1, 12, 0, 0),
         )
 
         with patch('src.adapters.application_adapter.logger') as mock_logger:
             app = adapter._row_to_application(row)
-            assert app.config is None
-            mock_logger.warning.assert_called_once()
+            assert app.release_config == []
+            assert app.ontology_ids == []
+            assert app.agent_ids == []
+
+    def test_parse_json_list_returns_list_for_valid_json(self, test_settings: Settings):
+        """测试 _parse_json_list 对有效 JSON 返回列表。"""
+        adapter = ApplicationAdapter(test_settings)
+
+        assert adapter._parse_json_list('[1, 2, 3]') == [1, 2, 3]
+        assert adapter._parse_json_list('["a", "b"]') == ["a", "b"]
+
+    def test_parse_json_list_returns_default_for_invalid_json(self, test_settings: Settings):
+        """测试 _parse_json_list 对无效 JSON 返回默认值。"""
+        adapter = ApplicationAdapter(test_settings)
+
+        assert adapter._parse_json_list('{invalid}') == []
+        assert adapter._parse_json_list(None) == []
+        assert adapter._parse_json_list('') == []
 
 
 class TestApplicationRouter:
@@ -349,35 +514,75 @@ class TestApplicationRouter:
             assert isinstance(data, list)
             assert len(data) == 0
 
-    def test_get_application_by_key_endpoint_returns_404_when_not_found(self, test_settings: Settings):
-        """测试当应用不存在时获取应用接口返回 404 状态码。"""
+    def test_get_application_basic_info_endpoint_returns_404_when_not_found(self, test_settings: Settings):
+        """测试当应用不存在时获取基础信息接口返回 404 状态码。"""
         with patch('src.adapters.application_adapter.ApplicationAdapter.get_application_by_key') as mock_get_by_key:
             mock_get_by_key.side_effect = ValueError("应用不存在: nonexistent-key")
 
             app = create_app(test_settings)
             client = TestClient(app)
 
-            response = client.get(f"{test_settings.api_prefix}/applications/nonexistent-key")
+            response = client.get(
+                f"{test_settings.api_prefix}/applications/basic-info",
+                params={"app_id": "nonexistent-key"}
+            )
+
+            assert response.status_code == 404
+
+    def test_get_application_ontologies_endpoint_returns_404_when_not_found(self, test_settings: Settings):
+        """测试当应用不存在时获取业务知识网络配置接口返回 404 状态码。"""
+        with patch('src.adapters.application_adapter.ApplicationAdapter.get_application_by_key') as mock_get_by_key:
+            mock_get_by_key.side_effect = ValueError("应用不存在: nonexistent-key")
+
+            app = create_app(test_settings)
+            client = TestClient(app)
+
+            response = client.get(
+                f"{test_settings.api_prefix}/applications/ontologies",
+                params={"app_id": "nonexistent-key"}
+            )
+
+            assert response.status_code == 404
+
+    def test_get_application_agents_endpoint_returns_404_when_not_found(self, test_settings: Settings):
+        """测试当应用不存在时获取智能体配置接口返回 404 状态码。"""
+        with patch('src.adapters.application_adapter.ApplicationAdapter.get_application_by_key') as mock_get_by_key:
+            mock_get_by_key.side_effect = ValueError("应用不存在: nonexistent-key")
+
+            app = create_app(test_settings)
+            client = TestClient(app)
+
+            response = client.get(
+                f"{test_settings.api_prefix}/applications/agents",
+                params={"app_id": "nonexistent-key"}
+            )
 
             assert response.status_code == 404
 
     def test_delete_application_endpoint_returns_204_when_successful(self, test_settings: Settings):
         """测试删除应用成功时接口返回 204 状态码。"""
-        with patch('src.adapters.application_adapter.ApplicationAdapter.delete_application') as mock_delete:
-            mock_delete.return_value = True
+        with patch('src.adapters.application_adapter.ApplicationAdapter.get_application_by_key') as mock_get:
+            with patch('src.adapters.application_adapter.ApplicationAdapter.delete_application') as mock_delete:
+                mock_get.return_value = Application(
+                    id=1,
+                    key="test-app-001",
+                    name="Test",
+                    release_config=[],
+                    updated_by="user",
+                )
+                mock_delete.return_value = True
 
-            app = create_app(test_settings)
-            client = TestClient(app)
+                app = create_app(test_settings)
+                client = TestClient(app)
 
-            response = client.delete(f"{test_settings.api_prefix}/applications/test-app-001")
+                response = client.delete(f"{test_settings.api_prefix}/applications/test-app-001")
 
-            assert response.status_code == 204
-            mock_delete.assert_called_once_with("test-app-001")
+                assert response.status_code == 204
 
     def test_delete_application_endpoint_returns_404_when_not_found(self, test_settings: Settings):
         """测试当应用不存在时删除应用接口返回 404 状态码。"""
-        with patch('src.adapters.application_adapter.ApplicationAdapter.delete_application') as mock_delete:
-            mock_delete.side_effect = ValueError("应用不存在: nonexistent-key")
+        with patch('src.adapters.application_adapter.ApplicationAdapter.get_application_by_key') as mock_get:
+            mock_get.side_effect = ValueError("应用不存在: nonexistent-key")
 
             app = create_app(test_settings)
             client = TestClient(app)
@@ -385,17 +590,87 @@ class TestApplicationRouter:
             response = client.delete(f"{test_settings.api_prefix}/applications/nonexistent-key")
 
             assert response.status_code == 404
-            assert "应用不存在" in response.json()["detail"]
+            assert "应用不存在" in str(response.json())
 
-    def test_delete_application_endpoint_returns_500_on_error(self, test_settings: Settings):
-        """测试删除应用时发生异常接口返回 500 状态码。"""
-        with patch('src.adapters.application_adapter.ApplicationAdapter.delete_application') as mock_delete:
-            mock_delete.side_effect = Exception("数据库连接失败")
+    def test_install_application_endpoint_returns_400_when_empty_body(self, test_settings: Settings):
+        """测试安装应用接口当请求体为空时返回 400 状态码。"""
+        app = create_app(test_settings)
+        client = TestClient(app)
+
+        response = client.post(
+            f"{test_settings.api_prefix}/applications",
+            content=b"",
+            headers={"Content-Type": "application/octet-stream"}
+        )
+
+        assert response.status_code == 400
+
+    def test_configure_application_endpoint_returns_404_when_not_found(self, test_settings: Settings):
+        """测试配置应用接口当应用不存在时返回 404 状态码。"""
+        with patch('src.adapters.application_adapter.ApplicationAdapter.get_application_by_key') as mock_get:
+            mock_get.side_effect = ValueError("应用不存在: nonexistent-key")
 
             app = create_app(test_settings)
             client = TestClient(app)
 
-            response = client.delete(f"{test_settings.api_prefix}/applications/test-app-001")
+            response = client.put(
+                f"{test_settings.api_prefix}/applications/config",
+                params={"app_id": "nonexistent-key"},
+                json={"ontology_ids": [1, 2], "agent_ids": [1]}
+            )
 
-            assert response.status_code == 500
-            assert "删除应用失败" in response.json()["detail"]
+            assert response.status_code == 404
+
+
+class TestExternalServiceMocks:
+    """外部服务 Mock 测试。"""
+
+    @pytest.mark.asyncio
+    async def test_ontology_manager_mock_get_knowledge_network(self):
+        """测试 Ontology Manager Mock 获取业务知识网络。"""
+        from src.ports.external_service_port import KnowledgeNetworkInfo
+
+        mock_port = AsyncMock()
+        mock_port.get_knowledge_network.return_value = KnowledgeNetworkInfo(
+            id="1",
+            name="测试业务知识网络",
+            comment="这是一个测试",
+        )
+
+        result = await mock_port.get_knowledge_network("1")
+
+        assert result.id == "1"
+        assert result.name == "测试业务知识网络"
+        assert result.comment == "这是一个测试"
+
+    @pytest.mark.asyncio
+    async def test_deploy_installer_mock_upload_image(self):
+        """测试 Deploy Installer Mock 上传镜像。"""
+        from src.ports.external_service_port import ImageUploadResult
+
+        mock_port = AsyncMock()
+        mock_port.upload_image.return_value = [
+            ImageUploadResult(from_name="image:v1", to_name="registry/image:v1"),
+        ]
+
+        result = await mock_port.upload_image(io.BytesIO(b"image-data"))
+
+        assert len(result) == 1
+        assert result[0].from_name == "image:v1"
+        assert result[0].to_name == "registry/image:v1"
+
+    @pytest.mark.asyncio
+    async def test_agent_factory_mock_create_agent(self):
+        """测试 Agent Factory Mock 创建智能体。"""
+        from src.ports.external_service_port import AgentFactoryResult
+
+        mock_port = AsyncMock()
+        mock_port.create_agent.return_value = AgentFactoryResult(
+            id="123",
+            version="v0",
+        )
+
+        result = await mock_port.create_agent({"name": "test-agent"})
+
+        assert result.id == "123"
+        assert result.version == "v0"

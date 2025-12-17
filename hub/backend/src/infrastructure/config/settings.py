@@ -67,6 +67,12 @@ class Settings(BaseSettings):
     adp_url: str = Field(default="http://localhost:8081", description="ADP 服务地址")
     adp_timeout: int = Field(default=60, description="ADP 请求超时时间（秒）")
 
+    # Mock 模式配置
+    use_mock_services: bool = Field(
+        default=False, 
+        description="是否使用 Mock 外部服务（用于本地开发调试）"
+    )
+
 
 @lru_cache
 def get_settings() -> Settings:

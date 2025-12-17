@@ -65,25 +65,40 @@ class ApplicationAdapter(ApplicationPort):
             await self._pool.wait_closed()
             logger.info("数据库连接池已关闭")
 
+    def _parse_json_list(self, json_str: Optional[str], default: list = None) -> list:
+        """
+        解析 JSON 字符串为列表。
+
+        参数:
+            json_str: JSON 字符串
+            default: 默认值
+
+        返回:
+            list: 解析后的列表
+        """
+        if default is None:
+            default = []
+        if not json_str:
+            return default
+        try:
+            result = json.loads(json_str)
+            return result if isinstance(result, list) else default
+        except json.JSONDecodeError:
+            logger.warning(f"JSON 解析失败: {json_str}")
+            return default
+
     def _row_to_application(self, row: tuple) -> Application:
         """
         将数据库行转换为应用领域模型。
 
         参数:
             row: 数据库查询结果行
+                (id, key, name, description, icon, version, category, 
+                 release_config, ontology_ids, agent_ids, is_config, updated_by, updated_at)
 
         返回:
             Application: 应用领域模型
         """
-        config_str = row[6]
-        config = None
-        if config_str:
-            try:
-                config = json.loads(config_str)
-            except json.JSONDecodeError:
-                logger.warning(f"应用配置 JSON 解析失败: {config_str}")
-                config = None
-
         # 将二进制图标转换为 Base64 字符串
         icon_base64 = None
         if row[4]:
@@ -93,6 +108,11 @@ class ApplicationAdapter(ApplicationPort):
                 logger.warning(f"应用图标 Base64 编码失败: {e}")
                 icon_base64 = None
 
+        # 解析 JSON 字段
+        release_config = self._parse_json_list(row[7])
+        ontology_ids = self._parse_json_list(row[8])
+        agent_ids = self._parse_json_list(row[9])
+
         return Application(
             id=row[0],
             key=row[1],
@@ -100,10 +120,13 @@ class ApplicationAdapter(ApplicationPort):
             description=row[3],
             icon=icon_base64,
             version=row[5],
-            category=None,  # 数据库中暂无此字段
-            config=config,
-            updated_by=row[7],
-            updated_at=row[8],
+            category=row[6],
+            release_config=release_config,
+            ontology_ids=ontology_ids,
+            agent_ids=agent_ids,
+            is_config=bool(row[10]) if row[10] is not None else False,
+            updated_by=row[11] or "",
+            updated_at=row[12],
         )
 
     async def get_all_applications(self) -> List[Application]:
@@ -117,9 +140,11 @@ class ApplicationAdapter(ApplicationPort):
         async with pool.acquire() as conn:
             async with conn.cursor() as cursor:
                 await cursor.execute(
-                    "SELECT id, `key`, name, description, icon, version, config, updated_by, updated_at "
-                    "FROM t_application "
-                    "ORDER BY updated_at DESC"
+                    """SELECT id, `key`, name, description, icon, version, category,
+                              release_config, ontology_ids, agent_ids, is_config, 
+                              updated_by, updated_at 
+                       FROM t_application 
+                       ORDER BY updated_at DESC"""
                 )
                 rows = await cursor.fetchall()
                 return [self._row_to_application(row) for row in rows]
@@ -141,14 +166,42 @@ class ApplicationAdapter(ApplicationPort):
         async with pool.acquire() as conn:
             async with conn.cursor() as cursor:
                 await cursor.execute(
-                    "SELECT id, `key`, name, description, icon, version, config, updated_by, updated_at "
-                    "FROM t_application "
-                    "WHERE `key` = %s",
+                    """SELECT id, `key`, name, description, icon, version, category,
+                              release_config, ontology_ids, agent_ids, is_config,
+                              updated_by, updated_at 
+                       FROM t_application 
+                       WHERE `key` = %s""",
                     (key,)
                 )
                 row = await cursor.fetchone()
                 if row is None:
                     raise ValueError(f"应用不存在: {key}")
+                return self._row_to_application(row)
+
+    async def get_application_by_key_optional(self, key: str) -> Optional[Application]:
+        """
+        根据应用唯一标识获取应用信息（可选）。
+
+        参数:
+            key: 应用包唯一标识
+
+        返回:
+            Optional[Application]: 应用实体，不存在时返回 None
+        """
+        pool = await self._get_pool()
+        async with pool.acquire() as conn:
+            async with conn.cursor() as cursor:
+                await cursor.execute(
+                    """SELECT id, `key`, name, description, icon, version, category,
+                              release_config, ontology_ids, agent_ids, is_config,
+                              updated_by, updated_at 
+                       FROM t_application 
+                       WHERE `key` = %s""",
+                    (key,)
+                )
+                row = await cursor.fetchone()
+                if row is None:
+                    return None
                 return self._row_to_application(row)
 
     async def create_application(self, application: Application) -> Application:
@@ -185,18 +238,29 @@ class ApplicationAdapter(ApplicationPort):
                         logger.warning(f"应用图标 Base64 解码失败: {e}")
                         icon_binary = None
 
+                # 序列化 JSON 字段
+                release_config_json = json.dumps(application.release_config) if application.release_config else "[]"
+                ontology_ids_json = json.dumps(application.ontology_ids) if application.ontology_ids else "[]"
+                agent_ids_json = json.dumps(application.agent_ids) if application.agent_ids else "[]"
+
                 # 插入新应用
-                config_json = json.dumps(application.config) if application.config else None
                 await cursor.execute(
-                    "INSERT INTO t_application (`key`, name, description, icon, version, config, updated_by, updated_at) "
-                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                    """INSERT INTO t_application 
+                       (`key`, name, description, icon, version, category,
+                        release_config, ontology_ids, agent_ids, is_config,
+                        updated_by, updated_at) 
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                     (
                         application.key,
                         application.name,
                         application.description,
                         icon_binary,
                         application.version,
-                        config_json,
+                        application.category,
+                        release_config_json,
+                        ontology_ids_json,
+                        agent_ids_json,
+                        application.is_config,
                         application.updated_by,
                         application.updated_at or datetime.now(),
                     )
@@ -231,17 +295,27 @@ class ApplicationAdapter(ApplicationPort):
                         logger.warning(f"应用图标 Base64 解码失败: {e}")
                         icon_binary = None
 
-                config_json = json.dumps(application.config) if application.config else None
+                # 序列化 JSON 字段
+                release_config_json = json.dumps(application.release_config) if application.release_config else "[]"
+                ontology_ids_json = json.dumps(application.ontology_ids) if application.ontology_ids else "[]"
+                agent_ids_json = json.dumps(application.agent_ids) if application.agent_ids else "[]"
+
                 await cursor.execute(
-                    "UPDATE t_application "
-                    "SET name = %s, description = %s, icon = %s, version = %s, config = %s, updated_by = %s, updated_at = %s "
-                    "WHERE `key` = %s",
+                    """UPDATE t_application 
+                       SET name = %s, description = %s, icon = %s, version = %s, category = %s,
+                           release_config = %s, ontology_ids = %s, agent_ids = %s, is_config = %s,
+                           updated_by = %s, updated_at = %s 
+                       WHERE `key` = %s""",
                     (
                         application.name,
                         application.description,
                         icon_binary,
                         application.version,
-                        config_json,
+                        application.category,
+                        release_config_json,
+                        ontology_ids_json,
+                        agent_ids_json,
+                        application.is_config,
                         application.updated_by,
                         application.updated_at or datetime.now(),
                         application.key,
@@ -252,6 +326,56 @@ class ApplicationAdapter(ApplicationPort):
                     raise ValueError(f"应用不存在: {application.key}")
 
                 return application
+
+    async def update_application_config(
+        self,
+        key: str,
+        ontology_ids: List[int],
+        agent_ids: List[int],
+        updated_by: str
+    ) -> Application:
+        """
+        更新应用配置（业务知识网络和智能体）。
+
+        参数:
+            key: 应用唯一标识
+            ontology_ids: 业务知识网络 ID 列表
+            agent_ids: 智能体 ID 列表
+            updated_by: 更新者用户 ID
+
+        返回:
+            Application: 更新后的应用实体
+
+        异常:
+            ValueError: 当应用不存在时抛出
+        """
+        pool = await self._get_pool()
+        async with pool.acquire() as conn:
+            async with conn.cursor() as cursor:
+                ontology_ids_json = json.dumps(ontology_ids)
+                agent_ids_json = json.dumps(agent_ids)
+                is_config = True  # 配置后标记为已配置
+
+                await cursor.execute(
+                    """UPDATE t_application 
+                       SET ontology_ids = %s, agent_ids = %s, is_config = %s,
+                           updated_by = %s, updated_at = %s 
+                       WHERE `key` = %s""",
+                    (
+                        ontology_ids_json,
+                        agent_ids_json,
+                        is_config,
+                        updated_by,
+                        datetime.now(),
+                        key,
+                    )
+                )
+
+                if cursor.rowcount == 0:
+                    raise ValueError(f"应用不存在: {key}")
+
+                # 返回更新后的应用
+                return await self.get_application_by_key(key)
 
     async def delete_application(self, key: str) -> bool:
         """

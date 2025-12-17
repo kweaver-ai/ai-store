@@ -9,10 +9,21 @@ python-dotenv>=1.0.0
 aiomysql>=0.2.0
 pymysql>=1.1.0
 
+# HTTP client
+httpx>=0.25.0
+
+# YAML parsing
+pyyaml>=6.0.0
+
+# Version parsing
+packaging>=23.0
+
 # Development dependencies
 pytest>=7.4.0
 pytest-cov>=4.1.0
-httpx>=0.25.0
+pytest-asyncio>=0.21.0
 black>=23.0.0
 ruff>=0.1.0
 mypy>=1.5.0
+
+

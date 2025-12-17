@@ -4,11 +4,26 @@
 按照六边形架构组装和连接所有依赖。
 在这里实例化适配器并注入到应用服务中。
 """
+import logging
+
 from src.application.health_service import HealthService
 from src.application.application_service import ApplicationService
 from src.adapters.health_adapter import HealthAdapter
 from src.adapters.application_adapter import ApplicationAdapter
+from src.adapters.external_service_adapter import (
+    DeployInstallerAdapter,
+    OntologyManagerAdapter,
+    AgentFactoryAdapter,
+)
+from src.adapters.mock_external_service_adapter import (
+    MockDeployInstallerAdapter,
+    MockOntologyManagerAdapter,
+    MockAgentFactoryAdapter,
+)
+from src.adapters.mock_application_adapter import MockApplicationAdapter
 from src.infrastructure.config.settings import Settings, get_settings
+
+logger = logging.getLogger(__name__)
 
 
 class Container:
@@ -30,6 +45,9 @@ class Container:
         self._health_service = None
         self._application_adapter = None
         self._application_service = None
+        self._deploy_installer_adapter = None
+        self._ontology_manager_adapter = None
+        self._agent_factory_adapter = None
     
     @property
     def settings(self) -> Settings:
@@ -51,17 +69,60 @@ class Container:
         return self._health_service
 
     @property
-    def application_adapter(self) -> ApplicationAdapter:
+    def application_adapter(self):
         """获取应用适配器实例（单例）。"""
         if self._application_adapter is None:
-            self._application_adapter = ApplicationAdapter(self._settings)
+            if self._settings.use_mock_services:
+                logger.info("使用 Mock 应用适配器（内存存储）")
+                self._application_adapter = MockApplicationAdapter()
+            else:
+                self._application_adapter = ApplicationAdapter(self._settings)
         return self._application_adapter
+
+    @property
+    def deploy_installer_adapter(self):
+        """获取 Deploy Installer 适配器实例（单例）。"""
+        if self._deploy_installer_adapter is None:
+            if self._settings.use_mock_services:
+                logger.info("使用 Mock Deploy Installer 适配器")
+                self._deploy_installer_adapter = MockDeployInstallerAdapter()
+            else:
+                self._deploy_installer_adapter = DeployInstallerAdapter(self._settings)
+        return self._deploy_installer_adapter
+
+    @property
+    def ontology_manager_adapter(self):
+        """获取 Ontology Manager 适配器实例（单例）。"""
+        if self._ontology_manager_adapter is None:
+            if self._settings.use_mock_services:
+                logger.info("使用 Mock Ontology Manager 适配器")
+                self._ontology_manager_adapter = MockOntologyManagerAdapter()
+            else:
+                self._ontology_manager_adapter = OntologyManagerAdapter(self._settings)
+        return self._ontology_manager_adapter
+
+    @property
+    def agent_factory_adapter(self):
+        """获取 Agent Factory 适配器实例（单例）。"""
+        if self._agent_factory_adapter is None:
+            if self._settings.use_mock_services:
+                logger.info("使用 Mock Agent Factory 适配器")
+                self._agent_factory_adapter = MockAgentFactoryAdapter()
+            else:
+                self._agent_factory_adapter = AgentFactoryAdapter(self._settings)
+        return self._agent_factory_adapter
 
     @property
     def application_service(self) -> ApplicationService:
         """获取应用服务实例（单例）。"""
         if self._application_service is None:
-            self._application_service = ApplicationService(self.application_adapter)
+            self._application_service = ApplicationService(
+                application_port=self.application_adapter,
+                deploy_installer_port=self.deploy_installer_adapter,
+                ontology_manager_port=self.ontology_manager_adapter,
+                agent_factory_port=self.agent_factory_adapter,
+                settings=self._settings,
+            )
         return self._application_service
 
     def set_ready(self, ready: bool = True) -> None:

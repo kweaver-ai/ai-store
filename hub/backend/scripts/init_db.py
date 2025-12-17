@@ -17,6 +17,7 @@ DB_USER = os.getenv('DIP_HUB_DB_USER', 'root')
 DB_PASSWORD = os.getenv('DIP_HUB_DB_PASSWORD', '123456')
 DB_NAME = os.getenv('DIP_HUB_DB_NAME', 'dip')
 
+
 def init_database():
     """初始化数据库和表。"""
     # 首先连接到 MySQL（不指定数据库）
@@ -72,21 +73,27 @@ def init_database():
             """)
             print("✓ 表 't_user_role' 已创建")
 
-            # 创建应用表
+            # 创建应用表（包含所有新字段）
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS `t_application` (
                     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
                     `key` CHAR(32) NOT NULL COMMENT '应用包唯一标识',
                     `name` VARCHAR(128) NOT NULL COMMENT '应用名称',
                     `description` VARCHAR(800) NULL COMMENT '应用描述',
-                    `icon` BLOB NULL COMMENT '应用图标',
+                    `icon` BLOB NULL COMMENT '应用图标（二进制数据）',
                     `version` VARCHAR(128) NULL COMMENT '当前上传的版本号',
-                    `config` TEXT NULL COMMENT '应用配置',
+                    `category` VARCHAR(128) NULL COMMENT '应用所属分组',
+                    `release_config` TEXT NULL COMMENT '应用安装配置（JSON数组，helm release名称列表）',
+                    `ontology_ids` TEXT NULL COMMENT '业务知识网络ID列表（JSON数组）',
+                    `agent_ids` TEXT NULL COMMENT '智能体ID列表（JSON数组）',
+                    `is_config` BOOLEAN NOT NULL DEFAULT FALSE COMMENT '是否完成配置',
                     `updated_by` CHAR(36) NOT NULL COMMENT '更新者ID',
                     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
                     PRIMARY KEY (`id`),
                     UNIQUE INDEX `idx_key` (`key`),
-                    INDEX `idx_updated_by` (`updated_by`)
+                    INDEX `idx_updated_by` (`updated_by`),
+                    INDEX `idx_updated_at` (`updated_at`),
+                    INDEX `idx_category` (`category`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='应用表'
             """)
             print("✓ 表 't_application' 已创建")
@@ -101,10 +108,88 @@ def init_database():
     finally:
         connection.close()
 
+
+def migrate_database():
+    """迁移数据库（添加新字段到现有表）。"""
+    connection = pymysql.connect(
+        host=DB_HOST,
+        port=DB_PORT,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        db=DB_NAME,
+        charset='utf8mb4',
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
+    try:
+        with connection.cursor() as cursor:
+            # 检查并添加新字段
+            migrations = [
+                ("category", "ALTER TABLE `t_application` ADD COLUMN `category` VARCHAR(128) NULL COMMENT '应用所属分组' AFTER `version`"),
+                ("release_config", "ALTER TABLE `t_application` ADD COLUMN `release_config` TEXT NULL COMMENT '应用安装配置（JSON数组，helm release名称列表）' AFTER `category`"),
+                ("ontology_ids", "ALTER TABLE `t_application` ADD COLUMN `ontology_ids` TEXT NULL COMMENT '业务知识网络ID列表（JSON数组）' AFTER `release_config`"),
+                ("agent_ids", "ALTER TABLE `t_application` ADD COLUMN `agent_ids` TEXT NULL COMMENT '智能体ID列表（JSON数组）' AFTER `ontology_ids`"),
+                ("is_config", "ALTER TABLE `t_application` ADD COLUMN `is_config` BOOLEAN NOT NULL DEFAULT FALSE COMMENT '是否完成配置' AFTER `agent_ids`"),
+            ]
+
+            for column_name, sql in migrations:
+                try:
+                    # 检查列是否存在
+                    cursor.execute(f"""
+                        SELECT COUNT(*) as cnt FROM INFORMATION_SCHEMA.COLUMNS 
+                        WHERE TABLE_SCHEMA = '{DB_NAME}' 
+                        AND TABLE_NAME = 't_application' 
+                        AND COLUMN_NAME = '{column_name}'
+                    """)
+                    result = cursor.fetchone()
+                    
+                    if result['cnt'] == 0:
+                        cursor.execute(sql)
+                        print(f"✓ 已添加列 '{column_name}'")
+                    else:
+                        print(f"○ 列 '{column_name}' 已存在，跳过")
+                except Exception as e:
+                    print(f"✗ 添加列 '{column_name}' 失败: {e}")
+
+            # 删除旧的 config 字段（如果存在且迁移完成）
+            try:
+                cursor.execute(f"""
+                    SELECT COUNT(*) as cnt FROM INFORMATION_SCHEMA.COLUMNS 
+                    WHERE TABLE_SCHEMA = '{DB_NAME}' 
+                    AND TABLE_NAME = 't_application' 
+                    AND COLUMN_NAME = 'config'
+                """)
+                result = cursor.fetchone()
+                
+                if result['cnt'] > 0:
+                    print("○ 旧 'config' 列仍存在，可在确认迁移成功后手动删除")
+            except Exception:
+                pass
+
+        connection.commit()
+        print("\n✓ 数据库迁移完成！")
+
+    except Exception as e:
+        print(f"\n✗ 数据库迁移失败: {e}")
+        connection.rollback()
+        raise
+    finally:
+        connection.close()
+
+
 if __name__ == '__main__':
-    print("开始初始化数据库...")
+    import sys
+    
+    print("DIP Hub 数据库初始化/迁移脚本")
     print(f"数据库主机: {DB_HOST}:{DB_PORT}")
     print(f"数据库名称: {DB_NAME}")
     print(f"数据库用户: {DB_USER}")
     print("-" * 50)
-    init_database()
+    
+    if len(sys.argv) > 1 and sys.argv[1] == 'migrate':
+        print("执行数据库迁移...")
+        migrate_database()
+    else:
+        print("执行数据库初始化...")
+        init_database()
+        print("\n提示: 如需迁移现有数据库，请运行: python init_db.py migrate")
