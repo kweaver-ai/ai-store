@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Layout } from 'antd'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useAuthStore, useMicroAppStore } from '@/stores'
+import { useMicroAppStore } from '@/stores'
 import {
   onMicroAppGlobalStateChange,
   setMicroAppGlobalState,
@@ -24,7 +24,7 @@ const { Header: AntHeader } = Layout
 const MicroAppHeader = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { userInfo } = useAuthStore()
+
   const { currentMicroApp } = useMicroAppStore()
 
   const [microAppBreadcrumb, setMicroAppBreadcrumb] = useState<
@@ -149,7 +149,7 @@ const MicroAppHeader = () => {
       {/* 右侧：Copilot 按钮和用户信息 */}
       <div className="flex items-center gap-x-4">
         {isMicroAppRoute && <CopilotButton onClick={handleCopilotClick} />}
-        <UserInfo username={userInfo?.username || userInfo?.name || 'Admin'} />
+        <UserInfo />
       </div>
     </AntHeader>
   )

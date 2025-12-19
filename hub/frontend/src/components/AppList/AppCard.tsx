@@ -2,16 +2,16 @@ import React, { useMemo, useState } from 'react'
 import { Card, Dropdown, Avatar, Button } from 'antd'
 import type { MenuProps } from 'antd'
 import { formatTimeMinute } from '@/utils/handle-function/FormatTime'
-import type { Application } from '@/apis/dip-hub'
+import type { ApplicationInfo } from '@/apis/dip-hub'
 import { ModeEnum } from './types'
 import { cardHeight, getAppCardMenuItems } from './utils'
 import IconFont from '../IconFont'
 import classNames from 'classnames'
 
 interface AppCardProps {
-  app: Application
+  app: ApplicationInfo
   mode: ModeEnum.MyApp | ModeEnum.AppStore
-  onMenuClick?: (key: string, app: Application) => void
+  onMenuClick?: (key: string, app: ApplicationInfo) => void
 }
 
 const AppCard: React.FC<AppCardProps> = ({ app, mode, onMenuClick }) => {
@@ -91,7 +91,10 @@ const AppCard: React.FC<AppCardProps> = ({ app, mode, onMenuClick }) => {
                 {app.version}
               </div>
             )}
-            <p className="text-xs line-clamp-2" title={app.description}>
+            <p
+              className="text-xs line-clamp-2 text-[--dip-text-color]"
+              title={app.description}
+            >
               {app.description || '[暂无描述]'}
             </p>
           </div>

@@ -39,18 +39,14 @@ const Empty: React.FC<IEmpty> = ({
   }, [type, iconSrc])
 
   return (
-    <div className="flex flex-col h-full w-full items-center justify-center">
+    <div className="flex flex-col h-full w-full items-center justify-center gap-y-3">
       <img
         src={icon}
         alt=""
         style={{ height: iconHeight, maxHeight: iconHeight }}
       />
-      {desc && (
-        <div className="font-medium text-[rgba(0,0,0,0.75)] mb-2">{desc}</div>
-      )}
-      {subDesc && (
-        <div className="font-normal text-[rgba(0,0,0,0.75)]">{subDesc}</div>
-      )}
+      {desc && <div className="font-medium ">{desc}</div>}
+      {subDesc && <div className="font-normal">{subDesc}</div>}
       {children}
     </div>
   )

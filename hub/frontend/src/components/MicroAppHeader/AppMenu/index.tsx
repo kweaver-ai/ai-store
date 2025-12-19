@@ -19,9 +19,9 @@ export const AppMenu = () => {
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
     const app = apps.find((item) => item.key === key)
-    if (app && app.key) {
+    if (app && app.micro_app.name) {
       // 以新标签页形式打开应用
-      window.open(`/application/${app.key}`, '_blank')
+      window.open(`/application/${app.micro_app.name}`, '_blank')
     }
   }
 

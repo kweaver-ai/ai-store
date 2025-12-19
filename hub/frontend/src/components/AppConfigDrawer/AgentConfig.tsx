@@ -53,11 +53,6 @@ const AgentConfig = ({ appId }: AgentConfigProps) => {
         type="info"
         showIcon
         className="rounded-lg border border-[#BAE0FF] bg-[#E6F4FF] text-sm text-[--dip-text-color-85]"
-        styles={{
-          icon: {
-            color: 'var(--dip-primary-color)',
-          },
-        }}
       />
 
       {/* 智能体列表 */}

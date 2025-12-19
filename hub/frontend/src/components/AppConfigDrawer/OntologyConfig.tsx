@@ -57,11 +57,6 @@ const OntologyConfig = ({ appId }: OntologyConfigProps) => {
         type="info"
         showIcon
         className="rounded-lg border border-[#BAE0FF] bg-[#E6F4FF] text-sm text-[--dip-text-color-85]"
-        styles={{
-          icon: {
-            color: 'var(--dip-primary-color)',
-          },
-        }}
       />
 
       {/* 业务知识网络列表 */}
@@ -120,7 +115,7 @@ const OntologyConfig = ({ appId }: OntologyConfigProps) => {
                   href={`https://dip.aishu.cn/studio/ontology/ontology-manage/main/overview?id=${item.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 mt-2 text-xs text-[var(--dip-primary-color)] hover:text-[var(--dip-primary-color)] hover:underline"
+                  className="inline-flex items-center gap-1.5 mt-2 text-xs text-[--dip-primary-color] hover:text-[var(--dip-primary-color)] hover:underline"
                 >
                   <ShareAltOutlined />
                   前往ADP平台配置数据视图映射

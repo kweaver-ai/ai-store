@@ -18,6 +18,15 @@ export interface ApplicationBasicInfo {
   updated_by: string
   /** 更新时间（ISO 8601 date-time） */
   updated_at: string
+  /** 微应用配置 */
+  micro_app: {
+    /** 微应用名称 */
+    name: string
+    /** 微应用入口 */
+    entry: string
+    /** 是否无头模式 */
+    headless: boolean
+  }
 }
 
 /** 应用信息 */

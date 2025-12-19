@@ -1,5 +1,6 @@
 import { useState, useCallback, memo, useEffect } from 'react'
-import { Spin, Button, message } from 'antd'
+import { Spin, Button, message, Modal } from 'antd'
+import { ExclamationCircleFilled, ReloadOutlined } from '@ant-design/icons'
 import GradientContainer from '@/components/GradientContainer'
 import AppList from '@/components/AppList'
 import Empty from '@/components/Empty'
@@ -7,10 +8,11 @@ import { ModeEnum } from '@/components/AppList/types'
 import { AppStoreActionEnum } from './types'
 import { type ApplicationInfo } from '@/apis/dip-hub'
 import SearchInput from '@/components/SearchInput'
-import { ReloadOutlined } from '@ant-design/icons'
 import IconFont from '@/components/IconFont'
 import { useApplicationsService } from '@/hooks/useApplicationsService'
 import AppConfigDrawer from '@/components/AppConfigDrawer'
+import { deleteApplications } from '@/apis/dip-hub/applications'
+import UploadAppModal from '@/components/UploadAppModal'
 
 const AppStore = () => {
   const { apps, loading, error, searchValue, handleSearch, handleRefresh } =
@@ -32,15 +34,35 @@ const AppStore = () => {
     async (action: string, _app: ApplicationInfo) => {
       try {
         switch (action) {
-          case AppStoreActionEnum.Install:
-            // TODO: 调用安装接口
-            message.success('安装成功')
-            handleRefresh()
-            break
           case AppStoreActionEnum.Uninstall:
-            // TODO: 调用卸载接口
-            message.success('卸载成功')
-            handleRefresh()
+            Modal.confirm({
+              title: '确认卸载',
+              icon: <ExclamationCircleFilled />,
+              content:
+                '卸载应用后，相关配置和数据将被清除，用户将无法使用应用。是否继续?',
+              okText: '确定',
+              okType: 'primary',
+              okButtonProps: { danger: true },
+              cancelText: '取消',
+              footer: (_, { OkBtn, CancelBtn }) => (
+                <>
+                  <OkBtn />
+                  <CancelBtn />
+                </>
+              ),
+              onOk: async () => {
+                try {
+                  await deleteApplications(_app.key)
+                  message.success('卸载成功')
+                  handleRefresh()
+                } catch (err: any) {
+                  if (err?.description) {
+                    message.error(err.description)
+                    return
+                  }
+                }
+              },
+            })
             break
           case AppStoreActionEnum.Config:
             setSelectedApp(_app)
@@ -55,9 +77,12 @@ const AppStore = () => {
           default:
             break
         }
-      } catch (err) {
+      } catch (err: any) {
+        if (err?.description) {
+          message.error(err.description)
+          return
+        }
         console.error('Failed to handle app action:', err)
-        message.error('操作失败')
       }
     },
     [handleRefresh]
@@ -85,10 +110,11 @@ const AppStore = () => {
       }
       return (
         <Empty
-          desc="暂无可用应用"
-          subDesc="您当前没有任何应用的访问权限。这可能是因为管理员尚未为您分配权限，或者应用尚未部署。"
+          desc="暂无应用"
+          subDesc="当前应用市场空空如也，您可以点击下方按钮安装第一个企业应用。"
         >
           <Button
+            className="mt-2"
             type="primary"
             icon={<IconFont type="icon-dip-upload" />}
             onClick={() => {
@@ -129,8 +155,12 @@ const AppStore = () => {
     <GradientContainer className="h-full p-6 flex flex-col">
       <div className="flex justify-between mb-6 flex-shrink-0 z-20">
         <div className="flex flex-col gap-y-3">
-          <span className="text-base font-bold">应用商店</span>
-          <span className="text-sm">管理企业应用市场，安装或卸载应用</span>
+          <span className="text-base font-bold text-[--dip-text-color]">
+            应用商店
+          </span>
+          <span className="text-sm text-[--dip-text-color-65]">
+            管理企业应用市场，安装或卸载应用
+          </span>
         </div>
         {hasLoadedData && (
           <div className="flex items-center gap-x-2">
@@ -155,6 +185,15 @@ const AppStore = () => {
         appData={selectedApp ?? undefined}
         open={configModalVisible}
         onClose={() => setConfigModalVisible(false)}
+      />
+      <UploadAppModal
+        open={installModalVisible}
+        onCancel={() => setInstallModalVisible(false)}
+        onSuccess={() => {
+          setInstallModalVisible(false)
+          handleRefresh()
+          message.success('安装成功')
+        }}
       />
     </GradientContainer>
   )

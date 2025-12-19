@@ -22,6 +22,11 @@ const App = () => {
       theme={{
         token: {
           colorPrimary: '#126ee3',
+          colorSuccess: '#52c41a',
+          colorWarning: '#faad14',
+          colorError: '#f5222d',
+          colorInfo: '#126ee3',
+          colorText: 'rgba(0,0,0,0.85)',
         },
       }}
       getPopupContainer={() => document.getElementById('root') || document.body}
