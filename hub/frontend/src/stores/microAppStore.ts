@@ -1,11 +1,11 @@
 import { create } from 'zustand'
-import type { Application } from '@/apis/dip-hub'
+import type { ApplicationBasicInfo } from '@/apis/dip-hub'
 
 /**
  * 当前激活的微应用信息
  * 用于主应用内部使用，不会传递给微应用
  */
-export interface CurrentMicroAppInfo extends Application {
+export interface CurrentMicroAppInfo extends ApplicationBasicInfo {
   /** 微应用路由基础路径 */
   routeBasename: string
 }

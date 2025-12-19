@@ -28,13 +28,11 @@ export interface MicroAppProps {
     role?: string
   }
 
-  /** ========== 语言 ========== */
-  /** 当前语言（如 zh-CN, en-US） */
-  language: string
-
-  /** ========== Copilot ========== */
-  /** Copilot 点击按钮方法 */
-  onCopilotClick: () => void
+  /** ========== UI 组件渲染函数 ========== */
+  /** 渲染应用菜单组件（AppMenu）到指定容器，使用主应用的 React 上下文渲染 */
+  renderAppMenu: (container: HTMLElement | string) => void
+  /** 渲染用户信息组件（UserInfo）到指定容器，使用主应用的 React 上下文渲染 */
+  renderUserInfo: (container: HTMLElement | string) => void
 
   /** ========== 全局状态管理 ========== */
   /** 设置全局状态（微应用可以通过此方法更新全局状态） */

@@ -46,7 +46,7 @@ export function defaultRefreshToken(): Promise<{ accessToken: string }> {
   return refreshingPromise
 }
 
-const onTokenExpired = (code?: number) => {
+const onTokenExpired = (_code?: number) => {
   window.location.replace('/login')
 }
 

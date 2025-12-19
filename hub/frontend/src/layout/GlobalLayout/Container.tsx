@@ -29,7 +29,7 @@ const Container = ({ children }: ContainerProps) => {
   // 当前是否处于微应用容器场景
   const isMicroApp = !!currentMicroApp
   // headless 微应用：不需要任何壳层 Header / Sider
-  const isHeadlessMicroApp = isMicroApp && currentMicroApp?.config?.headless
+  const isHeadlessMicroApp = isMicroApp && currentMicroApp?.micro_app?.headless
 
   // 只使用最后一个匹配的路由（当前路由）的布局配置
   // 主应用页面只依赖路由的静态布局配置

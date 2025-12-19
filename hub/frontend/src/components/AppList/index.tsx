@@ -3,16 +3,16 @@ import { Row, Col, Tabs } from 'antd'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { computeColumnCount, gap } from './utils'
 import AppCard from './AppCard'
-import type { Application } from '@/apis/dip-hub'
+import type { ApplicationInfo } from '@/apis/dip-hub'
 import { ModeEnum, ALL_TAB_KEY } from './types'
 import styles from './index.module.less'
 
 interface AppListProps {
   mode: ModeEnum.MyApp | ModeEnum.AppStore
   /** 应用列表数据 */
-  apps: Application[]
+  apps: ApplicationInfo[]
   /** 卡片菜单点击回调 */
-  onMenuClick?: (action: string, app: Application) => void
+  onMenuClick?: (action: string, app: ApplicationInfo) => void
 }
 
 /**
@@ -23,7 +23,7 @@ const AppList: React.FC<AppListProps> = ({ mode, apps, onMenuClick }) => {
 
   // 根据后端返回的 category 动态分组
   const { groupedApps, appTypes } = useMemo(() => {
-    const groups: Record<string, Application[]> = {
+    const groups: Record<string, ApplicationInfo[]> = {
       [ALL_TAB_KEY]: apps,
     }
     const typeSet = new Set<string>()
@@ -78,7 +78,7 @@ const AppList: React.FC<AppListProps> = ({ mode, apps, onMenuClick }) => {
 
   /** 渲染应用卡片 */
   const renderAppCard = useCallback(
-    (app: Application, width: number) => {
+    (app: ApplicationInfo, width: number) => {
       return (
         <Col key={app.key} style={{ width, minWidth: width }}>
           <AppCard

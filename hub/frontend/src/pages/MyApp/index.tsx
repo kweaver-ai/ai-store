@@ -40,7 +40,7 @@ const MyApp = () => {
             handleRefresh()
             break
           case MyAppActionEnum.Use:
-            window.open(`/application/${_app.key}`, '_blank')
+            window.open(`/application/${_app.micro_app.name}`, '_blank')
             break
           default:
             break

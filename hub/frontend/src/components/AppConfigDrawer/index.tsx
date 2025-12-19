@@ -1,4 +1,4 @@
-import { Drawer } from 'antd'
+import { Drawer, type DrawerProps } from 'antd'
 import { useState, useEffect } from 'react'
 import clsx from 'classnames'
 import { ConfigMenuType } from './types'
@@ -9,13 +9,10 @@ import AgentConfig from './AgentConfig'
 import { menuItems } from './utils'
 import ScrollBarContainer from '../ScrollBarContainer'
 
-export interface AppConfigDrawerProps {
+export interface AppConfigDrawerProps
+  extends Pick<DrawerProps, 'open' | 'onClose'> {
   /** 已有的应用基础信息 */
   appData?: ApplicationBasicInfo | null
-  /** 是否打开 */
-  open: boolean
-  /** 关闭回调 */
-  onClose: () => void
 }
 
 export const AppConfigDrawer = ({
@@ -41,7 +38,7 @@ export const AppConfigDrawer = ({
   return (
     <Drawer
       title={
-        <div className="flex items-center gap-1 text-base font-medium text-[rgba(0,0,0,0.85)]">
+        <div className="flex items-center gap-1 text-base font-medium text-[--dip-text-color]">
           <span>应用配置</span>
           {appData?.name && (
             <>

@@ -1,5 +1,5 @@
 import { PushpinFilled, PushpinOutlined } from '@ant-design/icons'
-import type { Application } from '@/apis/dip-hub'
+import type { ApplicationInfo } from '@/apis/dip-hub'
 import { ModeEnum } from './types'
 import { AppStoreActionEnum } from '@/pages/AppStore/types'
 import IconFont from '../IconFont'
@@ -57,7 +57,7 @@ export const computeColumnCount = (
 }
 
 /** 我的应用操作菜单项 */
-export const getMyAppMenuItems = (app: Application) => {
+export const getMyAppMenuItems = (app: ApplicationInfo) => {
   const { isPinned } = usePreferenceStore.getState()
   const pinned = isPinned(app.key)
 
@@ -107,7 +107,7 @@ export const getAppStoreMenuItems = () => {
   ]
 }
 
-export const getAppCardMenuItems = (mode: ModeEnum, app: Application) => {
+export const getAppCardMenuItems = (mode: ModeEnum, app: ApplicationInfo) => {
   if (mode === ModeEnum.AppStore) {
     return getAppStoreMenuItems()
   }

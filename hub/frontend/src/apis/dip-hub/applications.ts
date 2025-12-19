@@ -45,12 +45,22 @@ export const putApplicationsConfig = (
 
 /**
  * 查看应用基础信息
- * OpenAPI: GET /applications/basic-info?app_id=xxx
+ * OpenAPI: GET /applications/basic-info?app_id=xxx 或 ?package_name=xxx
+ * 支持通过 appId 或 packageName 任意一个参数查询
  */
-export const getApplicationsBasicInfo = (
-  appId: string
-): Promise<ApplicationBasicInfo> =>
-  get(`/api/dip-hub/v1/applications/basic-info`, { params: { app_id: appId } })
+export const getApplicationsBasicInfo = (params: {
+  appId?: string
+  packageName?: string
+}): Promise<ApplicationBasicInfo> => {
+  const queryParams: Record<string, string> = {}
+  if (params.appId) {
+    queryParams.app_id = params.appId
+  }
+  if (params.packageName) {
+    queryParams.package_name = params.packageName
+  }
+  return get(`/api/dip-hub/v1/applications/basic-info`, { params: queryParams })
+}
 
 /**
  * 查看业务知识网络配置

@@ -78,7 +78,7 @@ export const router = createBrowserRouter([
       ...generateRoutesFromConfig(),
       // 动态路由（微应用容器）
       {
-        path: 'application/:appKey/*',
+        path: 'application/:appName/*',
         element: <MicroAppContainer />,
         handle: {
           layout: {
