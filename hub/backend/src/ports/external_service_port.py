@@ -59,7 +59,11 @@ class DeployInstallerPort(ABC):
     """
 
     @abstractmethod
-    async def upload_image(self, image_data: BinaryIO) -> List[ImageUploadResult]:
+    async def upload_image(
+        self,
+        image_data: BinaryIO,
+        auth_token: Optional[str] = None,
+    ) -> List[ImageUploadResult]:
         """
         上传镜像。
 
@@ -72,7 +76,11 @@ class DeployInstallerPort(ABC):
         pass
 
     @abstractmethod
-    async def upload_chart(self, chart_data: BinaryIO) -> ChartUploadResult:
+    async def upload_chart(
+        self,
+        chart_data: BinaryIO,
+        auth_token: Optional[str] = None,
+    ) -> ChartUploadResult:
         """
         上传 Chart。
 
@@ -92,7 +100,8 @@ class DeployInstallerPort(ABC):
         chart_name: str,
         chart_version: str,
         values: dict,
-        set_registry: bool = True
+        set_registry: bool = True,
+        auth_token: Optional[str] = None,
     ) -> ReleaseResult:
         """
         安装/更新 Release。
@@ -111,7 +120,12 @@ class DeployInstallerPort(ABC):
         pass
 
     @abstractmethod
-    async def delete_release(self, release_name: str, namespace: str) -> ReleaseResult:
+    async def delete_release(
+        self,
+        release_name: str,
+        namespace: str,
+        auth_token: Optional[str] = None,
+    ) -> ReleaseResult:
         """
         删除 Release。
 
@@ -133,7 +147,11 @@ class OntologyManagerPort(ABC):
     """
 
     @abstractmethod
-    async def get_knowledge_network(self, kn_id: str) -> KnowledgeNetworkInfo:
+    async def get_knowledge_network(
+        self,
+        kn_id: str,
+        auth_token: Optional[str] = None,
+    ) -> KnowledgeNetworkInfo:
         """
         获取业务知识网络详情。
 
@@ -149,7 +167,11 @@ class OntologyManagerPort(ABC):
         pass
 
     @abstractmethod
-    async def create_knowledge_network(self, data: dict) -> str:
+    async def create_knowledge_network(
+        self,
+        data: dict,
+        auth_token: Optional[str] = None,
+    ) -> str:
         """
         创建业务知识网络。
 
@@ -170,7 +192,11 @@ class AgentFactoryPort(ABC):
     """
 
     @abstractmethod
-    async def create_agent(self, data: dict) -> AgentFactoryResult:
+    async def create_agent(
+        self,
+        data: dict,
+        auth_token: Optional[str] = None,
+    ) -> AgentFactoryResult:
         """
         创建智能体。
 

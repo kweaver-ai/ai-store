@@ -4,7 +4,7 @@ Mock 外部服务适配器
 用于本地开发和测试时模拟外部服务响应。
 """
 import logging
-from typing import List, BinaryIO
+from typing import List, BinaryIO, Optional
 
 from src.ports.external_service_port import (
     DeployInstallerPort,
@@ -35,7 +35,11 @@ class MockDeployInstallerAdapter(DeployInstallerPort):
         self._charts = []  # 存储上传的 chart 记录
         logger.info("Mock Deploy Installer 适配器已初始化")
 
-    async def upload_image(self, image_data: BinaryIO) -> List[ImageUploadResult]:
+    async def upload_image(
+        self,
+        image_data: BinaryIO,
+        auth_token: Optional[str] = None,
+    ) -> List[ImageUploadResult]:
         """
         模拟上传镜像。
 
@@ -61,7 +65,11 @@ class MockDeployInstallerAdapter(DeployInstallerPort):
         
         return [result]
 
-    async def upload_chart(self, chart_data: BinaryIO) -> ChartUploadResult:
+    async def upload_chart(
+        self,
+        chart_data: BinaryIO,
+        auth_token: Optional[str] = None,
+    ) -> ChartUploadResult:
         """
         模拟上传 Chart。
 
@@ -101,7 +109,8 @@ class MockDeployInstallerAdapter(DeployInstallerPort):
         chart_name: str,
         chart_version: str,
         values: dict,
-        set_registry: bool = True
+        set_registry: bool = True,
+        auth_token: Optional[str] = None,
     ) -> ReleaseResult:
         """
         模拟安装/更新 Release。
@@ -129,7 +138,12 @@ class MockDeployInstallerAdapter(DeployInstallerPort):
         
         return ReleaseResult(values=values)
 
-    async def delete_release(self, release_name: str, namespace: str) -> ReleaseResult:
+    async def delete_release(
+        self,
+        release_name: str,
+        namespace: str,
+        auth_token: Optional[str] = None,
+    ) -> ReleaseResult:
         """
         模拟删除 Release。
 
@@ -180,7 +194,11 @@ class MockOntologyManagerAdapter(OntologyManagerPort):
         
         logger.info("Mock Ontology Manager 适配器已初始化")
 
-    async def get_knowledge_network(self, kn_id: str) -> KnowledgeNetworkInfo:
+    async def get_knowledge_network(
+        self,
+        kn_id: str,
+        auth_token: Optional[str] = None,
+    ) -> KnowledgeNetworkInfo:
         """
         模拟获取业务知识网络详情。
 
@@ -200,7 +218,11 @@ class MockOntologyManagerAdapter(OntologyManagerPort):
         logger.warning(f"[Mock] 业务知识网络不存在: {kn_id}")
         raise ValueError(f"业务知识网络不存在: {kn_id}")
 
-    async def create_knowledge_network(self, data: dict) -> str:
+    async def create_knowledge_network(
+        self,
+        data: dict,
+        auth_token: Optional[str] = None,
+    ) -> str:
         """
         模拟创建业务知识网络。
 
@@ -249,7 +271,11 @@ class MockAgentFactoryAdapter(AgentFactoryPort):
         
         logger.info("Mock Agent Factory 适配器已初始化")
 
-    async def create_agent(self, data: dict) -> AgentFactoryResult:
+    async def create_agent(
+        self,
+        data: dict,
+        auth_token: Optional[str] = None,
+    ) -> AgentFactoryResult:
         """
         模拟创建智能体。
 

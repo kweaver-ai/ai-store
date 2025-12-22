@@ -117,14 +117,18 @@ def create_application_router(application_service: ApplicationService) -> APIRou
                     }
                 )
             
-            # 获取更新者用户 ID（从请求头或认证信息中获取）
+            # 获取更新者用户 ID（从请求头获取）
             updated_by = request.headers.get("X-User-Id", "system")
+            # 认证 Token 已由中间件统一提取并存储到 request.state 和 TokenContext
+            # 适配器层会从 TokenContext 统一获取，这里可以不再传递
+            auth_token = getattr(request.state, "auth_token", None)
             
             # 调用服务安装应用
             zip_data = io.BytesIO(body)
             application = await application_service.install_application(
                 zip_data=zip_data,
                 updated_by=updated_by,
+                auth_token=auth_token,  # 保留参数以保持兼容性
             )
             
             return _application_to_response(application)
@@ -325,6 +329,7 @@ def create_application_router(application_service: ApplicationService) -> APIRou
         }
     )
     async def get_application_ontologies(
+        request: Request,
         key: str = Query(..., description="应用唯一标识", max_length=32),
     ) -> OntologyListResponse:
         """
@@ -341,7 +346,14 @@ def create_application_router(application_service: ApplicationService) -> APIRou
             OntologyListResponse: 业务知识网络列表
         """
         try:
-            ontologies = await application_service.get_application_ontologies(key)
+            # 认证 Token 已由中间件统一提取并存储到 request.state 和 TokenContext
+            # 适配器层会从 TokenContext 统一获取，这里可以不再传递
+            auth_token = getattr(request.state, "auth_token", None)
+
+            ontologies = await application_service.get_application_ontologies(
+                app_id=key,
+                auth_token=auth_token,  # 保留参数以保持兼容性
+            )
             
             return OntologyListResponse(
                 ontologies=[
@@ -446,7 +458,10 @@ def create_application_router(application_service: ApplicationService) -> APIRou
             500: {"description": "服务器内部错误", "model": ErrorResponse},
         }
     )
-    async def uninstall_application(key: str) -> Response:
+    async def uninstall_application(
+        request: Request,
+        key: str,
+    ) -> Response:
         """
         卸载应用。
 
@@ -461,7 +476,14 @@ def create_application_router(application_service: ApplicationService) -> APIRou
             None: 成功时返回 204 No Content
         """
         try:
-            await application_service.uninstall_application(key)
+            # 认证 Token 已由中间件统一提取并存储到 request.state 和 TokenContext
+            # 适配器层会从 TokenContext 统一获取，这里可以不再传递
+            auth_token = getattr(request.state, "auth_token", None)
+
+            await application_service.uninstall_application(
+                key,
+                auth_token=auth_token,  # 保留参数以保持兼容性
+            )
             return Response(status_code=status.HTTP_204_NO_CONTENT)
 
         except ValueError as e:

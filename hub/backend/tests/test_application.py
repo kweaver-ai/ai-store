@@ -325,6 +325,7 @@ class TestApplicationService:
         mock_deploy_port.delete_release.assert_called_once_with(
             release_name="test-release-1",
             namespace="default",
+            auth_token=None,
         )
         mock_app_port.delete_application.assert_called_once_with("test-app-001")
 

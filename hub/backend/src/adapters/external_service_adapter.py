@@ -20,6 +20,7 @@ from src.ports.external_service_port import (
     AgentFactoryResult,
 )
 from src.infrastructure.config.settings import Settings
+from src.infrastructure.context.token_context import get_auth_token
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,11 @@ class DeployInstallerAdapter(DeployInstallerPort):
         self._base_url = f"{settings.proton_url}/internal/api/deploy-installer/v1"
         self._timeout = settings.proton_timeout
 
-    async def upload_image(self, image_data: BinaryIO) -> List[ImageUploadResult]:
+    async def upload_image(
+        self,
+        image_data: BinaryIO,
+        auth_token: Optional[str] = None,
+    ) -> List[ImageUploadResult]:
         """
         上传镜像。
 
@@ -54,11 +59,18 @@ class DeployInstallerAdapter(DeployInstallerPort):
         """
         url = f"{self._base_url}/agents/image"
         
+        # 统一从TokenContext获取token，如果上下文没有则使用传入的参数（向后兼容）
+        token = get_auth_token() or auth_token
+        
+        headers = {"Content-Type": "application/octet-stream"}
+        if token:
+            headers["Authorization"] = token
+
         async with httpx.AsyncClient(timeout=self._timeout) as client:
             response = await client.put(
                 url,
                 content=image_data.read(),
-                headers={"Content-Type": "application/octet-stream"},
+                headers=headers,
             )
             response.raise_for_status()
             
@@ -73,7 +85,11 @@ class DeployInstallerAdapter(DeployInstallerPort):
                 for img in images
             ]
 
-    async def upload_chart(self, chart_data: BinaryIO) -> ChartUploadResult:
+    async def upload_chart(
+        self,
+        chart_data: BinaryIO,
+        auth_token: Optional[str] = None,
+    ) -> ChartUploadResult:
         """
         上传 Chart。
 
@@ -85,11 +101,18 @@ class DeployInstallerAdapter(DeployInstallerPort):
         """
         url = f"{self._base_url}/agents/chart"
         
+        # 统一从TokenContext获取token，如果上下文没有则使用传入的参数（向后兼容）
+        token = get_auth_token() or auth_token
+        
+        headers = {"Content-Type": "application/octet-stream"}
+        if token:
+            headers["Authorization"] = token
+
         async with httpx.AsyncClient(timeout=self._timeout) as client:
             response = await client.put(
                 url,
                 content=chart_data.read(),
-                headers={"Content-Type": "application/octet-stream"},
+                headers=headers,
             )
             response.raise_for_status()
             
@@ -111,7 +134,8 @@ class DeployInstallerAdapter(DeployInstallerPort):
         chart_name: str,
         chart_version: str,
         values: dict,
-        set_registry: bool = True
+        set_registry: bool = True,
+        auth_token: Optional[str] = None,
     ) -> ReleaseResult:
         """
         安装/更新 Release。
@@ -138,18 +162,31 @@ class DeployInstallerAdapter(DeployInstallerPort):
             "values": values,
         }
         
+        # 统一从TokenContext获取token，如果上下文没有则使用传入的参数（向后兼容）
+        token = get_auth_token() or auth_token
+        
+        headers = {}
+        if token:
+            headers["Authorization"] = token
+
         async with httpx.AsyncClient(timeout=self._timeout) as client:
             response = await client.post(
                 url,
                 params=params,
                 json=body,
+                headers=headers or None,
             )
             response.raise_for_status()
             
             data = response.json()
             return ReleaseResult(values=data.get("values", {}))
 
-    async def delete_release(self, release_name: str, namespace: str) -> ReleaseResult:
+    async def delete_release(
+        self,
+        release_name: str,
+        namespace: str,
+        auth_token: Optional[str] = None,
+    ) -> ReleaseResult:
         """
         删除 Release。
 
@@ -163,8 +200,15 @@ class DeployInstallerAdapter(DeployInstallerPort):
         url = f"{self._base_url}/agents/release/{release_name}"
         params = {"namespace": namespace}
         
+        # 统一从TokenContext获取token，如果上下文没有则使用传入的参数（向后兼容）
+        token = get_auth_token() or auth_token
+        
+        headers = {}
+        if token:
+            headers["Authorization"] = token
+
         async with httpx.AsyncClient(timeout=self._timeout) as client:
-            response = await client.delete(url, params=params)
+            response = await client.delete(url, params=params, headers=headers or None)
             response.raise_for_status()
             
             data = response.json()
@@ -189,7 +233,11 @@ class OntologyManagerAdapter(OntologyManagerPort):
         self._base_url = f"{settings.adp_url}/api/ontology-manager/v1"
         self._timeout = settings.adp_timeout
 
-    async def get_knowledge_network(self, kn_id: str) -> KnowledgeNetworkInfo:
+    async def get_knowledge_network(
+        self,
+        kn_id: str,
+        auth_token: Optional[str] = None,
+    ) -> KnowledgeNetworkInfo:
         """
         获取业务知识网络详情。
 
@@ -204,8 +252,15 @@ class OntologyManagerAdapter(OntologyManagerPort):
         """
         url = f"{self._base_url}/knowledge-networks/{kn_id}"
         
+        # 统一从TokenContext获取token，如果上下文没有则使用传入的参数（向后兼容）
+        token = get_auth_token() or auth_token
+        
+        headers = {}
+        if token:
+            headers["Authorization"] = token
+
         async with httpx.AsyncClient(timeout=self._timeout) as client:
-            response = await client.get(url)
+            response = await client.get(url, headers=headers or None)
             
             if response.status_code == 404:
                 raise ValueError(f"业务知识网络不存在: {kn_id}")
@@ -219,7 +274,11 @@ class OntologyManagerAdapter(OntologyManagerPort):
                 comment=data.get("comment"),
             )
 
-    async def create_knowledge_network(self, data: dict) -> str:
+    async def create_knowledge_network(
+        self,
+        data: dict,
+        auth_token: Optional[str] = None,
+    ) -> str:
         """
         创建业务知识网络。
 
@@ -231,8 +290,15 @@ class OntologyManagerAdapter(OntologyManagerPort):
         """
         url = f"{self._base_url}/knowledge-networks"
         
+        # 统一从TokenContext获取token，如果上下文没有则使用传入的参数（向后兼容）
+        token = get_auth_token() or auth_token
+        
+        headers = {}
+        if token:
+            headers["Authorization"] = token
+
         async with httpx.AsyncClient(timeout=self._timeout) as client:
-            response = await client.post(url, json=data)
+            response = await client.post(url, json=data, headers=headers or None)
             response.raise_for_status()
             
             result = response.json()
@@ -260,7 +326,11 @@ class AgentFactoryAdapter(AgentFactoryPort):
         self._base_url = f"{settings.adp_url}/api/agent-factory/v3"
         self._timeout = settings.adp_timeout
 
-    async def create_agent(self, data: dict) -> AgentFactoryResult:
+    async def create_agent(
+        self,
+        data: dict,
+        auth_token: Optional[str] = None,
+    ) -> AgentFactoryResult:
         """
         创建智能体。
 
@@ -272,8 +342,15 @@ class AgentFactoryAdapter(AgentFactoryPort):
         """
         url = f"{self._base_url}/agent"
         
+        # 统一从TokenContext获取token，如果上下文没有则使用传入的参数（向后兼容）
+        token = get_auth_token() or auth_token
+        
+        headers = {}
+        if token:
+            headers["Authorization"] = token
+
         async with httpx.AsyncClient(timeout=self._timeout) as client:
-            response = await client.post(url, json=data)
+            response = await client.post(url, json=data, headers=headers or None)
             response.raise_for_status()
             
             result = response.json()

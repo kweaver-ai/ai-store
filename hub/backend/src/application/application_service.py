@@ -102,7 +102,11 @@ class ApplicationService:
         """
         return await self._application_port.get_application_by_key(app_id)
 
-    async def get_application_ontologies(self, app_id: str) -> List[OntologyInfo]:
+    async def get_application_ontologies(
+        self,
+        app_id: str,
+        auth_token: Optional[str] = None,
+    ) -> List[OntologyInfo]:
         """
         获取应用的业务知识网络配置。
 
@@ -121,7 +125,10 @@ class ApplicationService:
         for config_item in application.ontology_config:
             try:
                 if self._ontology_manager_port:
-                    kn_info = await self._ontology_manager_port.get_knowledge_network(str(config_item.id))
+                    kn_info = await self._ontology_manager_port.get_knowledge_network(
+                        str(config_item.id),
+                        auth_token=auth_token,
+                    )
                     ontologies.append(OntologyInfo(
                         id=config_item.id,
                         name=kn_info.name,
@@ -205,6 +212,7 @@ class ApplicationService:
         self,
         zip_data: BinaryIO,
         updated_by: str = "",
+        auth_token: Optional[str] = None,
     ) -> Application:
         """
         安装应用。
@@ -281,7 +289,7 @@ class ApplicationService:
                     image_full_path = os.path.join(extract_dir, image_path)
                     if os.path.exists(image_full_path):
                         with open(image_full_path, "rb") as f:
-                            await self._deploy_installer_port.upload_image(f)
+                            await self._deploy_installer_port.upload_image(f, auth_token=auth_token)
                 
                 # 上传 Chart 并安装
                 for chart_config in manifest.charts:
@@ -289,7 +297,7 @@ class ApplicationService:
                     chart_full_path = os.path.join(extract_dir, chart_path)
                     if os.path.exists(chart_full_path):
                         with open(chart_full_path, "rb") as f:
-                            chart_result = await self._deploy_installer_port.upload_chart(f)
+                            chart_result = await self._deploy_installer_port.upload_chart(f, auth_token=auth_token)
                         
                         # 安装 release
                         release_name = chart_config.get("release_name", chart_result.chart.name)
@@ -302,6 +310,7 @@ class ApplicationService:
                             chart_name=chart_result.chart.name,
                             chart_version=chart_result.chart.version,
                             values=values,
+                            auth_token=auth_token,
                         )
                         release_configs.append(release_name)
             
@@ -310,7 +319,10 @@ class ApplicationService:
             if self._ontology_manager_port:
                 for onto_config in manifest.ontologies:
                     try:
-                        onto_id = await self._ontology_manager_port.create_knowledge_network(onto_config)
+                        onto_id = await self._ontology_manager_port.create_knowledge_network(
+                            onto_config,
+                            auth_token=auth_token,
+                        )
                         if onto_id:
                             ontology_config.append(OntologyConfigItem(
                                 id=int(onto_id),
@@ -324,7 +336,10 @@ class ApplicationService:
             if self._agent_factory_port:
                 for agent_config_data in manifest.agents:
                     try:
-                        agent_result = await self._agent_factory_port.create_agent(agent_config_data)
+                        agent_result = await self._agent_factory_port.create_agent(
+                            agent_config_data,
+                            auth_token=auth_token,
+                        )
                         if agent_result.id:
                             agent_config.append(AgentConfigItem(
                                 id=int(agent_result.id),
@@ -363,7 +378,11 @@ class ApplicationService:
             if temp_dir and os.path.exists(temp_dir):
                 shutil.rmtree(temp_dir, ignore_errors=True)
 
-    async def uninstall_application(self, key: str) -> bool:
+    async def uninstall_application(
+        self,
+        key: str,
+        auth_token: Optional[str] = None,
+    ) -> bool:
         """
         卸载应用。
 
@@ -391,6 +410,7 @@ class ApplicationService:
                     await self._deploy_installer_port.delete_release(
                         release_name=release_name,
                         namespace="default",  # TODO: 从配置中获取
+                        auth_token=auth_token,
                     )
                 except Exception as e:
                     logger.warning(f"删除 Release 失败 ({release_name}): {e}")

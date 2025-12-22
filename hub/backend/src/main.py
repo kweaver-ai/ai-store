@@ -21,6 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.infrastructure.config.settings import get_settings, Settings
 from src.infrastructure.container import init_container, get_container
 from src.infrastructure.logging.logger import setup_logging
+from src.infrastructure.middleware.auth_middleware import AuthMiddleware
 from src.routers.health_router import create_health_router
 from src.routers.application_router import create_application_router
 
@@ -74,6 +75,9 @@ def create_app(settings: Settings = None) -> FastAPI:
         redoc_url=f"{settings.api_prefix}/redoc",
         openapi_url=f"{settings.api_prefix}/openapi.json",
     )
+    
+    # 添加认证中间件（最先添加，确保token在请求处理前被提取）
+    app.add_middleware(AuthMiddleware)
     
     # 添加 CORS 中间件
     app.add_middleware(
