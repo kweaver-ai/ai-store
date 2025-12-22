@@ -7,7 +7,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from src.domains.application import Application
+from src.domains.application import Application, OntologyConfigItem, AgentConfigItem
 
 
 class ApplicationPort(ABC):
@@ -92,8 +92,8 @@ class ApplicationPort(ABC):
     async def update_application_config(
         self,
         key: str,
-        ontology_ids: List[int],
-        agent_ids: List[int],
+        ontology_config: List[OntologyConfigItem],
+        agent_config: List[AgentConfigItem],
         updated_by: str
     ) -> Application:
         """
@@ -101,8 +101,8 @@ class ApplicationPort(ABC):
 
         参数:
             key: 应用唯一标识
-            ontology_ids: 业务知识网络 ID 列表
-            agent_ids: 智能体 ID 列表
+            ontology_config: 业务知识网络配置列表
+            agent_config: 智能体配置列表
             updated_by: 更新者用户 ID
 
         返回:

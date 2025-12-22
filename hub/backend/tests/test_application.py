@@ -12,7 +12,10 @@ from fastapi.testclient import TestClient
 
 from src.main import create_app
 from src.infrastructure.config.settings import Settings
-from src.domains.application import Application, OntologyInfo, AgentInfo, ManifestInfo
+from src.domains.application import (
+    Application, OntologyInfo, AgentInfo, ManifestInfo, MicroAppInfo,
+    OntologyConfigItem, AgentConfigItem
+)
 from src.application.application_service import ApplicationService
 from src.adapters.application_adapter import ApplicationAdapter
 
@@ -56,9 +59,19 @@ def sample_application() -> Application:
         icon="dGVzdC1pY29uLWRhdGE=",  # Base64 编码的 "test-icon-data"
         version="1.0.0",
         category="测试分类",
+        micro_app=MicroAppInfo(
+            name="test_app",
+            entry="/test_app",
+            headless=False,
+        ),
         release_config=["test-release-1"],
-        ontology_ids=[1, 2],
-        agent_ids=[1],
+        ontology_config=[
+            OntologyConfigItem(id=1, is_config=True),
+            OntologyConfigItem(id=2, is_config=True),
+        ],
+        agent_config=[
+            AgentConfigItem(id=1, is_config=True),
+        ],
         is_config=True,
         updated_by="user-001",
         updated_at=datetime(2024, 1, 1, 12, 0, 0),
@@ -82,8 +95,8 @@ def sample_application_no_config() -> Application:
         version="1.0.0",
         category=None,
         release_config=[],
-        ontology_ids=[],
-        agent_ids=[],
+        ontology_config=[],
+        agent_config=[],
         is_config=False,
         updated_by="user-001",
         updated_at=datetime(2024, 1, 1, 12, 0, 0),
@@ -141,20 +154,20 @@ class TestApplicationDomain:
         """测试当未配置时 is_configured 返回 False。"""
         assert sample_application_no_config.is_configured() is False
 
-    def test_has_ontologies_returns_true_when_has_ontology_ids(self, sample_application: Application):
-        """测试当有业务知识网络 ID 时 has_ontologies 返回 True。"""
+    def test_has_ontologies_returns_true_when_has_ontology_config(self, sample_application: Application):
+        """测试当有业务知识网络配置时 has_ontologies 返回 True。"""
         assert sample_application.has_ontologies() is True
 
-    def test_has_ontologies_returns_false_when_no_ontology_ids(self, sample_application_no_config: Application):
-        """测试当没有业务知识网络 ID 时 has_ontologies 返回 False。"""
+    def test_has_ontologies_returns_false_when_no_ontology_config(self, sample_application_no_config: Application):
+        """测试当没有业务知识网络配置时 has_ontologies 返回 False。"""
         assert sample_application_no_config.has_ontologies() is False
 
-    def test_has_agents_returns_true_when_has_agent_ids(self, sample_application: Application):
-        """测试当有智能体 ID 时 has_agents 返回 True。"""
+    def test_has_agents_returns_true_when_has_agent_config(self, sample_application: Application):
+        """测试当有智能体配置时 has_agents 返回 True。"""
         assert sample_application.has_agents() is True
 
-    def test_has_agents_returns_false_when_no_agent_ids(self, sample_application_no_config: Application):
-        """测试当没有智能体 ID 时 has_agents 返回 False。"""
+    def test_has_agents_returns_false_when_no_agent_config(self, sample_application_no_config: Application):
+        """测试当没有智能体配置时 has_agents 返回 False。"""
         assert sample_application_no_config.has_agents() is False
 
 
@@ -246,17 +259,19 @@ class TestApplicationService:
 
         result = await service.configure_application(
             app_id="test-app-001",
-            ontology_ids=[1, 2, 3],
-            agent_ids=[1, 2],
             updated_by="user-002",
         )
 
-        mock_port.update_application_config.assert_called_once_with(
-            key="test-app-001",
-            ontology_ids=[1, 2, 3],
-            agent_ids=[1, 2],
-            updated_by="user-002",
-        )
+        # 验证端口被正确调用，并且所有配置项的 is_config 都被置为 True
+        mock_port.update_application_config.assert_called_once()
+        _, kwargs = mock_port.update_application_config.call_args
+        assert kwargs["key"] == "test-app-001"
+        assert kwargs["updated_by"] == "user-002"
+
+        for item in kwargs["ontology_config"]:
+            assert item.is_config is True
+        for item in kwargs["agent_config"]:
+            assert item.is_config is True
 
     @pytest.mark.asyncio
     async def test_delete_application_calls_port(self):
@@ -385,9 +400,10 @@ class TestApplicationAdapter:
             b"test-icon",                   # icon (binary)
             "1.0.0",                        # version
             "测试分类",                     # category
+            '{"name": "test_app", "entry": "/test_app", "headless": false}',  # micro_app (JSON)
             '["release-1"]',                # release_config (JSON)
-            '[1, 2]',                       # ontology_ids (JSON)
-            '[1]',                          # agent_ids (JSON)
+            '[{"id": 1, "is_config": true}, {"id": 2, "is_config": false}]',  # ontology_config (JSON)
+            '[{"id": 1, "is_config": true}]',  # agent_config (JSON)
             True,                           # is_config
             "user-001",                     # updated_by
             datetime(2024, 1, 1, 12, 0, 0), # updated_at
@@ -402,9 +418,19 @@ class TestApplicationAdapter:
         assert app.icon == "dGVzdC1pY29u"  # Base64 编码后的 "test-icon"
         assert app.version == "1.0.0"
         assert app.category == "测试分类"
+        assert app.micro_app is not None
+        assert app.micro_app.name == "test_app"
+        assert app.micro_app.entry == "/test_app"
+        assert app.micro_app.headless is False
         assert app.release_config == ["release-1"]
-        assert app.ontology_ids == [1, 2]
-        assert app.agent_ids == [1]
+        assert len(app.ontology_config) == 2
+        assert app.ontology_config[0].id == 1
+        assert app.ontology_config[0].is_config is True
+        assert app.ontology_config[1].id == 2
+        assert app.ontology_config[1].is_config is False
+        assert len(app.agent_config) == 1
+        assert app.agent_config[0].id == 1
+        assert app.agent_config[0].is_config is True
         assert app.is_config is True
         assert app.updated_by == "user-001"
         assert app.updated_at == datetime(2024, 1, 1, 12, 0, 0)
@@ -422,6 +448,7 @@ class TestApplicationAdapter:
             None,  # icon
             None,  # version
             None,  # category
+            None,  # micro_app
             None,  # release_config
             None,  # ontology_ids
             None,  # agent_ids
@@ -437,8 +464,8 @@ class TestApplicationAdapter:
         assert app.version is None
         assert app.category is None
         assert app.release_config == []
-        assert app.ontology_ids == []
-        assert app.agent_ids == []
+        assert app.ontology_config == []
+        assert app.agent_config == []
         assert app.is_config is False
 
     @pytest.mark.asyncio
@@ -454,6 +481,7 @@ class TestApplicationAdapter:
             None,
             None,
             None,
+            None,  # micro_app
             "{invalid-json}",  # Invalid JSON
             "{invalid}",
             "{invalid}",
@@ -465,8 +493,8 @@ class TestApplicationAdapter:
         with patch('src.adapters.application_adapter.logger') as mock_logger:
             app = adapter._row_to_application(row)
             assert app.release_config == []
-            assert app.ontology_ids == []
-            assert app.agent_ids == []
+            assert app.ontology_config == []
+            assert app.agent_config == []
 
     def test_parse_json_list_returns_list_for_valid_json(self, test_settings: Settings):
         """测试 _parse_json_list 对有效 JSON 返回列表。"""
@@ -524,7 +552,7 @@ class TestApplicationRouter:
 
             response = client.get(
                 f"{test_settings.api_prefix}/applications/basic-info",
-                params={"app_id": "nonexistent-key"}
+                params={"key": "nonexistent-key"}
             )
 
             assert response.status_code == 404
@@ -539,7 +567,7 @@ class TestApplicationRouter:
 
             response = client.get(
                 f"{test_settings.api_prefix}/applications/ontologies",
-                params={"app_id": "nonexistent-key"}
+                params={"key": "nonexistent-key"}
             )
 
             assert response.status_code == 404
@@ -554,7 +582,7 @@ class TestApplicationRouter:
 
             response = client.get(
                 f"{test_settings.api_prefix}/applications/agents",
-                params={"app_id": "nonexistent-key"}
+                params={"key": "nonexistent-key"}
             )
 
             assert response.status_code == 404
@@ -615,8 +643,16 @@ class TestApplicationRouter:
 
             response = client.put(
                 f"{test_settings.api_prefix}/applications/config",
-                params={"app_id": "nonexistent-key"},
-                json={"ontology_ids": [1, 2], "agent_ids": [1]}
+                params={"key": "nonexistent-key"},
+                json={
+                    "ontology_config": [
+                        {"id": 1, "is_config": True},
+                        {"id": 2, "is_config": False}
+                    ],
+                    "agent_config": [
+                        {"id": 1, "is_config": True}
+                    ]
+                }
             )
 
             assert response.status_code == 404

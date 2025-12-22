@@ -1,5 +1,32 @@
 components:
   schemas:
+    # ============ 微应用信息 Schema ============
+    MicroApp:
+      summary: 微应用信息
+      description: 微应用配置信息，对应 manifest.yaml 中的 micro-app 配置
+      type: object
+      properties:
+        name:
+          type: string
+          title: 微应用包名
+          description: 微应用的包名
+        entry:
+          type: string
+          title: 微应用入口路径
+          description: 微应用的入口路径
+        headless:
+          type: boolean
+          title: 是否不显示导航头
+          description: "false: 显示导航头，true: 不显示导航头"
+          default: false
+      required:
+        - name
+        - entry
+      example:
+        name: 'intelligent_fault_analysis'
+        entry: '/intelligent_fault_analysis'
+        headless: false
+
     # ============ 应用信息 Schema ============
     Application:
       summary: 应用信息
@@ -32,6 +59,8 @@ components:
           title: 应用版本号
           description: 必须符合语义版本号规范
           maxLength: 128
+        micro_app:
+          $ref: '#/components/schemas/MicroApp'
         release_config:
           type: array
           title: 应用安装配置
@@ -39,20 +68,28 @@ components:
           items:
             type: string
           example: ["release1", "release2"]
-        ontology_ids:
+        ontology_config:
           type: array
           title: 业务知识网络配置
-          description: 多个业务知识网络 ID
+          description: 业务知识网络配置列表
           items:
-            type: integer
-          example: [1, 2]
-        agent_ids:
+            $ref: '#/components/schemas/OntologyConfigItem'
+          example:
+            - id: 201
+              is_config: true
+            - id: 202
+              is_config: false
+        agent_config:
           type: array
           title: 智能体配置
-          description: 多个智能体 ID
+          description: 智能体配置列表
           items:
-            type: integer
-          example: [1, 2]
+            $ref: '#/components/schemas/AgentConfigItem'
+          example:
+            - id: 201
+              is_config: true
+            - id: 202
+              is_config: false
         is_config:
           type: boolean
           title: 是否完成配置
@@ -80,9 +117,19 @@ components:
         version: '1.0.0'
         icon: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
         category: 'DIP for ITOps'
+        micro_app:
+          name: 'intelligent_fault_analysis'
+          entry: '/intelligent_fault_analysis'
+          headless: false
         release_config: ['app-release-1']
-        ontology_ids: [1, 2]
-        agent_ids: [1]
+        ontology_config:
+          - id: 201
+            is_config: true
+          - id: 202
+            is_config: false
+        agent_config:
+          - id: 201
+            is_config: true
         is_config: true
         updated_by: 'user-uuid-1234'
         updated_at: '2025-12-13T12:00:00Z'
@@ -117,6 +164,8 @@ components:
         category:
           type: string
           title: 应用所属分组
+        micro_app:
+          $ref: '#/components/schemas/MicroApp'
         is_config:
           type: boolean
           title: 是否完成配置
@@ -133,6 +182,35 @@ components:
         - is_config
         - updated_by
         - updated_at
+
+    # ============ 业务知识网络配置项 Schema ============
+    OntologyConfigItem:
+      summary: 业务知识网络配置项
+      type: object
+      properties:
+        id:
+          type: integer
+          title: 业务知识网络 ID
+        is_config:
+          type: boolean
+          title: 是否已配置
+          default: false
+      required:
+        - id
+
+    AgentConfigItem:
+      summary: 智能体配置项
+      type: object
+      properties:
+        id:
+          type: integer
+          title: 智能体 ID
+        is_config:
+          type: boolean
+          title: 是否已配置
+          default: false
+      required:
+        - id
 
     # ============ 业务知识网络配置 Schema ============
     OntologyInfo:
@@ -192,16 +270,16 @@ components:
       description: 用于配置应用的业务知识网络和智能体
       type: object
       properties:
-        ontology_ids:
+        ontology_config:
           type: array
-          title: 业务知识网络 ID 列表
+          title: 业务知识网络配置列表
           items:
-            type: integer
-        agent_ids:
+            $ref: '#/components/schemas/OntologyConfigItem'
+        agent_config:
           type: array
-          title: 智能体 ID 列表
+          title: 智能体配置列表
           items:
-            type: integer
+            $ref: '#/components/schemas/AgentConfigItem'
 
     # ============ 错误响应 Schema ============
     ErrorResponse:

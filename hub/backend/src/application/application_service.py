@@ -17,7 +17,10 @@ from packaging import version as pkg_version
 
 import yaml
 
-from src.domains.application import Application, OntologyInfo, AgentInfo, ManifestInfo
+from src.domains.application import (
+    Application, OntologyInfo, AgentInfo, ManifestInfo, MicroAppInfo,
+    OntologyConfigItem, AgentConfigItem
+)
 from src.ports.application_port import ApplicationPort
 from src.ports.external_service_port import (
     DeployInstallerPort,
@@ -115,21 +118,21 @@ class ApplicationService:
         application = await self._application_port.get_application_by_key(app_id)
         
         ontologies = []
-        for onto_id in application.ontology_ids:
+        for config_item in application.ontology_config:
             try:
                 if self._ontology_manager_port:
-                    kn_info = await self._ontology_manager_port.get_knowledge_network(str(onto_id))
+                    kn_info = await self._ontology_manager_port.get_knowledge_network(str(config_item.id))
                     ontologies.append(OntologyInfo(
-                        id=onto_id,
+                        id=config_item.id,
                         name=kn_info.name,
                         description=kn_info.comment,
                     ))
                 else:
                     # 如果没有外部服务端口，只返回 ID
-                    ontologies.append(OntologyInfo(id=onto_id))
+                    ontologies.append(OntologyInfo(id=config_item.id))
             except Exception as e:
-                logger.warning(f"获取业务知识网络详情失败 (ID: {onto_id}): {e}")
-                ontologies.append(OntologyInfo(id=onto_id))
+                logger.warning(f"获取业务知识网络详情失败 (ID: {config_item.id}): {e}")
+                ontologies.append(OntologyInfo(id=config_item.id))
         
         return ontologies
 
@@ -149,27 +152,26 @@ class ApplicationService:
         application = await self._application_port.get_application_by_key(app_id)
         
         agents = []
-        for agent_id in application.agent_ids:
+        for config_item in application.agent_config:
             # 智能体详情需要从 Agent Factory 获取
             # 目前 Agent Factory 没有提供查询接口，只返回 ID
-            agents.append(AgentInfo(id=agent_id))
+            agents.append(AgentInfo(id=config_item.id))
         
         return agents
 
     async def configure_application(
         self,
         app_id: str,
-        ontology_ids: Optional[List[int]] = None,
-        agent_ids: Optional[List[int]] = None,
         updated_by: str = "",
     ) -> Application:
         """
         配置应用的业务知识网络和智能体。
 
+        根据应用当前在数据库中的业务知识网络配置 (ontology_config)
+        和智能体配置 (agent_config)，将每一项的 is_config 设置为 True。
+
         参数:
             app_id: 应用 ID（key）
-            ontology_ids: 业务知识网络 ID 列表
-            agent_ids: 智能体 ID 列表
             updated_by: 更新者用户 ID
 
         返回:
@@ -180,16 +182,22 @@ class ApplicationService:
         """
         # 获取现有应用
         application = await self._application_port.get_application_by_key(app_id)
-        
-        # 使用新值或保留原值
-        new_ontology_ids = ontology_ids if ontology_ids is not None else application.ontology_ids
-        new_agent_ids = agent_ids if agent_ids is not None else application.agent_ids
-        
+
+        # 基于现有配置，将 is_config 统一置为 True
+        new_ontology_config = [
+            OntologyConfigItem(id=item.id, is_config=True)
+            for item in application.ontology_config
+        ]
+        new_agent_config = [
+            AgentConfigItem(id=item.id, is_config=True)
+            for item in application.agent_config
+        ]
+
         # 更新配置
         return await self._application_port.update_application_config(
             key=app_id,
-            ontology_ids=new_ontology_ids,
-            agent_ids=new_agent_ids,
+            ontology_config=new_ontology_config,
+            agent_config=new_agent_config,
             updated_by=updated_by,
         )
 
@@ -298,24 +306,30 @@ class ApplicationService:
                         release_configs.append(release_name)
             
             # 导入业务知识网络
-            ontology_ids = []
+            ontology_config = []
             if self._ontology_manager_port:
                 for onto_config in manifest.ontologies:
                     try:
                         onto_id = await self._ontology_manager_port.create_knowledge_network(onto_config)
                         if onto_id:
-                            ontology_ids.append(int(onto_id))
+                            ontology_config.append(OntologyConfigItem(
+                                id=int(onto_id),
+                                is_config=False,  # 安装时默认为未配置
+                            ))
                     except Exception as e:
                         logger.warning(f"导入业务知识网络失败: {e}")
             
             # 导入智能体
-            agent_ids = []
+            agent_config = []
             if self._agent_factory_port:
-                for agent_config in manifest.agents:
+                for agent_config_data in manifest.agents:
                     try:
-                        agent_result = await self._agent_factory_port.create_agent(agent_config)
+                        agent_result = await self._agent_factory_port.create_agent(agent_config_data)
                         if agent_result.id:
-                            agent_ids.append(int(agent_result.id))
+                            agent_config.append(AgentConfigItem(
+                                id=int(agent_result.id),
+                                is_config=False,  # 安装时默认为未配置
+                            ))
                     except Exception as e:
                         logger.warning(f"导入智能体失败: {e}")
             
@@ -328,9 +342,10 @@ class ApplicationService:
                 icon=icon_base64,
                 version=manifest.version,
                 category=manifest.category,
+                micro_app=manifest.micro_app,
                 release_config=release_configs,
-                ontology_ids=ontology_ids,
-                agent_ids=agent_ids,
+                ontology_config=ontology_config,
+                agent_config=agent_config,
                 is_config=False,  # 安装后需要手动配置
                 updated_by=updated_by,
                 updated_at=datetime.now(),
@@ -444,6 +459,7 @@ class ApplicationService:
         key = data.get("key")
         name = data.get("name")
         version = data.get("version")
+        manifest_version = data.get("manifest_version", 1)
         
         if not key:
             raise ValueError("manifest.yaml 缺少 key 字段")
@@ -452,12 +468,30 @@ class ApplicationService:
         if not version:
             raise ValueError("manifest.yaml 缺少 version 字段")
         
+        # 解析 micro-app 配置
+        micro_app = None
+        micro_app_data = data.get("micro-app")
+        if micro_app_data:
+            micro_app_name = micro_app_data.get("name")
+            micro_app_entry = micro_app_data.get("entry")
+            if not micro_app_name:
+                raise ValueError("manifest.yaml 中 micro-app.name 字段缺失")
+            if not micro_app_entry:
+                raise ValueError("manifest.yaml 中 micro-app.entry 字段缺失")
+            micro_app = MicroAppInfo(
+                name=micro_app_name,
+                entry=micro_app_entry,
+                headless=micro_app_data.get("headless", False),
+            )
+        
         return ManifestInfo(
             key=key,
             name=name,
             version=version,
+            manifest_version=manifest_version,
             description=data.get("description"),
             category=data.get("category"),
+            micro_app=micro_app,
             icon_path=data.get("icon"),
             charts=data.get("charts", []),
             images=data.get("images", []),

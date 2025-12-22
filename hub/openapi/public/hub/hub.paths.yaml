@@ -62,23 +62,21 @@ paths:
     put:
       operationId: configureApplication
       summary: 配置应用
-      description: 配置应用的业务知识网络和智能体。
+      description: |
+        配置应用的业务知识网络和智能体。
+
+        根据应用在系统中已有的业务知识网络配置和 Data Agent 智能体配置，
+        将配置项的 `is_config` 标记为 `true`，不再从请求体中传入配置列表。
       tags:
         - Application
       parameters:
-        - name: app_id
+        - name: key
           in: query
-          description: 应用 ID（key）
+          description: 应用唯一标识
           required: true
           schema:
             type: string
             maxLength: 32
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: './hub.schemas.yaml#/components/schemas/ApplicationConfigRequest'
       responses:
         '200':
           description: 配置成功
@@ -107,9 +105,9 @@ paths:
       tags:
         - Application
       parameters:
-        - name: app_id
+        - name: key
           in: query
-          description: 应用 ID（key）
+          description: 应用唯一标识
           required: true
           schema:
             type: string
@@ -142,9 +140,9 @@ paths:
       tags:
         - Application
       parameters:
-        - name: app_id
+        - name: key
           in: query
-          description: 应用 ID（key）
+          description: 应用唯一标识
           required: true
           schema:
             type: string
@@ -177,9 +175,9 @@ paths:
       tags:
         - Application
       parameters:
-        - name: app_id
+        - name: key
           in: query
-          description: 应用 ID（key）
+          description: 应用唯一标识
           required: true
           schema:
             type: string

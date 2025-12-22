@@ -12,7 +12,7 @@ from datetime import datetime
 
 import aiomysql
 
-from src.domains.application import Application
+from src.domains.application import Application, MicroAppInfo, OntologyConfigItem, AgentConfigItem
 from src.ports.application_port import ApplicationPort
 from src.infrastructure.config.settings import Settings
 
@@ -87,13 +87,80 @@ class ApplicationAdapter(ApplicationPort):
             logger.warning(f"JSON 解析失败: {json_str}")
             return default
 
+    def _parse_micro_app(self, json_str: Optional[str]) -> Optional[MicroAppInfo]:
+        """
+        解析 JSON 字符串为 MicroAppInfo。
+
+        参数:
+            json_str: JSON 字符串
+
+        返回:
+            Optional[MicroAppInfo]: 解析后的微应用信息，失败时返回 None
+        """
+        if not json_str:
+            return None
+        try:
+            data = json.loads(json_str)
+            if isinstance(data, dict):
+                return MicroAppInfo(
+                    name=data.get("name", ""),
+                    entry=data.get("entry", ""),
+                    headless=data.get("headless", False),
+                )
+            return None
+        except (json.JSONDecodeError, TypeError) as e:
+            logger.warning(f"微应用配置 JSON 解析失败: {json_str}, 错误: {e}")
+            return None
+
+    def _parse_config_list(self, json_str: Optional[str], config_type: str) -> list:
+        """
+        解析配置列表 JSON 字符串。
+
+        参数:
+            json_str: JSON 字符串
+            config_type: 配置类型 ('ontology' 或 'agent')
+
+        返回:
+            list: 解析后的配置项列表
+        """
+        if not json_str:
+            return []
+        try:
+            data = json.loads(json_str)
+            if not isinstance(data, list):
+                return []
+            
+            result = []
+            for item in data:
+                if isinstance(item, dict):
+                    if config_type == 'ontology':
+                        result.append(OntologyConfigItem(
+                            id=item.get("id", 0),
+                            is_config=item.get("is_config", False),
+                        ))
+                    elif config_type == 'agent':
+                        result.append(AgentConfigItem(
+                            id=item.get("id", 0),
+                            is_config=item.get("is_config", False),
+                        ))
+                # 兼容旧格式：如果是整数，转换为配置项
+                elif isinstance(item, int):
+                    if config_type == 'ontology':
+                        result.append(OntologyConfigItem(id=item, is_config=False))
+                    elif config_type == 'agent':
+                        result.append(AgentConfigItem(id=item, is_config=False))
+            return result
+        except (json.JSONDecodeError, TypeError) as e:
+            logger.warning(f"配置列表 JSON 解析失败: {json_str}, 错误: {e}")
+            return []
+
     def _row_to_application(self, row: tuple) -> Application:
         """
         将数据库行转换为应用领域模型。
 
         参数:
             row: 数据库查询结果行
-                (id, key, name, description, icon, version, category, 
+                (id, key, name, description, icon, version, category, micro_app,
                  release_config, ontology_ids, agent_ids, is_config, updated_by, updated_at)
 
         返回:
@@ -109,9 +176,11 @@ class ApplicationAdapter(ApplicationPort):
                 icon_base64 = None
 
         # 解析 JSON 字段
-        release_config = self._parse_json_list(row[7])
-        ontology_ids = self._parse_json_list(row[8])
-        agent_ids = self._parse_json_list(row[9])
+        micro_app = self._parse_micro_app(row[7])
+        release_config = self._parse_json_list(row[8])
+        # 兼容旧格式：如果字段名还是 ontology_ids/agent_ids，先尝试解析为配置项
+        ontology_config = self._parse_config_list(row[9], 'ontology')
+        agent_config = self._parse_config_list(row[10], 'agent')
 
         return Application(
             id=row[0],
@@ -121,12 +190,13 @@ class ApplicationAdapter(ApplicationPort):
             icon=icon_base64,
             version=row[5],
             category=row[6],
+            micro_app=micro_app,
             release_config=release_config,
-            ontology_ids=ontology_ids,
-            agent_ids=agent_ids,
-            is_config=bool(row[10]) if row[10] is not None else False,
-            updated_by=row[11] or "",
-            updated_at=row[12],
+            ontology_config=ontology_config,
+            agent_config=agent_config,
+            is_config=bool(row[11]) if row[11] is not None else False,
+            updated_by=row[12] or "",
+            updated_at=row[13],
         )
 
     async def get_all_applications(self) -> List[Application]:
@@ -140,7 +210,7 @@ class ApplicationAdapter(ApplicationPort):
         async with pool.acquire() as conn:
             async with conn.cursor() as cursor:
                 await cursor.execute(
-                    """SELECT id, `key`, name, description, icon, version, category,
+                    """SELECT id, `key`, name, description, icon, version, category, micro_app,
                               release_config, ontology_ids, agent_ids, is_config, 
                               updated_by, updated_at 
                        FROM t_application 
@@ -166,7 +236,7 @@ class ApplicationAdapter(ApplicationPort):
         async with pool.acquire() as conn:
             async with conn.cursor() as cursor:
                 await cursor.execute(
-                    """SELECT id, `key`, name, description, icon, version, category,
+                    """SELECT id, `key`, name, description, icon, version, category, micro_app,
                               release_config, ontology_ids, agent_ids, is_config,
                               updated_by, updated_at 
                        FROM t_application 
@@ -192,7 +262,7 @@ class ApplicationAdapter(ApplicationPort):
         async with pool.acquire() as conn:
             async with conn.cursor() as cursor:
                 await cursor.execute(
-                    """SELECT id, `key`, name, description, icon, version, category,
+                    """SELECT id, `key`, name, description, icon, version, category, micro_app,
                               release_config, ontology_ids, agent_ids, is_config,
                               updated_by, updated_at 
                        FROM t_application 
@@ -239,17 +309,30 @@ class ApplicationAdapter(ApplicationPort):
                         icon_binary = None
 
                 # 序列化 JSON 字段
+                micro_app_json = None
+                if application.micro_app:
+                    micro_app_json = json.dumps({
+                        "name": application.micro_app.name,
+                        "entry": application.micro_app.entry,
+                        "headless": application.micro_app.headless,
+                    })
                 release_config_json = json.dumps(application.release_config) if application.release_config else "[]"
-                ontology_ids_json = json.dumps(application.ontology_ids) if application.ontology_ids else "[]"
-                agent_ids_json = json.dumps(application.agent_ids) if application.agent_ids else "[]"
+                ontology_config_json = json.dumps([
+                    {"id": item.id, "is_config": item.is_config}
+                    for item in (application.ontology_config or [])
+                ])
+                agent_config_json = json.dumps([
+                    {"id": item.id, "is_config": item.is_config}
+                    for item in (application.agent_config or [])
+                ])
 
                 # 插入新应用
                 await cursor.execute(
                     """INSERT INTO t_application 
-                       (`key`, name, description, icon, version, category,
+                       (`key`, name, description, icon, version, category, micro_app,
                         release_config, ontology_ids, agent_ids, is_config,
                         updated_by, updated_at) 
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                     (
                         application.key,
                         application.name,
@@ -257,9 +340,10 @@ class ApplicationAdapter(ApplicationPort):
                         icon_binary,
                         application.version,
                         application.category,
+                        micro_app_json,
                         release_config_json,
-                        ontology_ids_json,
-                        agent_ids_json,
+                        ontology_config_json,
+                        agent_config_json,
                         application.is_config,
                         application.updated_by,
                         application.updated_at or datetime.now(),
@@ -296,13 +380,26 @@ class ApplicationAdapter(ApplicationPort):
                         icon_binary = None
 
                 # 序列化 JSON 字段
+                micro_app_json = None
+                if application.micro_app:
+                    micro_app_json = json.dumps({
+                        "name": application.micro_app.name,
+                        "entry": application.micro_app.entry,
+                        "headless": application.micro_app.headless,
+                    })
                 release_config_json = json.dumps(application.release_config) if application.release_config else "[]"
-                ontology_ids_json = json.dumps(application.ontology_ids) if application.ontology_ids else "[]"
-                agent_ids_json = json.dumps(application.agent_ids) if application.agent_ids else "[]"
+                ontology_config_json = json.dumps([
+                    {"id": item.id, "is_config": item.is_config}
+                    for item in (application.ontology_config or [])
+                ])
+                agent_config_json = json.dumps([
+                    {"id": item.id, "is_config": item.is_config}
+                    for item in (application.agent_config or [])
+                ])
 
                 await cursor.execute(
                     """UPDATE t_application 
-                       SET name = %s, description = %s, icon = %s, version = %s, category = %s,
+                       SET name = %s, description = %s, icon = %s, version = %s, category = %s, micro_app = %s,
                            release_config = %s, ontology_ids = %s, agent_ids = %s, is_config = %s,
                            updated_by = %s, updated_at = %s 
                        WHERE `key` = %s""",
@@ -312,9 +409,10 @@ class ApplicationAdapter(ApplicationPort):
                         icon_binary,
                         application.version,
                         application.category,
+                        micro_app_json,
                         release_config_json,
-                        ontology_ids_json,
-                        agent_ids_json,
+                        ontology_config_json,
+                        agent_config_json,
                         application.is_config,
                         application.updated_by,
                         application.updated_at or datetime.now(),
@@ -330,8 +428,8 @@ class ApplicationAdapter(ApplicationPort):
     async def update_application_config(
         self,
         key: str,
-        ontology_ids: List[int],
-        agent_ids: List[int],
+        ontology_config: List[OntologyConfigItem],
+        agent_config: List[AgentConfigItem],
         updated_by: str
     ) -> Application:
         """
@@ -339,8 +437,8 @@ class ApplicationAdapter(ApplicationPort):
 
         参数:
             key: 应用唯一标识
-            ontology_ids: 业务知识网络 ID 列表
-            agent_ids: 智能体 ID 列表
+            ontology_config: 业务知识网络配置列表
+            agent_config: 智能体配置列表
             updated_by: 更新者用户 ID
 
         返回:
@@ -352,8 +450,14 @@ class ApplicationAdapter(ApplicationPort):
         pool = await self._get_pool()
         async with pool.acquire() as conn:
             async with conn.cursor() as cursor:
-                ontology_ids_json = json.dumps(ontology_ids)
-                agent_ids_json = json.dumps(agent_ids)
+                ontology_config_json = json.dumps([
+                    {"id": item.id, "is_config": item.is_config}
+                    for item in ontology_config
+                ])
+                agent_config_json = json.dumps([
+                    {"id": item.id, "is_config": item.is_config}
+                    for item in agent_config
+                ])
                 is_config = True  # 配置后标记为已配置
 
                 await cursor.execute(
@@ -362,8 +466,8 @@ class ApplicationAdapter(ApplicationPort):
                            updated_by = %s, updated_at = %s 
                        WHERE `key` = %s""",
                     (
-                        ontology_ids_json,
-                        agent_ids_json,
+                        ontology_config_json,
+                        agent_config_json,
                         is_config,
                         updated_by,
                         datetime.now(),

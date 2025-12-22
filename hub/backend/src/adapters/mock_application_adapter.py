@@ -8,7 +8,7 @@ from typing import List, Optional
 from datetime import datetime
 from copy import deepcopy
 
-from src.domains.application import Application
+from src.domains.application import Application, MicroAppInfo, OntologyConfigItem, AgentConfigItem
 from src.ports.application_port import ApplicationPort
 
 logger = logging.getLogger(__name__)
@@ -42,9 +42,19 @@ class MockApplicationAdapter(ApplicationPort):
                 icon=None,
                 version="1.0.0",
                 category="DIP for ITOps",
+                micro_app=MicroAppInfo(
+                    name="intelligent_fault_analysis",
+                    entry="/intelligent_fault_analysis",
+                    headless=False,
+                ),
                 release_config=["itops-analysis-release"],
-                ontology_ids=[1, 2],
-                agent_ids=[1],
+                ontology_config=[
+                    OntologyConfigItem(id=1, is_config=True),
+                    OntologyConfigItem(id=2, is_config=True),
+                ],
+                agent_config=[
+                    AgentConfigItem(id=1, is_config=True),
+                ],
                 is_config=True,
                 updated_by="system",
                 updated_at=datetime.now(),
@@ -57,9 +67,10 @@ class MockApplicationAdapter(ApplicationPort):
                 icon=None,
                 version="2.1.0",
                 category="安全运营",
+                micro_app=None,
                 release_config=["security-monitor-release"],
-                ontology_ids=[],
-                agent_ids=[],
+                ontology_config=[],
+                agent_config=[],
                 is_config=False,
                 updated_by="system",
                 updated_at=datetime.now(),
@@ -167,8 +178,8 @@ class MockApplicationAdapter(ApplicationPort):
     async def update_application_config(
         self,
         key: str,
-        ontology_ids: List[int],
-        agent_ids: List[int],
+        ontology_config: List[OntologyConfigItem],
+        agent_config: List[AgentConfigItem],
         updated_by: str
     ) -> Application:
         """
@@ -176,8 +187,8 @@ class MockApplicationAdapter(ApplicationPort):
 
         参数:
             key: 应用唯一标识
-            ontology_ids: 业务知识网络 ID 列表
-            agent_ids: 智能体 ID 列表
+            ontology_config: 业务知识网络配置列表
+            agent_config: 智能体配置列表
             updated_by: 更新者用户 ID
 
         返回:
@@ -190,13 +201,13 @@ class MockApplicationAdapter(ApplicationPort):
             raise ValueError(f"应用不存在: {key}")
         
         app = self._applications[key]
-        app.ontology_ids = ontology_ids
-        app.agent_ids = agent_ids
+        app.ontology_config = ontology_config
+        app.agent_config = agent_config
         app.is_config = True
         app.updated_by = updated_by
         app.updated_at = datetime.now()
         
-        logger.info(f"[Mock] 更新应用配置: {key}, ontologies={ontology_ids}, agents={agent_ids}")
+        logger.info(f"[Mock] 更新应用配置: {key}, ontologies={[item.id for item in ontology_config]}, agents={[item.id for item in agent_config]}")
         
         return deepcopy(app)
 

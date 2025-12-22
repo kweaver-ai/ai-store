@@ -83,9 +83,10 @@ def init_database():
                     `icon` BLOB NULL COMMENT '应用图标（二进制数据）',
                     `version` VARCHAR(128) NULL COMMENT '当前上传的版本号',
                     `category` VARCHAR(128) NULL COMMENT '应用所属分组',
+                    `micro_app` TEXT NULL COMMENT '微应用配置（JSON对象）',
                     `release_config` TEXT NULL COMMENT '应用安装配置（JSON数组，helm release名称列表）',
-                    `ontology_ids` TEXT NULL COMMENT '业务知识网络ID列表（JSON数组）',
-                    `agent_ids` TEXT NULL COMMENT '智能体ID列表（JSON数组）',
+                    `ontology_ids` TEXT NULL COMMENT '业务知识网络配置（JSON数组，每个元素包含id和is_config字段）',
+                    `agent_ids` TEXT NULL COMMENT '智能体配置（JSON数组，每个元素包含id和is_config字段）',
                     `is_config` BOOLEAN NOT NULL DEFAULT FALSE COMMENT '是否完成配置',
                     `updated_by` CHAR(36) NOT NULL COMMENT '更新者ID',
                     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -126,7 +127,8 @@ def migrate_database():
             # 检查并添加新字段
             migrations = [
                 ("category", "ALTER TABLE `t_application` ADD COLUMN `category` VARCHAR(128) NULL COMMENT '应用所属分组' AFTER `version`"),
-                ("release_config", "ALTER TABLE `t_application` ADD COLUMN `release_config` TEXT NULL COMMENT '应用安装配置（JSON数组，helm release名称列表）' AFTER `category`"),
+                ("micro_app", "ALTER TABLE `t_application` ADD COLUMN `micro_app` TEXT NULL COMMENT '微应用配置（JSON对象）' AFTER `category`"),
+                ("release_config", "ALTER TABLE `t_application` ADD COLUMN `release_config` TEXT NULL COMMENT '应用安装配置（JSON数组，helm release名称列表）' AFTER `micro_app`"),
                 ("ontology_ids", "ALTER TABLE `t_application` ADD COLUMN `ontology_ids` TEXT NULL COMMENT '业务知识网络ID列表（JSON数组）' AFTER `release_config`"),
                 ("agent_ids", "ALTER TABLE `t_application` ADD COLUMN `agent_ids` TEXT NULL COMMENT '智能体ID列表（JSON数组）' AFTER `ontology_ids`"),
                 ("is_config", "ALTER TABLE `t_application` ADD COLUMN `is_config` BOOLEAN NOT NULL DEFAULT FALSE COMMENT '是否完成配置' AFTER `agent_ids`"),

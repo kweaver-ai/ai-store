@@ -8,6 +8,37 @@ from datetime import datetime
 from pydantic import BaseModel, Field, ConfigDict
 
 
+# ============ 微应用信息响应 ============
+
+class MicroAppResponse(BaseModel):
+    """
+    微应用信息响应模型。
+
+    对应 manifest.yaml 中的 micro-app 配置。
+    """
+    name: str = Field(..., description="微应用包名")
+    entry: str = Field(..., description="微应用入口路径")
+    headless: bool = Field(False, description="是否不显示导航头（false: 显示导航头，true: 不显示导航头）")
+
+
+# ============ 配置项响应 ============
+
+class OntologyConfigItemResponse(BaseModel):
+    """
+    业务知识网络配置项响应模型。
+    """
+    id: int = Field(..., description="业务知识网络 ID")
+    is_config: bool = Field(False, description="是否已配置")
+
+
+class AgentConfigItemResponse(BaseModel):
+    """
+    智能体配置项响应模型。
+    """
+    id: int = Field(..., description="智能体 ID")
+    is_config: bool = Field(False, description="是否已配置")
+
+
 # ============ 应用信息响应 ============
 
 class ApplicationResponse(BaseModel):
@@ -22,9 +53,10 @@ class ApplicationResponse(BaseModel):
     icon: Optional[str] = Field(None, description="应用图标，Base64 编码")
     category: Optional[str] = Field(None, description="应用所属分组", max_length=128)
     version: Optional[str] = Field(None, description="应用版本号", max_length=128)
+    micro_app: Optional[MicroAppResponse] = Field(None, description="微应用配置")
     release_config: List[str] = Field(default_factory=list, description="应用安装配置（helm release 列表）")
-    ontology_ids: List[int] = Field(default_factory=list, description="业务知识网络 ID 列表")
-    agent_ids: List[int] = Field(default_factory=list, description="智能体 ID 列表")
+    ontology_config: List[OntologyConfigItemResponse] = Field(default_factory=list, description="业务知识网络配置列表")
+    agent_config: List[AgentConfigItemResponse] = Field(default_factory=list, description="智能体配置列表")
     is_config: bool = Field(False, description="是否完成配置")
     updated_by: str = Field(..., description="更新者用户 ID", max_length=36)
     updated_at: datetime = Field(..., description="更新时间")
@@ -46,6 +78,7 @@ class ApplicationBasicInfoResponse(BaseModel):
     version: Optional[str] = Field(None, description="应用版本号")
     icon: Optional[str] = Field(None, description="应用图标")
     category: Optional[str] = Field(None, description="应用所属分组")
+    micro_app: Optional[MicroAppResponse] = Field(None, description="微应用配置")
     is_config: bool = Field(..., description="是否完成配置")
     updated_by: str = Field(..., description="更新者用户 ID")
     updated_at: datetime = Field(..., description="更新时间")
@@ -105,8 +138,8 @@ class ApplicationConfigRequest(BaseModel):
 
     对应 OpenAPI 中的 ApplicationConfigRequest schema。
     """
-    ontology_ids: Optional[List[int]] = Field(None, description="业务知识网络 ID 列表")
-    agent_ids: Optional[List[int]] = Field(None, description="智能体 ID 列表")
+    ontology_config: Optional[List[OntologyConfigItemResponse]] = Field(None, description="业务知识网络配置列表")
+    agent_config: Optional[List[AgentConfigItemResponse]] = Field(None, description="智能体配置列表")
 
 
 # ============ 错误响应 ============

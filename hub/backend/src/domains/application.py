@@ -9,6 +9,47 @@ from typing import Optional, List
 
 
 @dataclass
+class MicroAppInfo:
+    """
+    微应用信息。
+
+    属性:
+        name: 微应用包名
+        entry: 微应用入口路径
+        headless: 是否不显示导航头（false: 显示导航头，true: 不显示导航头）
+    """
+    name: str
+    entry: str
+    headless: bool = False
+
+
+@dataclass
+class OntologyConfigItem:
+    """
+    业务知识网络配置项。
+
+    属性:
+        id: 业务知识网络 ID
+        is_config: 是否已配置
+    """
+    id: int
+    is_config: bool = False
+
+
+@dataclass
+class AgentConfigItem:
+    """
+    智能体配置项。
+
+    属性:
+        id: 智能体 ID
+        is_config: 是否已配置
+    """
+    id: int
+    is_config: bool = False
+
+
+@dataclass
 class Application:
     """
     应用领域模型。
@@ -21,9 +62,10 @@ class Application:
         icon: 应用图标（Base64编码字符串）
         version: 当前版本号
         category: 应用所属分类
+        micro_app: 微应用配置信息
         release_config: 应用安装配置（helm release 名称列表）
-        ontology_ids: 业务知识网络 ID 列表
-        agent_ids: 智能体 ID 列表
+        ontology_config: 业务知识网络配置列表（每个配置项包含 id 和 is_config）
+        agent_config: 智能体配置列表（每个配置项包含 id 和 is_config）
         is_config: 是否完成配置
         updated_by: 更新者用户 ID
         updated_at: 更新时间
@@ -35,9 +77,10 @@ class Application:
     icon: Optional[str] = None
     version: Optional[str] = None
     category: Optional[str] = None
+    micro_app: Optional[MicroAppInfo] = None
     release_config: List[str] = field(default_factory=list)
-    ontology_ids: List[int] = field(default_factory=list)
-    agent_ids: List[int] = field(default_factory=list)
+    ontology_config: List[OntologyConfigItem] = field(default_factory=list)
+    agent_config: List[AgentConfigItem] = field(default_factory=list)
     is_config: bool = False
     updated_by: str = ""
     updated_at: Optional[datetime] = None
@@ -67,7 +110,7 @@ class Application:
         返回:
             bool: 是否有业务知识网络配置
         """
-        return len(self.ontology_ids) > 0
+        return len(self.ontology_config) > 0
 
     def has_agents(self) -> bool:
         """
@@ -76,7 +119,7 @@ class Application:
         返回:
             bool: 是否有智能体配置
         """
-        return len(self.agent_ids) > 0
+        return len(self.agent_config) > 0
 
 
 @dataclass
@@ -115,11 +158,13 @@ class ManifestInfo:
     应用安装包 manifest 信息。
 
     属性:
+        manifest_version: manifest 版本号，固定为 1
         key: 应用唯一标识
         name: 应用名称
         description: 应用描述
         version: 应用版本号
         category: 应用分类
+        micro_app: 微应用配置
         icon_path: 图标路径（相对于安装包根目录）
         charts: helm chart 列表
         images: 镜像列表
@@ -129,8 +174,10 @@ class ManifestInfo:
     key: str
     name: str
     version: str
+    manifest_version: int = 1
     description: Optional[str] = None
     category: Optional[str] = None
+    micro_app: Optional[MicroAppInfo] = None
     icon_path: Optional[str] = None
     charts: List[dict] = field(default_factory=list)
     images: List[str] = field(default_factory=list)

@@ -14,11 +14,13 @@ from src.application.application_service import ApplicationService
 from src.routers.schemas.application import (
     ApplicationResponse,
     ApplicationBasicInfoResponse,
+    MicroAppResponse,
     OntologyListResponse,
     OntologyInfoResponse,
     AgentListResponse,
     AgentInfoResponse,
-    ApplicationConfigRequest,
+    OntologyConfigItemResponse,
+    AgentConfigItemResponse,
     ErrorResponse,
 )
 
@@ -37,6 +39,16 @@ def create_application_router(application_service: ApplicationService) -> APIRou
     """
     router = APIRouter(tags=["Application"])
 
+    def _micro_app_to_response(micro_app) -> MicroAppResponse:
+        """将微应用领域模型转换为响应模型。"""
+        if micro_app is None:
+            return None
+        return MicroAppResponse(
+            name=micro_app.name,
+            entry=micro_app.entry,
+            headless=micro_app.headless,
+        )
+
     def _application_to_response(app) -> ApplicationResponse:
         """将应用领域模型转换为响应模型。"""
         return ApplicationResponse(
@@ -46,9 +58,16 @@ def create_application_router(application_service: ApplicationService) -> APIRou
             icon=app.icon,
             category=app.category,
             version=app.version,
+            micro_app=_micro_app_to_response(app.micro_app),
             release_config=app.release_config or [],
-            ontology_ids=app.ontology_ids or [],
-            agent_ids=app.agent_ids or [],
+            ontology_config=[
+                OntologyConfigItemResponse(id=item.id, is_config=item.is_config)
+                for item in (app.ontology_config or [])
+            ],
+            agent_config=[
+                AgentConfigItemResponse(id=item.id, is_config=item.is_config)
+                for item in (app.agent_config or [])
+            ],
             is_config=app.is_config,
             updated_by=app.updated_by,
             updated_at=app.updated_at,
@@ -177,7 +196,7 @@ def create_application_router(application_service: ApplicationService) -> APIRou
     @router.put(
         "/applications/config",
         summary="配置应用",
-        description="配置应用的业务知识网络和智能体",
+        description="配置应用的业务知识网络和智能体（基于数据库中已有配置，将配置项标记为已配置）。",
         response_model=ApplicationResponse,
         responses={
             200: {"description": "配置成功"},
@@ -188,8 +207,7 @@ def create_application_router(application_service: ApplicationService) -> APIRou
     )
     async def configure_application(
         request: Request,
-        app_id: str = Query(..., description="应用 ID（key）", max_length=32),
-        config_request: ApplicationConfigRequest = None,
+        key: str = Query(..., description="应用唯一标识", max_length=32),
     ) -> ApplicationResponse:
         """
         配置应用。
@@ -197,7 +215,7 @@ def create_application_router(application_service: ApplicationService) -> APIRou
         配置应用的业务知识网络和智能体。
 
         参数:
-            app_id: 应用 ID（key）
+            key: 应用唯一标识
             config_request: 配置请求体
 
         返回:
@@ -206,11 +224,11 @@ def create_application_router(application_service: ApplicationService) -> APIRou
         try:
             # 获取更新者用户 ID
             updated_by = request.headers.get("X-User-Id", "system")
-            
+
+            # 应用配置不再从请求体中传入，而是直接基于数据库中已有的配置，
+            # 将业务知识网络配置和智能体配置的 is_config 统一设置为 True。
             application = await application_service.configure_application(
-                app_id=app_id,
-                ontology_ids=config_request.ontology_ids if config_request else None,
-                agent_ids=config_request.agent_ids if config_request else None,
+                app_id=key,
                 updated_by=updated_by,
             )
             
@@ -248,19 +266,19 @@ def create_application_router(application_service: ApplicationService) -> APIRou
         }
     )
     async def get_application_basic_info(
-        app_id: str = Query(..., description="应用 ID（key）", max_length=32),
+        key: str = Query(..., description="应用唯一标识", max_length=32),
     ) -> ApplicationBasicInfoResponse:
         """
         查看应用基础信息。
 
         参数:
-            app_id: 应用 ID（key）
+            key: 应用唯一标识
 
         返回:
             ApplicationBasicInfoResponse: 应用基础信息
         """
         try:
-            application = await application_service.get_application_basic_info(app_id)
+            application = await application_service.get_application_basic_info(key)
             
             return ApplicationBasicInfoResponse(
                 key=application.key,
@@ -269,6 +287,7 @@ def create_application_router(application_service: ApplicationService) -> APIRou
                 version=application.version,
                 icon=application.icon,
                 category=application.category,
+                micro_app=_micro_app_to_response(application.micro_app),
                 is_config=application.is_config,
                 updated_by=application.updated_by,
                 updated_at=application.updated_at,
@@ -306,7 +325,7 @@ def create_application_router(application_service: ApplicationService) -> APIRou
         }
     )
     async def get_application_ontologies(
-        app_id: str = Query(..., description="应用 ID（key）", max_length=32),
+        key: str = Query(..., description="应用唯一标识", max_length=32),
     ) -> OntologyListResponse:
         """
         查看业务知识网络配置。
@@ -316,13 +335,13 @@ def create_application_router(application_service: ApplicationService) -> APIRou
         2. 遍历查询业务知识网络详情获取名称、描述
 
         参数:
-            app_id: 应用 ID（key）
+            key: 应用唯一标识
 
         返回:
             OntologyListResponse: 业务知识网络列表
         """
         try:
-            ontologies = await application_service.get_application_ontologies(app_id)
+            ontologies = await application_service.get_application_ontologies(key)
             
             return OntologyListResponse(
                 ontologies=[
@@ -367,7 +386,7 @@ def create_application_router(application_service: ApplicationService) -> APIRou
         }
     )
     async def get_application_agents(
-        app_id: str = Query(..., description="应用 ID（key）", max_length=32),
+        key: str = Query(..., description="应用唯一标识", max_length=32),
     ) -> AgentListResponse:
         """
         查看智能体配置。
@@ -377,13 +396,13 @@ def create_application_router(application_service: ApplicationService) -> APIRou
         2. 查询 Data Agent 智能体详情
 
         参数:
-            app_id: 应用 ID（key）
+            key: 应用唯一标识
 
         返回:
             AgentListResponse: 智能体列表
         """
         try:
-            agents = await application_service.get_application_agents(app_id)
+            agents = await application_service.get_application_agents(key)
             
             return AgentListResponse(
                 agents=[
