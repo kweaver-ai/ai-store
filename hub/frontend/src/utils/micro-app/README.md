@@ -22,8 +22,8 @@
 
 微应用统一挂载在：
 
-- `/application/:appKey/*`
-- 其中 `:appKey` 为微应用的应用包唯一标识（对应 `Application.key`）
+- `/application/:appName/*`
+- 其中 `:appName` 为微应用的应用包唯一标识（对应 `ApplicationBasicInfo.micro_app.name`）
 - 采用 History 模式
 
 ---
@@ -328,7 +328,7 @@ const MicroAppHeader = () => {
   }, [])
 
   // 这里会先插入一条“微应用根”项（应用图标+名称），
-  // 再把微应用上报的 breadcrumb 映射到 /application/:appKey/... 下
+  // 再把微应用上报的 breadcrumb 映射到 /application/:appName/... 下
   // 最终通过 Breadcrumb 组件渲染（内部自动加首页图标）
 }
 ```

@@ -3,7 +3,6 @@ import type { MenuProps } from 'antd'
 import clsx from 'classnames'
 import AvatarIcon from '@/assets/images/sider/avatar.svg?react'
 import { useAuthStore } from '@/stores'
-import { LogoutOutlined } from '@ant-design/icons'
 
 export interface UserMenuItemProps {
   /** 是否折叠 */
@@ -14,13 +13,11 @@ export const UserMenuItem = ({ collapsed }: UserMenuItemProps) => {
   const { userInfo, logout } = useAuthStore()
   const handleLogout = () => {
     logout()
-    window.location.replace('/login')
   }
 
   const menuItems: MenuProps['items'] = [
     {
       key: 'logout',
-      icon: <LogoutOutlined />,
       label: '退出登录',
       onClick: handleLogout,
     },

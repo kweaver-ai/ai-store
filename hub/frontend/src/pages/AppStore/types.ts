@@ -11,4 +11,3 @@ export enum AppStoreActionEnum {
   /** 卸载 */
   Uninstall = 'uninstall',
 }
-

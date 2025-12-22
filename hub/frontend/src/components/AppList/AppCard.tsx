@@ -129,7 +129,7 @@ const AppCard: React.FC<AppCardProps> = ({ app, mode, onMenuClick }) => {
                   e.stopPropagation()
                 }}
                 className={classNames(
-                  'w-6 h-6 flex items-center justify-center cursor-pointer text-[var(--dip-text-color-45)] hover:text-[var(--dip-text-color-85)] transition-opacity',
+                  'w-6 h-6 flex items-center justify-center cursor-pointer rounded text-[var(--dip-text-color-45)] hover:text-[var(--dip-text-color-85)] hover:bg-[--dip-hover-bg-color] transition-opacity',
                   menuOpen
                     ? 'opacity-100 visible'
                     : 'opacity-0 invisible group-hover:opacity-100 group-hover:visible'

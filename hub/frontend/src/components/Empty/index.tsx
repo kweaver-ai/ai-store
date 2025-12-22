@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react'
-import empty from '@/assets/images/empty.svg'
-import loadFailed from '@/assets/images/load-failed.png'
+import empty from '@/assets/images/abnormal/empty.svg'
+import loadFailed from '@/assets/images/abnormal/loadFailed.png'
+import searchEmpty from '@/assets/images/abnormal/searchEmpty.svg'
 /**
  * 空 样式组件
  * @interface IEmpty
@@ -34,6 +35,9 @@ const Empty: React.FC<IEmpty> = ({
     }
     if (type === 'failed') {
       return loadFailed
+    }
+    if (type === 'search') {
+      return searchEmpty
     }
     return empty
   }, [type, iconSrc])

@@ -21,7 +21,7 @@ let refreshingPromise: Promise<{ accessToken: string }> | null = null
 
 async function doRefreshTokenRequest(): Promise<{ accessToken: string }> {
   const response = await axios.get<{ accessToken: string }>(
-    '/af/api/session/v1/refresh-token'
+    '/dip/api/session/v1/refresh-token'
   )
   const newToken = response.data?.accessToken
   if (!newToken) {

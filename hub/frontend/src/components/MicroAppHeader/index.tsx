@@ -148,7 +148,9 @@ const MicroAppHeader = () => {
 
       {/* 右侧：Copilot 按钮和用户信息 */}
       <div className="flex items-center gap-x-4">
-        {isMicroAppRoute && <CopilotButton onClick={handleCopilotClick} />}
+        {isMicroAppRoute && currentMicroApp && (
+          <CopilotButton onClick={handleCopilotClick} />
+        )}
         <UserInfo />
       </div>
     </AntHeader>

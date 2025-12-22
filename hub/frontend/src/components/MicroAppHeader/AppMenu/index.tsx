@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
-import { Dropdown } from 'antd'
+import { Avatar, Button, Dropdown } from 'antd'
 import type { MenuProps } from 'antd'
 import { useApplicationsService } from '@/hooks/useApplicationsService'
+import AppMenuIcon from '@/assets/images/header/menu.svg?react'
 
 /**
  * 导航菜单图标按钮组件
@@ -28,20 +29,20 @@ export const AppMenu = () => {
   const menuItems: MenuProps['items'] = useMemo(
     () =>
       Array.isArray(apps)
-        ? apps.map((app) => ({
+        ? [...apps, ...apps].map((app) => ({
             key: app.key,
-            label: (
-              <div className="flex items-center gap-2">
-                {app.icon && (
-                  <img
-                    src={`data:image/png;base64,${app.icon}`}
-                    alt={app.name}
-                    className="w-[4px] h-[4px]"
-                  />
-                )}
-                <span>{app.name}</span>
-              </div>
+            icon: app.icon ? (
+              <img
+                src={`data:image/png;base64,${app.icon}`}
+                alt={app.name}
+                className="w-4 h-4 shrink-0"
+              />
+            ) : (
+              <Avatar size={24} className="shrink-0">
+                {app.name.charAt(0)}
+              </Avatar>
             ),
+            label: app.name,
           }))
         : [],
     [apps]
@@ -49,36 +50,35 @@ export const AppMenu = () => {
 
   return (
     <Dropdown
-      menu={{ items: menuItems, onClick: handleMenuClick }}
+      menu={{
+        items: menuItems,
+        onClick: handleMenuClick,
+        style: {
+          maxHeight: '80vh',
+        },
+      }}
       trigger={['click']}
       placement="bottomLeft"
+      styles={{
+        itemContent: {
+          maxWidth: '400px',
+          minWidth: '240px',
+          // overflow: 'hidden',
+          // textOverflow: 'ellipsis',
+          // whiteSpace: 'nowrap',
+        },
+      }}
     >
-      <button
-        className="flex items-center justify-center w-6 h-6 cursor-pointer bg-transparent border-0 p-0 text-[--dip-text-color] transition-opacity duration-200 hover:text-[--dip-link-color] disabled:opacity-50 disabled:cursor-not-allowed"
+      <Button
+        type="text"
         disabled={loading}
         onClick={handleButtonClick}
-      >
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* 第一行 */}
-          <circle cx="4" cy="4" r="2" fill="currentColor" />
-          <circle cx="12" cy="4" r="2" fill="currentColor" />
-          <circle cx="20" cy="4" r="2" fill="currentColor" />
-          {/* 第二行 */}
-          <circle cx="4" cy="12" r="2" fill="currentColor" />
-          <circle cx="12" cy="12" r="2" fill="currentColor" />
-          <circle cx="20" cy="12" r="2" fill="currentColor" />
-          {/* 第三行 */}
-          <circle cx="4" cy="20" r="2" fill="currentColor" />
-          <circle cx="12" cy="20" r="2" fill="currentColor" />
-          <circle cx="20" cy="20" r="2" fill="currentColor" />
-        </svg>
-      </button>
+        icon={
+          <span>
+            <AppMenuIcon />
+          </span>
+        }
+      />
     </Dropdown>
   )
 }

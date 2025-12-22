@@ -2,23 +2,22 @@ import { Dropdown, Avatar } from 'antd'
 import type { MenuProps } from 'antd'
 import AvatarIcon from '@/assets/images/sider/avatar.svg?react'
 import { DownOutlined } from '@ant-design/icons'
-import Cookies from 'js-cookie'
 import { useAuthStore } from '@/stores'
 
 /**
  * 用户信息组件
  */
 export const UserInfo = () => {
-  const { userInfo } = useAuthStore()
+  const { userInfo, logout } = useAuthStore()
 
-  const handleLogout = async () => {
-    Cookies.remove('dip.access_token')
+  const handleLogout = () => {
+    logout()
   }
 
   const menuItems: MenuProps['items'] = [
     {
       key: 'logout',
-      label: <a href="/dip/api/session/v1/logout">退出登录</a>,
+      label: '退出登录',
       onClick: handleLogout,
     },
   ]

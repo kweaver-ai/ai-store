@@ -1,9 +1,7 @@
-import { PushpinFilled, PushpinOutlined } from '@ant-design/icons'
 import type { ApplicationInfo } from '@/apis/dip-hub'
 import { ModeEnum } from './types'
-import { AppStoreActionEnum } from '@/pages/AppStore/types'
-import IconFont from '../IconFont'
-import { usePreferenceStore } from '@/stores'
+import { getAppStoreMenuItems } from '@/pages/AppStore/utils'
+import { getMyAppMenuItems } from '@/pages/MyApp/utils'
 
 // 卡片的最小宽度
 export const minCardWidth = 380
@@ -56,60 +54,11 @@ export const computeColumnCount = (
   return count
 }
 
-/** 我的应用操作菜单项 */
-export const getMyAppMenuItems = (app: ApplicationInfo) => {
-  const { isPinned } = usePreferenceStore.getState()
-  const pinned = isPinned(app.key)
-
-  if (pinned) {
-    return [
-      {
-        key: 'unfix',
-        label: '取消固定',
-        icon: <PushpinOutlined className="text-[var(--dip-warning-color)]" />,
-      },
-    ]
-  }
-  return [
-    {
-      key: 'fix',
-      icon: <PushpinOutlined />,
-      label: '固定',
-    },
-  ]
-}
-
-/** 应用商店操作菜单项 */
-export const getAppStoreMenuItems = () => {
-  return [
-    {
-      key: AppStoreActionEnum.Config,
-      icon: <IconFont type="icon-dip-shezhi" />,
-      label: '配置',
-    },
-    {
-      key: AppStoreActionEnum.Run,
-      icon: <IconFont type="icon-dip-run" />,
-      label: '运行',
-    },
-    {
-      key: AppStoreActionEnum.Auth,
-      icon: <IconFont type="icon-dip-User" />,
-      label: '授权管理',
-    },
-    { type: 'divider' },
-    {
-      key: AppStoreActionEnum.Uninstall,
-      icon: <IconFont type="icon-dip-trash" />,
-      danger: true,
-      label: '卸载',
-    },
-  ]
-}
-
+/** 获取应用卡片操作菜单项 */
 export const getAppCardMenuItems = (mode: ModeEnum, app: ApplicationInfo) => {
   if (mode === ModeEnum.AppStore) {
     return getAppStoreMenuItems()
   }
-  return getMyAppMenuItems(app)
+  // return getMyAppMenuItems(app)
+  return []
 }

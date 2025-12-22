@@ -13,6 +13,7 @@ import { useApplicationsService } from '@/hooks/useApplicationsService'
 import AppConfigDrawer from '@/components/AppConfigDrawer'
 import { deleteApplications } from '@/apis/dip-hub/applications'
 import UploadAppModal from '@/components/UploadAppModal'
+import styles from './index.module.less'
 
 const AppStore = () => {
   const { apps, loading, error, searchValue, handleSearch, handleRefresh } =
@@ -34,6 +35,7 @@ const AppStore = () => {
     async (action: string, _app: ApplicationInfo) => {
       try {
         switch (action) {
+          /** 卸载应用 */
           case AppStoreActionEnum.Uninstall:
             Modal.confirm({
               title: '确认卸载',
@@ -64,16 +66,23 @@ const AppStore = () => {
               },
             })
             break
+
+          /** 配置应用 */
           case AppStoreActionEnum.Config:
             setSelectedApp(_app)
             setConfigModalVisible(true)
             break
+
+          /** 运行应用 */
           case AppStoreActionEnum.Run:
-            // TODO: 运行应用
+            window.open(`/application/${_app.micro_app.name}`, '_blank')
             break
+
+          /** 授权管理 */
           case AppStoreActionEnum.Auth:
             // TODO: 跳转授权管理
             break
+
           default:
             break
         }
@@ -106,7 +115,7 @@ const AppStore = () => {
 
     if (apps.length === 0) {
       if (searchValue) {
-        return <Empty type="search" desc="抱歉，没有找到相关内容" />
+        return <Empty type="search" subDesc="抱歉，没有找到相关内容" />
       }
       return (
         <Empty
@@ -189,10 +198,38 @@ const AppStore = () => {
       <UploadAppModal
         open={installModalVisible}
         onCancel={() => setInstallModalVisible(false)}
-        onSuccess={() => {
+        onSuccess={(appInfo) => {
           setInstallModalVisible(false)
           handleRefresh()
-          message.success('安装成功')
+          // 显示成功提示
+          const key = `upload-success-${Date.now()}`
+          message.success({
+            key,
+            className: styles.uploadSuccessMessage,
+            content: (
+              <div className="flex items-center gap-2">
+                <span>
+                  应用"
+                  <span className="inline-block max-w-md truncate align-bottom">
+                    {appInfo.name}
+                  </span>
+                  "上传成功，请完成配置以启用服务。
+                  <a
+                    href=""
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setSelectedApp(appInfo)
+                      setConfigModalVisible(true)
+                      message.destroy(key)
+                    }}
+                    className="text-[--dip-primary-color]"
+                  >
+                    去配置
+                  </a>
+                </span>
+              </div>
+            ),
+          })
         }}
       />
     </GradientContainer>

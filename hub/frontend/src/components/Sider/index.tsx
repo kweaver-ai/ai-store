@@ -209,16 +209,17 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
         {/* logo + 收缩按钮 */}
         <div
           className={clsx(
-            'flex items-center justify-between gap-2 pb-4 pl-3 pr-2',
-            collapsed && 'justify-center pl-1.5 pr-1.5'
+            'flex items-center gap-2 pb-4',
+            collapsed
+              ? 'justify-center pl-1.5 pr-1.5'
+              : 'justify-between pl-3 pr-2'
           )}
         >
           <LogoIcon className={clsx('h-6 w-auto', collapsed && 'hidden')} />
           <Tooltip title={collapsed ? '展开' : '收起'} placement="right">
             <span
               className={clsx(
-                'text-sm cursor-pointer flex items-center justify-center w-8 h-8 rounded-md text-[--dip-text-color] hover:bg-[--dip-hover-bg-color]',
-                collapsed && '!w-full'
+                'text-sm cursor-pointer flex items-center justify-center w-8 h-8 rounded-md text-[--dip-text-color] hover:text-[--dip-primary-color]'
               )}
               onClick={() => onCollapse(!collapsed)}
             >

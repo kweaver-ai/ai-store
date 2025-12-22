@@ -31,6 +31,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
       isAuthenticated: true,
     }),
   logout: () => {
+    window.location.replace('/dip/api/session/v1/logout')
     Cookies.remove('dip.access_token')
     set({
       userInfo: null,

@@ -16,6 +16,7 @@ import {
 } from './utils'
 import { postApplications } from '@/apis/dip-hub/applications'
 import type { FileInfo } from './types'
+import type { ApplicationInfo } from '@/apis/dip-hub'
 import UploadFileIcon from '@/assets/images/uploadFile.svg?react'
 import styles from './index.module.less'
 import clsx from 'clsx'
@@ -25,8 +26,8 @@ const { Dragger } = Upload
 
 export interface UploadAppModalProps
   extends Pick<ModalProps, 'open' | 'onCancel'> {
-  /** 上传成功的回调 */
-  onSuccess: () => void
+  /** 上传成功的回调，传递应用信息 */
+  onSuccess: (appInfo: ApplicationInfo) => void
 }
 
 /** 上传应用安装包弹窗 */
@@ -36,16 +37,19 @@ const UploadAppModal = ({ open, onCancel, onSuccess }: UploadAppModalProps) => {
   )
   const [fileInfo, setFileInfo] = useState<FileInfo | null>(null)
   const [errorMessage, setErrorMessage] = useState<string>('')
-  const uploadControllerRef = useRef<AbortController | null>(null)
+  const [uploadedAppInfo, setUploadedAppInfo] =
+    useState<ApplicationInfo | null>(null)
+  const uploadRequestRef = useRef<{ abort: () => void } | null>(null)
 
   // 重置状态
   const resetState = () => {
     setUploadStatus(UploadStatus.INITIAL)
     setFileInfo(null)
     setErrorMessage('')
-    if (uploadControllerRef.current) {
-      uploadControllerRef.current.abort()
-      uploadControllerRef.current = null
+    setUploadedAppInfo(null)
+    if (uploadRequestRef.current) {
+      uploadRequestRef.current.abort()
+      uploadRequestRef.current = null
     }
   }
 
@@ -61,13 +65,10 @@ const UploadAppModal = ({ open, onCancel, onSuccess }: UploadAppModalProps) => {
     const { file } = info
     const { status } = file
 
-    console.log('handleFileChange', info)
-
     if (status === 'removed') {
       setFileInfo(null)
       setUploadStatus(UploadStatus.INITIAL)
       setErrorMessage('')
-      console.log('handleFileChange removed')
       return
     }
 
@@ -89,13 +90,12 @@ const UploadAppModal = ({ open, onCancel, onSuccess }: UploadAppModalProps) => {
 
     // 验证文件大小
     if (!validateFileSize(fileObj)) {
-      message.error('文件大小不能超过 1GB')
+      message.error('应用安装包大小不能超过 1GB')
       return
     }
 
     setFileInfo(getFileInfo(fileObj))
     setUploadStatus(UploadStatus.READY)
-    console.log('handleFileChange ready')
     setErrorMessage('')
   }
 
@@ -105,44 +105,72 @@ const UploadAppModal = ({ open, onCancel, onSuccess }: UploadAppModalProps) => {
       return
     }
 
+    // 如果存在上一个请求，取消它
+    if (uploadRequestRef.current) {
+      uploadRequestRef.current.abort()
+      uploadRequestRef.current = null
+    }
+
     setUploadStatus(UploadStatus.UPLOADING)
     setErrorMessage('')
-
-    // 创建 AbortController 用于取消上传
-    const controller = new AbortController()
-    uploadControllerRef.current = controller
 
     try {
       // 将文件转换为 Blob
       const blob = fileInfo.file
-      await postApplications(blob)
+      const requestPromise = postApplications(blob)
+      // 保存请求引用用于取消
+      uploadRequestRef.current = requestPromise as any
 
-      setUploadStatus(UploadStatus.SUCCESS)
-    } catch (error: any) {
-      if (controller.signal.aborted) {
-        // 如果已取消，不设置错误状态
+      const appInfo = await requestPromise
+
+      // 检查请求是否已被取消（可能在 await 期间被取消）
+      if (!uploadRequestRef.current) {
+        // 请求已被取消，不更新状态
         return
       }
 
+      // 请求成功后清除引用
+      uploadRequestRef.current = null
+
+      setUploadStatus(UploadStatus.SUCCESS)
+      // 保存应用信息，等待用户点击确定按钮后再调用 onSuccess
+      setUploadedAppInfo(appInfo)
+    } catch (error: any) {
+      // 检查请求是否已被取消（引用已被清除）
+      if (!uploadRequestRef.current) {
+        // 请求已被取消，不更新状态
+        return
+      }
+
+      // 请求被取消时，清除引用但不更新状态
+      if (
+        error?.name === 'AbortError' ||
+        error?.message === 'CANCEL' ||
+        error === 'CANCEL'
+      ) {
+        uploadRequestRef.current = null
+        return
+      }
+
+      uploadRequestRef.current = null
       setUploadStatus(UploadStatus.FAILED)
       if (error?.description) {
         setErrorMessage(error?.description)
       } else {
         setErrorMessage('上传失败，请重试')
       }
-    } finally {
-      if (uploadControllerRef.current) {
-        uploadControllerRef.current = null
-      }
     }
   }
 
   // 处理取消上传
   const handleCancelUpload = () => {
-    if (uploadControllerRef.current) {
-      uploadControllerRef.current.abort()
-      uploadControllerRef.current = null
+    if (uploadRequestRef.current) {
+      uploadRequestRef.current.abort()
+      uploadRequestRef.current = null
     }
+    // 重置上传状态，避免显示错误
+    setUploadStatus(UploadStatus.READY)
+    setErrorMessage('')
     if (onCancel) {
       onCancel(undefined as any)
     }
@@ -267,7 +295,7 @@ const UploadAppModal = ({ open, onCancel, onSuccess }: UploadAppModalProps) => {
     return (
       <div className="mt-4 px-3 py-2 bg-[#FFF1F0] border border-[#FFCCC7] rounded-lg flex gap-2">
         <CloseCircleFilled className="text-[--dip-error-color] text-base flex-shrink-0" />
-        <div className="flex-1 text-sm line-clamp-2" title={errorMessage}>
+        <div className="flex-1 text-sm line-clamp-4" title={errorMessage}>
           {errorMessage}
         </div>
       </div>
@@ -282,7 +310,7 @@ const UploadAppModal = ({ open, onCancel, onSuccess }: UploadAppModalProps) => {
       uploadStatus === UploadStatus.FAILED
 
     return (
-      <div className="mt-4 mb-16">
+      <div className="my-4">
         <Button
           type="primary"
           block
@@ -335,9 +363,17 @@ const UploadAppModal = ({ open, onCancel, onSuccess }: UploadAppModalProps) => {
         },
       }}
       okText="确定"
-      okButtonProps={{
-        onClick: () => onSuccess(),
-      }}
+      onOk={
+        uploadStatus === UploadStatus.SUCCESS
+          ? () => {
+              // 成功状态下点击确定按钮，调用成功回调并关闭弹窗
+              if (uploadedAppInfo) {
+                onSuccess(uploadedAppInfo)
+              }
+              onCancel?.(undefined as any)
+            }
+          : undefined
+      }
       cancelText="取消"
       cancelButtonProps={{
         onClick: () => handleCancel(),

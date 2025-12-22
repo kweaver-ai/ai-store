@@ -62,19 +62,19 @@ const AppList: React.FC<AppListProps> = ({ mode, apps, onMenuClick }) => {
     const items = [
       {
         key: ALL_TAB_KEY,
-        label: `全部 (${apps.length})`,
+        label: '全部',
       },
     ]
 
     appTypes.forEach((type) => {
       items.push({
         key: type,
-        label: `${type} (${groupedApps[type]?.length || 0})`,
+        label: type,
       })
     })
 
     return items
-  }, [apps.length, appTypes, groupedApps])
+  }, [appTypes])
 
   /** 渲染应用卡片 */
   const renderAppCard = useCallback(
@@ -100,6 +100,17 @@ const AppList: React.FC<AppListProps> = ({ mode, apps, onMenuClick }) => {
         onChange={setActiveTab}
         className={`flex-shrink-0 ${styles.tabs}`}
         size="small"
+        tabBarExtraContent={
+          mode === ModeEnum.AppStore
+            ? {
+                right: (
+                  <span className="text-sm text-[--dip-text-color-65]">
+                    已安装（{apps.length}）
+                  </span>
+                ),
+              }
+            : undefined
+        }
       />
       <div className={styles.hideScrollbar}>
         <AutoSizer style={{ width: 'calc(100% - 8px)' }} disableHeight>

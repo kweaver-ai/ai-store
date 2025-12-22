@@ -8,6 +8,7 @@ import {
 import MicroAppComponent from '../../components/MicroAppComponent'
 import { useMicroAppStore } from '../../stores/microAppStore'
 import { setMicroAppGlobalState } from '@/utils/micro-app/globalState'
+import Empty from '@/components/Empty'
 
 const MicroAppContainer = () => {
   const { appName } = useParams<{ appName: string }>()
@@ -79,16 +80,7 @@ const MicroAppContainer = () => {
     if (error || !appBasicInfo) {
       return (
         <div className="flex justify-center items-center h-full">
-          <Result
-            status="404"
-            title="Application Error"
-            subTitle={error}
-            extra={
-              <Button type="primary" onClick={() => navigate('/')}>
-                返回首页
-              </Button>
-            }
-          />
+          <Empty type="failed" desc="加载失败" subDesc={error ?? ''} />
         </div>
       )
     }
