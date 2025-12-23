@@ -24,6 +24,7 @@ from src.infrastructure.logging.logger import setup_logging
 from src.infrastructure.middleware.auth_middleware import AuthMiddleware
 from src.routers.health_router import create_health_router
 from src.routers.application_router import create_application_router
+from src.routers.login_router import create_login_router
 
 
 def create_app(settings: Settings = None) -> FastAPI:
@@ -94,6 +95,9 @@ def create_app(settings: Settings = None) -> FastAPI:
 
     application_router = create_application_router(container.application_service)
     app.include_router(application_router, prefix=settings.api_prefix)
+
+    login_router = create_login_router(container.login_service, settings)
+    app.include_router(login_router, prefix=settings.api_prefix)
 
     return app
 

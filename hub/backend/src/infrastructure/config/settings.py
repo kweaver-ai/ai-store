@@ -89,6 +89,47 @@ class Settings(BaseSettings):
         description="是否使用 Mock 外部服务（用于本地开发调试）"
     )
 
+    # Redis 配置
+    redis_host: str = Field(default="localhost:6379", description="Redis 主机地址")
+    redis_password: Optional[str] = Field(default=None, description="Redis 密码")
+    redis_db: int = Field(default=1, description="Redis 数据库编号")
+    redis_min_idle_conns: int = Field(default=8, description="Redis 最小空闲连接数")
+
+    # OAuth2 配置
+    oauth_client_id: str = Field(default="", description="OAuth2 客户端 ID")
+    oauth_client_id2: Optional[str] = Field(default=None, description="OAuth2 客户端 ID2")
+
+    # Hydra 配置
+    hydra_host: str = Field(
+        default="http://localhost:4445",
+        description="Hydra 管理服务地址"
+    )
+    hydra_timeout: int = Field(default=30, description="Hydra 请求超时时间（秒）")
+
+    # User Management 服务配置
+    user_management_url: str = Field(
+        default="http://user-management",
+        description="User Management 服务地址"
+    )
+    user_management_timeout: int = Field(
+        default=60,
+        description="User Management 请求超时时间（秒）"
+    )
+
+    # Deploy Manager 服务配置
+    deploy_manager_url: str = Field(
+        default="http://deploy-manager",
+        description="Deploy Manager 服务地址"
+    )
+    deploy_manager_timeout: int = Field(
+        default=60,
+        description="Deploy Manager 请求超时时间（秒）"
+    )
+
+    # Session Cookie 配置
+    cookie_domain: str = Field(default="", description="Cookie 域名")
+    cookie_timeout: int = Field(default=3600, description="Cookie 超时时间（秒）")
+
 
 @lru_cache
 def get_settings() -> Settings:

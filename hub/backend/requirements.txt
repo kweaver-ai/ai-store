@@ -12,6 +12,9 @@ pymysql>=1.1.0
 # HTTP client
 httpx>=0.25.0
 
+# Redis
+redis>=5.0.0
+
 # YAML parsing
 pyyaml>=6.0.0
 

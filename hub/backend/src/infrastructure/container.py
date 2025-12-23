@@ -8,8 +8,14 @@ import logging
 
 from src.application.health_service import HealthService
 from src.application.application_service import ApplicationService
+from src.application.login_service import LoginService
 from src.adapters.health_adapter import HealthAdapter
 from src.adapters.application_adapter import ApplicationAdapter
+from src.adapters.session_adapter import SessionAdapter
+from src.adapters.oauth2_adapter import OAuth2Adapter
+from src.adapters.hydra_adapter import HydraAdapter
+from src.adapters.user_management_adapter import UserManagementAdapter
+from src.adapters.deploy_manager_adapter import DeployManagerAdapter
 from src.adapters.external_service_adapter import (
     DeployInstallerAdapter,
     OntologyManagerAdapter,
@@ -48,6 +54,12 @@ class Container:
         self._deploy_installer_adapter = None
         self._ontology_manager_adapter = None
         self._agent_factory_adapter = None
+        self._session_adapter = None
+        self._oauth2_adapter = None
+        self._hydra_adapter = None
+        self._user_management_adapter = None
+        self._deploy_manager_adapter = None
+        self._login_service = None
     
     @property
     def settings(self) -> Settings:
@@ -113,6 +125,54 @@ class Container:
         return self._agent_factory_adapter
 
     @property
+    def session_adapter(self):
+        """获取 Session 适配器实例（单例）。"""
+        if self._session_adapter is None:
+            self._session_adapter = SessionAdapter(self._settings)
+        return self._session_adapter
+
+    @property
+    def oauth2_adapter(self):
+        """获取 OAuth2 适配器实例（单例）。"""
+        if self._oauth2_adapter is None:
+            self._oauth2_adapter = OAuth2Adapter(self._settings)
+        return self._oauth2_adapter
+
+    @property
+    def hydra_adapter(self):
+        """获取 Hydra 适配器实例（单例）。"""
+        if self._hydra_adapter is None:
+            self._hydra_adapter = HydraAdapter(self._settings)
+        return self._hydra_adapter
+
+    @property
+    def user_management_adapter(self):
+        """获取 User Management 适配器实例（单例）。"""
+        if self._user_management_adapter is None:
+            self._user_management_adapter = UserManagementAdapter(self._settings)
+        return self._user_management_adapter
+
+    @property
+    def deploy_manager_adapter(self):
+        """获取 Deploy Manager 适配器实例（单例）。"""
+        if self._deploy_manager_adapter is None:
+            self._deploy_manager_adapter = DeployManagerAdapter(self._settings)
+        return self._deploy_manager_adapter
+
+    @property
+    def login_service(self) -> LoginService:
+        """获取登录服务实例（单例）。"""
+        if self._login_service is None:
+            self._login_service = LoginService(
+                session_port=self.session_adapter,
+                oauth2_port=self.oauth2_adapter,
+                hydra_port=self.hydra_adapter,
+                user_management_port=self.user_management_adapter,
+                deploy_manager_port=self.deploy_manager_adapter,
+            )
+        return self._login_service
+
+    @property
     def application_service(self) -> ApplicationService:
         """获取应用服务实例（单例）。"""
         if self._application_service is None:
@@ -142,6 +202,8 @@ class Container:
         """
         if self._application_adapter is not None:
             await self._application_adapter.close()
+        if self._session_adapter is not None:
+            await self._session_adapter.close()
 
 
 # 全局容器实例
