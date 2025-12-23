@@ -63,9 +63,25 @@ class Settings(BaseSettings):
     proton_url: str = Field(default="http://localhost", description="Proton 服务地址")
     proton_timeout: int = Field(default=300, description="Proton 请求超时时间（秒）")
 
-    # ADP 平台配置
-    adp_url: str = Field(default="http://localhost:8081", description="ADP 服务地址")
-    adp_timeout: int = Field(default=60, description="ADP 请求超时时间（秒）")
+    # Ontology Manager 服务配置
+    ontology_manager_url: str = Field(
+        default="http://ontology-manager", 
+        description="Ontology Manager 服务地址"
+    )
+    ontology_manager_timeout: int = Field(
+        default=60, 
+        description="Ontology Manager 请求超时时间（秒）"
+    )
+
+    # Agent Factory 服务配置
+    agent_factory_url: str = Field(
+        default="http://agent-factory", 
+        description="Agent Factory 服务地址"
+    )
+    agent_factory_timeout: int = Field(
+        default=60, 
+        description="Agent Factory 请求超时时间（秒）"
+    )
 
     # Mock 模式配置
     use_mock_services: bool = Field(

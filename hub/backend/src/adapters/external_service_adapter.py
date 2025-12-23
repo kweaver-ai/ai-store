@@ -230,8 +230,8 @@ class OntologyManagerAdapter(OntologyManagerPort):
             settings: 应用配置
         """
         self._settings = settings
-        self._base_url = f"{settings.adp_url}/api/ontology-manager/v1"
-        self._timeout = settings.adp_timeout
+        self._base_url = f"{settings.ontology_manager_url}/api/ontology-manager/v1"
+        self._timeout = settings.ontology_manager_timeout
 
     async def get_knowledge_network(
         self,
@@ -323,8 +323,8 @@ class AgentFactoryAdapter(AgentFactoryPort):
             settings: 应用配置
         """
         self._settings = settings
-        self._base_url = f"{settings.adp_url}/api/agent-factory/v3"
-        self._timeout = settings.adp_timeout
+        self._base_url = f"{settings.agent_factory_url}/api/agent-factory/v3"
+        self._timeout = settings.agent_factory_timeout
 
     async def create_agent(
         self,
