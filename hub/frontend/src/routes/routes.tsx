@@ -1,6 +1,6 @@
 import { lazy } from 'react'
 import applicationsUrl from '@/assets/images/sider/applications.svg'
-import appStoreUrl from '@/assets/images/sider/app-store.svg'
+import appStoreUrl from '@/assets/images/sider/appStore.svg'
 import {
   SYSTEM_FIXED_APP_ADMIN_USER_ID,
   SYSTEM_FIXED_NORMAL_USER_ID,

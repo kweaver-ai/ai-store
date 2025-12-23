@@ -47,6 +47,10 @@ export function defaultRefreshToken(): Promise<{ accessToken: string }> {
 }
 
 const onTokenExpired = (_code?: number) => {
+  Cookies.remove('dip.access_token', {
+    domain: window.location.hostname,
+    path: '/',
+  })
   window.location.replace('/login')
 }
 

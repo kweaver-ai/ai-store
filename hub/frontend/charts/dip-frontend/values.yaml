@@ -1,0 +1,105 @@
+# 副本数量
+replicaCount: 2
+
+# 命名空间
+namespace: anyshare
+moduleName: dip-frontend
+
+# 镜像配置
+image:
+  registry: acr.aishu.cn # 镜像仓库地址，根据实际情况修改
+  repository: /dip/dip-frontend # 镜像仓库路径
+  tag: '1.0.0' # 镜像标签，建议使用版本号或构建号
+  pullPolicy: IfNotPresent # 镜像拉取策略
+  name: dip-frontend
+
+# Service 配置
+service:
+  type: ClusterIP # Service 类型：ClusterIP, NodePort, LoadBalancer
+  ports:
+    port1: 80 # Service 端口
+    targetPort1: 80 # 容器端口（与 Dockerfile 中的 EXPOSE 一致）
+    protocol1: TCP
+    name1: http
+  enableDualStack: false # 是否启用双栈（IPv4/IPv6）
+
+# Ingress 配置
+ingress:
+  enabled: true # 是否启用 Ingress
+  className: '' # Ingress Class 名称
+  annotations:
+    {} # Ingress 注解
+    # kubernetes.io/ingress.class: nginx
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: dip-hub.example.com # 域名，根据实际情况修改
+      paths:
+        - path: /
+          pathType: Prefix
+  # tls: []  # TLS 配置（如果需要 HTTPS）
+  #   - secretName: dip-hub-frontend-tls
+  #     hosts:
+  #       - dip-hub.example.com
+
+# 资源限制
+resources:
+  requests:
+    cpu: 100m # 最小 CPU（0.1 核）
+    memory: 128Mi # 最小内存
+  limits:
+    cpu: 500m # 最大 CPU（0.5 核）
+    memory: 512Mi # 最大内存
+
+# 健康检查配置
+probe:
+  livenessProbe:
+    httpGet:
+      path: /probe
+      port: 80
+    initialDelaySeconds: 30 # 容器启动后等待 30 秒开始检查
+    periodSeconds: 10 # 每 10 秒检查一次
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 3 # 连续失败 3 次后重启容器
+  readinessProbe:
+    httpGet:
+      path: /probe
+      port: 80
+    initialDelaySeconds: 10 # 容器启动后等待 10 秒开始检查
+    periodSeconds: 5 # 每 5 秒检查一次
+    timeoutSeconds: 3
+    successThreshold: 1
+    failureThreshold: 3 # 连续失败 3 次后从 Service 中移除
+  startupProbe:
+    httpGet:
+      path: /probe
+      port: 80
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 30 # 最多等待 5 分钟（30 * 10秒）
+
+# 节点选择器（可选）
+nodeSelector: {}
+
+# 容忍度（可选）
+tolerations: []
+
+# 亲和性配置（可选）
+affinity: {}
+
+# 滚动更新策略
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1 # 最多可以创建 1 个额外的 Pod
+    maxUnavailable: 0 # 最多可以有 0 个 Pod 不可用
+
+# 其他配置
+enableSystemLog: true # 是否启用系统日志
+
+# RPS 限制（如果需要，可以通过 Ingress 或其他方式配置）
+rps:
+  limit: 100 # 每秒最大请求数
+
