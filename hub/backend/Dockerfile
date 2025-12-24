@@ -2,7 +2,7 @@
 # Multi-stage build for optimized image
 
 # Build stage
-FROM python:3.10-slim as builder
+FROM acr.aishu.cn/public/python:3.10-slim as builder
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --user -r requirements.txt
 
 # Runtime stage
-FROM python:3.10-slim
+FROM acr.aishu.cn/public/python:3.10-slim
 
 WORKDIR /app
 
