@@ -1,5 +1,6 @@
 # Core dependencies
 fastapi>=0.104.0
+starlette>=0.40.0
 uvicorn[standard]>=0.24.0
 pydantic>=2.5.0
 pydantic-settings>=2.1.0
@@ -11,6 +12,7 @@ pymysql>=1.1.0
 
 # HTTP client
 httpx>=0.25.0
+urllib3>=2.6.0
 
 # Redis
 redis>=5.0.0
