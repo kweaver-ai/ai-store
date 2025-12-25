@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { ApplicationBasicInfo } from '@/apis/dip-hub'
+import type { ApplicationBasicInfo } from '@/apis/applications'
 
 /**
  * 当前激活的微应用信息

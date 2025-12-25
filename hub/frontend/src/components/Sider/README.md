@@ -115,7 +115,7 @@ interface SiderProps {
 
 ## 数据加载
 
-- **用户信息**：从 `useAuthStore` 获取用户信息和退出登录方法
+- **用户信息**：从 `useUserInfoStore` 获取用户信息和退出登录方法
 - **钉住的应用**：从 `usePreferenceStore` 获取钉住的应用列表
 - **路由配置**：从 `@/routes/routes` 和 `@/routes/utils` 获取路由配置和权限判断逻辑
 - **微应用列表**：目前使用空数组（TODO: 待实现）

@@ -34,7 +34,7 @@ ingress:
   hosts:
     - host: dip-hub.example.com # 域名，根据实际情况修改
       paths:
-        - path: /
+        - path: /dip-hub/
           pathType: Prefix
   # tls: []  # TLS 配置（如果需要 HTTPS）
   #   - secretName: dip-hub-frontend-tls

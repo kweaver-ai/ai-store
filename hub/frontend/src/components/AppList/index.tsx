@@ -3,7 +3,7 @@ import { Row, Col, Tabs } from 'antd'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import { computeColumnCount, gap } from './utils'
 import AppCard from './AppCard'
-import type { ApplicationInfo } from '@/apis/dip-hub'
+import type { ApplicationInfo } from '@/apis/applications'
 import { ModeEnum, ALL_TAB_KEY } from './types'
 import styles from './index.module.less'
 

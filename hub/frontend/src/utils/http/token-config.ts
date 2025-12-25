@@ -1,5 +1,6 @@
 import axios from 'axios'
 import Cookies from 'js-cookie'
+import { getFullPath, BASE_PATH, normalizePath } from '@/utils/config'
 
 export interface HttpConfig {
   accessToken: string
@@ -7,7 +8,8 @@ export interface HttpConfig {
   onTokenExpired?: (code?: number) => void
 }
 
-const ACCESS_TOKEN_KEY = 'dip.access_token'
+// 后端设置的Cookie名称是 dip.oauth2_token
+const ACCESS_TOKEN_KEY = 'dip.oauth2_token'
 
 /**
  * 获取当前 access token（从 Cookie 读取，保证获取最新值）
@@ -20,14 +22,20 @@ export function getAccessToken(): string {
 let refreshingPromise: Promise<{ accessToken: string }> | null = null
 
 async function doRefreshTokenRequest(): Promise<{ accessToken: string }> {
-  const response = await axios.get<{ accessToken: string }>(
-    '/dip/api/session/v1/refresh-token'
+  const response = await axios.get<{ access_token: string }>(
+    '/api/dip-hub/v1/refresh-token',
+    {
+      withCredentials: true, // 确保携带 Cookie
+    }
   )
-  const newToken = response.data?.accessToken
+  const newToken = response.data?.access_token
   if (!newToken) {
-    throw new Error('刷新 token 接口未返回 accessToken')
+    throw new Error('刷新 token 接口未返回 access_token')
   }
-  Cookies.set(ACCESS_TOKEN_KEY, newToken)
+  Cookies.set(ACCESS_TOKEN_KEY, newToken, {
+    domain: window.location.hostname,
+    path: '/',
+  })
   return { accessToken: newToken }
 }
 
@@ -46,12 +54,49 @@ export function defaultRefreshToken(): Promise<{ accessToken: string }> {
   return refreshingPromise
 }
 
-const onTokenExpired = (_code?: number) => {
-  Cookies.remove('dip.access_token', {
+/**
+ * 清除所有认证相关的 Cookie
+ * 后端设置的 Cookie：dip.session_id, dip.oauth2_token, dip.userid
+ */
+export function clearAuthCookies(): void {
+  const cookieOptions = {
     domain: window.location.hostname,
     path: '/',
-  })
-  window.location.replace('/login')
+  }
+
+  Cookies.remove('dip.oauth2_token', cookieOptions)
+  Cookies.remove('dip.session_id', cookieOptions)
+  Cookies.remove('dip.userid', cookieOptions)
+}
+
+const onTokenExpired = (_code?: number) => {
+  // 清除所有认证相关的 Cookie（与后端登出逻辑保持一致）
+  clearAuthCookies()
+
+  // 如果已经在登录页面，只需要清除 Cookie，不需要跳转（避免循环重定向）
+  const currentPathname = window.location.pathname
+  const currentSearch = window.location.search
+  const currentPath = currentPathname + currentSearch
+  const loginPath = getFullPath('/login')
+
+  if (currentPathname === loginPath) {
+    // 已经在登录页，只清除 Cookie，不跳转
+    return
+  }
+
+  // 检查是否是根路径（BASE_PATH 或 BASE_PATH + '/'）
+  // 如果是根路径，不传递 asredirect，让后端重定向到 login-success
+  const normalizedBasePath = normalizePath(BASE_PATH)
+  const normalizedCurrentPathname = normalizePath(currentPathname)
+
+  const isRootPath = normalizedCurrentPathname === normalizedBasePath
+
+  // 跳转到登录页面，并携带当前路径作为重定向地址
+  // 注意：如果是根路径，不传递 asredirect，让后端重定向到 login-success，由前端处理首页跳转
+  const loginUrl = isRootPath
+    ? loginPath
+    : `${loginPath}?asredirect=${encodeURIComponent(currentPath)}`
+  window.location.replace(loginUrl)
 }
 
 export const httpConfig: HttpConfig = {

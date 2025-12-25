@@ -1,9 +1,7 @@
-import { Result, Button } from 'antd'
-import { useNavigate } from 'react-router-dom'
-import NoAccessIcon from '@/assets/images/abnormal/noAccess.svg?react'
+import { Result } from 'antd'
+import NoAccessIcon from '@/assets/images/abnormal/403.svg?react'
 
-const NotFound = () => {
-  const navigate = useNavigate()
+const NoAccess = () => {
   return (
     <div className="w-full h-full flex items-center justify-center">
       <Result
@@ -23,4 +21,4 @@ const NotFound = () => {
   )
 }
 
-export default NotFound
+export default NoAccess

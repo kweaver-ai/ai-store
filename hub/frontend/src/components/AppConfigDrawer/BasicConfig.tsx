@@ -1,7 +1,7 @@
 import { Spin } from 'antd'
 import { memo, useEffect, useState } from 'react'
-import type { ApplicationBasicInfo } from '@/apis/dip-hub'
-import { getApplicationsBasicInfo } from '@/apis/dip-hub/applications'
+import type { ApplicationBasicInfo } from '@/apis/applications'
+import { getApplicationsBasicInfo } from '@/apis/applications'
 
 interface BasicConfigProps {
   /** 应用 ID */

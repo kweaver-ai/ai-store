@@ -1,4 +1,4 @@
-import type { ApplicationInfo } from '@/apis/dip-hub'
+import type { ApplicationInfo } from '@/apis/applications'
 import { usePreferenceStore } from '@/stores'
 import { PushpinOutlined } from '@ant-design/icons'
 

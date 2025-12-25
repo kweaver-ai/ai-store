@@ -1,15 +1,14 @@
 import { useState, useMemo, useCallback } from 'react'
 import { Layout, Avatar, message, Tooltip } from 'antd'
-import { LogoutOutlined } from '@ant-design/icons'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useAuthStore, usePreferenceStore } from '@/stores'
+import { usePreferenceStore } from '@/stores'
 import {
   getFirstVisibleSidebarRoute,
   getRouteByPath,
   isRouteVisibleForRoles,
 } from '@/routes/utils'
 import { routeConfigs } from '@/routes/routes'
-import type { ApplicationInfo } from '@/apis/dip-hub'
+import type { ApplicationInfo } from '@/apis/applications'
 import type { MenuProps } from 'antd'
 import clsx from 'classnames'
 import LogoIcon from '@/assets/images/brand/logo.svg?react'
@@ -34,12 +33,12 @@ interface SiderProps {
 const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { userInfo, logout } = useAuthStore()
   const { pinnedMicroApps, unpinMicroApp } = usePreferenceStore()
 
   // TODO: 微应用列表获取待实现
   const [microApps] = useState<ApplicationInfo[]>([])
-  const roleIds = useMemo(() => new Set(userInfo?.role_ids ?? []), [userInfo])
+  // TODO: 角色信息需要从其他地方获取，暂时使用空数组
+  const roleIds = useMemo(() => new Set<string>([]), [])
   const firstVisibleRoute = useMemo(
     () => getFirstVisibleSidebarRoute(roleIds),
     [roleIds]

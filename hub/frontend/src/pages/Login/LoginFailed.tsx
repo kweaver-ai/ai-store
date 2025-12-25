@@ -1,8 +1,9 @@
 import { Button, Result } from 'antd'
+import { getFullPath } from '@/utils/config'
 
 const LoginFailed = () => {
   const handleReturnLoginPage = () => {
-    window.location.replace('/login')
+    window.location.replace(getFullPath('/login'))
   }
 
   return (

@@ -9,6 +9,14 @@ import type {
   PinMicroAppParams,
 } from './index.d'
 
+// 导出类型定义（仅导出外部使用的类型）
+export type {
+  ApplicationInfo,
+  ApplicationBasicInfo,
+  OntologyInfo,
+  AgentInfo,
+}
+
 /**
  * 安装应用
  * OpenAPI: POST /applications (application/octet-stream, binary)
@@ -111,3 +119,4 @@ export async function pinMicroAppApi(params: PinMicroAppParams): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 200))
   console.log('Pin micro app:', params) // 避免未使用警告
 }
+

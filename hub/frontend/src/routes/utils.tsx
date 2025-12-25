@@ -37,16 +37,19 @@ export const getRouteByKey = (key: string): RouteConfig | undefined => {
 
 /**
  * 判断路由是否对用户可见
+ * TODO: 当前没有角色系统，所有路由都允许访问，直接返回 true
  */
 export const isRouteVisibleForRoles = (
   route: RouteConfig,
   roleIds: Set<string>
 ): boolean => {
-  const required = route.requiredRoleIds
-  if (!required || required.length === 0) return true
-  // 用户未携带任何角色时：默认不放行；首页会重定向到 /login-failed
-  if (roleIds.size === 0) return false
-  return required.some((id) => roleIds.has(id))
+  // 当前没有角色系统，所有路由都允许访问
+  return true
+  // 以下代码为角色系统的实现（暂时禁用）
+  // const required = route.requiredRoleIds
+  // if (!required || required.length === 0) return true
+  // if (roleIds.size === 0) return false
+  // return required.some((id) => roleIds.has(id))
 }
 
 export const getFirstVisibleSidebarRoute = (

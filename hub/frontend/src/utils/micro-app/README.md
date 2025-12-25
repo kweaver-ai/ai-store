@@ -42,6 +42,8 @@ interface MicroAppProps {
     get accessToken(): string
     /** Token 刷新能力（微应用可以调用此函数刷新 token） */
     refreshToken: () => Promise<{ accessToken: string }>
+    /** Token 过期处理函数（可选） */
+    onTokenExpired?: (code?: number) => void
   }
 
   /** ========== 路由信息 ========== */
@@ -54,8 +56,10 @@ interface MicroAppProps {
   user: {
     /** 用户 ID */
     id: string
-    /** 用户名称，使用 getter，每次访问时都从 store 读取最新值 */
-    get name(): string
+    /** 用户显示名称，使用 getter，每次访问时都从 store 读取最新值 */
+    get vision_name(): string
+    /** 用户账号，使用 getter，每次访问时都从 store 读取最新值 */
+    get account(): string
   }
 
   /** ========== UI 组件渲染函数 ========== */
@@ -102,12 +106,19 @@ export async function mount(props) {
   // 刷新后再次访问，会自动获取最新的 token
   const latestToken = token.accessToken
 
+  // Token 过期处理
+  if (token.onTokenExpired) {
+    // 可以注册 token 过期回调
+    token.onTokenExpired(401)
+  }
+
   // 访问路由信息
   const routeBasename = route.basename
 
   // 访问用户信息（每次访问都会获取最新值）
   const userId = user.id
-  const userName = user.name // 使用 getter，每次访问都获取最新值
+  const userName = user.vision_name // 使用 getter，每次访问都获取最新值（用户显示名称）
+  const userAccount = user.account // 使用 getter，每次访问都获取最新值（用户账号）
 
   // 使用主应用提供的 UI 组件
   // 这些组件在主应用的 React 上下文中渲染，使用 ReactDOM.createRoot 渲染到微应用指定的容器
@@ -272,9 +283,9 @@ useEffect(() => {
 
 ```typescript
 interface MicroAppConfig {
-  /** 应用名称，必须与 package.json 中的 name 保持一致 */
+  /** 微应用的包名，必须与 manifest.yaml 中的 micro-app.name 对应 */
   name: string
-  /** 应用入口 URL */
+  /** 微应用的入口路径，必须与 manifest.yaml 中的 micro-app.entry 对应 */
   entry: string
 }
 ```
@@ -345,9 +356,12 @@ const MicroAppHeader = () => {
 
   - Token 刷新后，下次访问 `token.accessToken` 时会自动获取最新值
   - 微应用无需监听 token 变化，直接访问即可获取最新值
+  - 如果提供了 `token.onTokenExpired`，可以在 token 过期时调用
 
-- **`user.name`**：每次访问时从 store 读取最新值
-  - 用户名称变化后，下次访问 `user.name` 时会自动获取最新值
+- **`user.vision_name`**：每次访问时从 store 读取最新值（用户显示名称）
+  - 用户名称变化后，下次访问 `user.vision_name` 时会自动获取最新值
+- **`user.account`**：每次访问时从 store 读取最新值（用户账号）
+  - 用户账号变化后，下次访问 `user.account` 时会自动获取最新值
   - 微应用无需监听用户名称变化，直接访问即可获取最新值
 
 ### 通过全局状态管理的字段（需要监听变化）
@@ -482,7 +496,9 @@ useEffect(() => {
 4. **状态初始化**：全局状态的 `language` 字段会在初始化时从 `languageStore` 读取，支持从 localStorage 恢复
 5. **微应用信息**：微应用信息（name、displayName、routeBasename）存储在 `microAppStore` 中，不会传递给微应用
 6. **取消监听**：`onMicroAppStateChange` 返回取消监听的函数，组件卸载时应该调用以清理资源
-7. **Token 刷新**：Token 刷新后，微应用通过 `token.accessToken` 访问时会自动获取最新值，无需更新 props
-8. **语言获取**：语言不再通过 props 传递，微应用必须在 `mount` 时通过 `onMicroAppStateChange(callback, true)` 获取初始值和监听变化
-9. **UI 组件渲染**：`renderAppMenu` 和 `renderUserInfo` 需要传入容器元素，使用 `useRef` 和 `useEffect` 在容器准备好后调用。主应用会自动管理渲染实例的生命周期
-10. **React 上下文隔离**：UI 组件渲染函数使用 `ReactDOM.createRoot` 在主应用的 React 上下文中渲染，确保组件可以正常使用主应用的 hooks 和 store
+7. **Token 刷新**：Token 刷新后，微应用通过 `token.accessToken` 访问时会自动获取最新值，无需更新 props。如果提供了 `token.onTokenExpired`，可以在 token 过期时调用
+8. **用户信息**：`user.id` 通过 props 传递，`user.vision_name` 和 `user.account` 使用 getter 每次访问时从 store 读取最新值
+9. **语言获取**：语言不再通过 props 传递，微应用必须在 `mount` 时通过 `onMicroAppStateChange(callback, true)` 获取初始值和监听变化
+10. **UI 组件渲染**：`renderAppMenu` 和 `renderUserInfo` 需要传入容器元素，使用 `useRef` 和 `useEffect` 在容器准备好后调用。主应用会自动管理渲染实例的生命周期
+11. **容器元素**：`container` 是必需的 DOM 元素，主应用会在加载微应用时传递
+12. **React 上下文隔离**：UI 组件渲染函数使用 `ReactDOM.createRoot` 在主应用的 React 上下文中渲染，确保组件可以正常使用主应用的 hooks 和 store

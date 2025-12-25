@@ -2,7 +2,7 @@ import { Dropdown, Tooltip } from 'antd'
 import type { MenuProps } from 'antd'
 import clsx from 'classnames'
 import AvatarIcon from '@/assets/images/sider/avatar.svg?react'
-import { useAuthStore } from '@/stores'
+import { useUserInfoStore } from '@/stores'
 
 export interface UserMenuItemProps {
   /** 是否折叠 */
@@ -10,7 +10,7 @@ export interface UserMenuItemProps {
 }
 
 export const UserMenuItem = ({ collapsed }: UserMenuItemProps) => {
-  const { userInfo, logout } = useAuthStore()
+  const { userInfo, logout } = useUserInfoStore()
   const handleLogout = () => {
     logout()
   }
@@ -34,7 +34,7 @@ export const UserMenuItem = ({ collapsed }: UserMenuItemProps) => {
       {!collapsed && (
         <div className="min-w-0">
           <span className="text-sm font-normal text-[#000] truncate">
-            {userInfo?.display_name || '用户'}
+            {userInfo?.vision_name || '用户'}
           </span>
         </div>
       )}
@@ -47,7 +47,7 @@ export const UserMenuItem = ({ collapsed }: UserMenuItemProps) => {
       trigger={['click']}
     >
       {collapsed ? (
-        <Tooltip title={userInfo?.display_name} placement="right">
+        <Tooltip title={userInfo?.vision_name} placement="right">
           {content}
         </Tooltip>
       ) : (

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { getPinnedMicroAppsApi, pinMicroAppApi } from '../apis/dip-hub'
+import { getPinnedMicroAppsApi, pinMicroAppApi } from '../apis/applications'
 
 /**
  * 用户偏好配置 Store

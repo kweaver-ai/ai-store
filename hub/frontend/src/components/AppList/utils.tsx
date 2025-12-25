@@ -1,4 +1,4 @@
-import type { ApplicationInfo } from '@/apis/dip-hub'
+import type { ApplicationInfo } from '@/apis/applications'
 import { ModeEnum } from './types'
 import { getAppStoreMenuItems } from '@/pages/AppStore/utils'
 import { getMyAppMenuItems } from '@/pages/MyApp/utils'

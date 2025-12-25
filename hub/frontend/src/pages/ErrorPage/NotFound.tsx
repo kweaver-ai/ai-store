@@ -1,9 +1,7 @@
-import { Result, Button } from 'antd'
-import { useNavigate } from 'react-router-dom'
-import NotFoundIcon from '@/assets/images/abnormal/notFound.svg?react'
+import { Result } from 'antd'
+import NotFoundIcon from '@/assets/images/abnormal/404.svg?react'
 
 const NotFound = () => {
-  const navigate = useNavigate()
   return (
     <div className="w-full h-full flex items-center justify-center">
       <Result
