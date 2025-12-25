@@ -13,6 +13,7 @@ import { useApplicationsService } from '@/hooks/useApplicationsService'
 import AppConfigDrawer from '@/components/AppConfigDrawer'
 import { deleteApplications } from '@/apis/applications'
 import UploadAppModal from '@/components/UploadAppModal'
+import { getFullPath } from '@/utils/config'
 import styles from './index.module.less'
 
 const AppStore = () => {
@@ -75,7 +76,7 @@ const AppStore = () => {
 
           /** 运行应用 */
           case AppStoreActionEnum.Run:
-            window.open(`/application/${_app.micro_app.name}`, '_blank')
+            window.open(getFullPath(`/application/${_app.micro_app.name}`), '_blank')
             break
 
           /** 授权管理 */

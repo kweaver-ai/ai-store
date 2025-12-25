@@ -11,6 +11,7 @@ import { routeConfigs } from '@/routes/routes'
 import type { ApplicationInfo } from '@/apis/applications'
 import type { MenuProps } from 'antd'
 import clsx from 'classnames'
+import { getFullPath } from '@/utils/config'
 import LogoIcon from '@/assets/images/brand/logo.svg?react'
 import SidebarSystemIcon from '@/assets/images/sider/proton.svg?react'
 import SidebarAiDataPlatformIcon from '@/assets/images/sider/adp.svg?react'
@@ -65,7 +66,7 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
   const handleItemClick = (key: string) => {
     if (key.startsWith('micro-app-')) {
       const appKey = key.replace('micro-app-', '')
-      window.open(`/application/${appKey}`, '_blank')
+      window.open(getFullPath(`/application/${appKey}`), '_blank')
       return
     }
 
@@ -80,7 +81,7 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
     if (e) {
       e.stopPropagation()
     }
-    window.open(`/application/${appKey}`, '_blank')
+    window.open(getFullPath(`/application/${appKey}`), '_blank')
   }, [])
 
   // 处理取消钉住

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Spin, Result, Button } from 'antd'
-import { useParams, useNavigate } from 'react-router-dom'
+import { Spin } from 'antd'
+import { useParams } from 'react-router-dom'
 import {
   getApplicationsBasicInfo,
   type ApplicationBasicInfo,
@@ -8,11 +8,11 @@ import {
 import MicroAppComponent from '../../components/MicroAppComponent'
 import { useMicroAppStore } from '../../stores/microAppStore'
 import { setMicroAppGlobalState } from '@/utils/micro-app/globalState'
+import { getFullPath } from '@/utils/config'
 import Empty from '@/components/Empty'
 
 const MicroAppContainer = () => {
   const { appName } = useParams<{ appName: string }>()
-  const navigate = useNavigate()
   const [appBasicInfo, setAppBasicInfo] = useState<ApplicationBasicInfo | null>(
     null
   )
@@ -35,9 +35,13 @@ const MicroAppContainer = () => {
         } else {
           setAppBasicInfo(appData)
           // 设置微应用信息到 store
+          // routeBasename 需要包含 BASE_PATH 前缀，因为微应用的路由系统是独立的
+          // 需要知道浏览器中的完整路径才能正确匹配路由
           setCurrentMicroApp({
             ...appData,
-            routeBasename: `/application/${appData.micro_app.name}`,
+            routeBasename: getFullPath(
+              `/application/${appData.micro_app.name}`
+            ),
           })
         }
       } catch (err: any) {

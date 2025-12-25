@@ -22,9 +22,10 @@
 
 微应用统一挂载在：
 
-- `/application/:appName/*`
+- `/dip-hub/application/:appName/*`（完整路径，包含 BASE_PATH 前缀）
 - 其中 `:appName` 为微应用的应用包唯一标识（对应 `ApplicationBasicInfo.micro_app.name`）
 - 采用 History 模式
+- **注意**：`route.basename` 会包含 `/dip-hub` 前缀，因为微应用的路由系统是独立的，需要知道浏览器中的完整路径才能正确匹配路由
 
 ---
 
@@ -48,7 +49,7 @@ interface MicroAppProps {
 
   /** ========== 路由信息 ========== */
   route: {
-    /** 应用路由基础路径 */
+    /** 应用路由基础路径，包含 BASE_PATH 前缀（如 `/dip-hub/application/:appName`） */
     basename: string
   }
 
@@ -310,9 +311,11 @@ props.setMicroAppState({
 
 主应用会自动将这些路径挂载到 `route.basename` 之下，例如：
 
-- `route.basename = /application/app-1`
-- `/alarm` -> `/application/app-1/alarm`
-- `/alarm/problem` -> `/application/app-1/alarm/problem`
+- `route.basename = /dip-hub/application/app-1`（包含 BASE_PATH 前缀）
+- `/alarm` -> `/dip-hub/application/app-1/alarm`
+- `/alarm/problem` -> `/dip-hub/application/app-1/alarm/problem`
+
+**注意**：`route.basename` 包含 `/dip-hub` 前缀，因为微应用的路由系统是独立的，需要知道浏览器中的完整路径才能正确匹配路由。
 
 ### 主应用端实现
 
@@ -339,7 +342,7 @@ const MicroAppHeader = () => {
   }, [])
 
   // 这里会先插入一条“微应用根”项（应用图标+名称），
-  // 再把微应用上报的 breadcrumb 映射到 /application/:appName/... 下
+  // 再把微应用上报的 breadcrumb 映射到 /dip-hub/application/:appName/... 下
   // 最终通过 Breadcrumb 组件渲染（内部自动加首页图标）
 }
 ```

@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Avatar, Button, Dropdown } from 'antd'
 import type { MenuProps } from 'antd'
 import { useApplicationsService } from '@/hooks/useApplicationsService'
+import { getFullPath } from '@/utils/config'
 import AppMenuIcon from '@/assets/images/header/menu.svg?react'
 
 /**
@@ -22,7 +23,7 @@ export const AppMenu = () => {
     const app = apps.find((item) => item.key === key)
     if (app && app.micro_app.name) {
       // 以新标签页形式打开应用
-      window.open(`/application/${app.micro_app.name}`, '_blank')
+      window.open(getFullPath(`/application/${app.micro_app.name}`), '_blank')
     }
   }
 

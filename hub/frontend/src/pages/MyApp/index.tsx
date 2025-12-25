@@ -10,6 +10,7 @@ import { type ApplicationInfo } from '@/apis/applications'
 import { ReloadOutlined } from '@ant-design/icons'
 import { usePreferenceStore } from '@/stores'
 import { useApplicationsService } from '@/hooks/useApplicationsService'
+import { getFullPath } from '@/utils/config'
 
 const MyApp = () => {
   const { apps, loading, error, searchValue, handleSearch, handleRefresh } =
@@ -40,7 +41,7 @@ const MyApp = () => {
             handleRefresh()
             break
           case MyAppActionEnum.Use:
-            window.open(`/application/${_app.micro_app.name}`, '_blank')
+            window.open(getFullPath(`/application/${_app.micro_app.name}`), '_blank')
             break
           default:
             break

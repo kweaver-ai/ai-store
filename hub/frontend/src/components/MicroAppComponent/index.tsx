@@ -3,6 +3,7 @@ import { loadMicroApp, type MicroApp as QiankunMicroApp } from 'qiankun'
 import { message, Spin } from 'antd'
 import { useUserInfoStore, useMicroAppStore } from '@/stores'
 import { httpConfig, getAccessToken } from '@/utils/http/token-config'
+import { getFullPath } from '@/utils/config'
 import {
   setMicroAppGlobalState,
   onMicroAppGlobalStateChange,
@@ -47,7 +48,7 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
       route: {
         basename:
           currentMicroApp?.routeBasename ||
-          `/application/${appBasicInfo.micro_app.name}`,
+          getFullPath(`/application/${appBasicInfo.micro_app.name}`),
       },
 
       // ========== 用户信息 ==========
