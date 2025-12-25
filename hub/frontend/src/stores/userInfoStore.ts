@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import type { UserInfo } from '@/apis/user'
 import { getUserInfo } from '@/apis/user'
 import { getLogoutUrl } from '@/apis/login'
-import { getAccessToken, clearAuthCookies } from '@/utils/http/token-config'
+import { getAccessToken } from '@/utils/http/token-config'
 
 /**
  * 用户信息 Store
@@ -30,9 +30,15 @@ export const useUserInfoStore = create<UserInfoState>((set) => ({
   logout: () => {
     // 清除本地状态
     set({ userInfo: null })
-    // 清除认证相关的 Cookie
-    clearAuthCookies()
-    // 跳转到登出 URL
+    // 注意：不清除 Cookie，让后端在登出流程中处理
+    // 后端需要从 Cookie 中获取 session_id 来执行完整的登出流程：
+    // 1. 获取 Session 信息（需要 session_id）
+    // 2. 撤销 Refresh Token（需要从 Session 中获取）
+    // 3. 删除 Session 记录
+    // 4. 构建 OAuth2 登出 URL（需要从 Session 中获取 id_token 和 state）
+    // 后端会在登出回调时清除所有 Cookie
+    // clearAuthCookies()
+    // 跳转到登出 URL，让后端处理完整的登出流程
     window.location.replace(getLogoutUrl())
   },
 
