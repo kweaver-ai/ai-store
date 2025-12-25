@@ -19,7 +19,7 @@ data:
   DIP_HUB_API_PREFIX: "/api/dip-hub/v1"
 
   # 前端路由配置
-  DIP_HUB_FRONTEND_BASE_PATH: "/"
+  DIP_HUB_FRONTEND_BASE_PATH: "/dip-hub"
   
   # 日志配置
   DIP_HUB_LOG_LEVEL: "{{ .service.telemetry.log.level }}"

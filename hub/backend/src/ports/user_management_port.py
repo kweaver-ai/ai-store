@@ -14,7 +14,16 @@ class UserInfo:
     id: str
     account: str
     vision_name: str
-    email: Optional[str] = None
+    csf_level: int = 0  # 密级
+    frozen: bool = False  # 冻结状态
+    roles: Optional[Dict[str, bool]] = None  # 角色
+    email: Optional[str] = None  # 邮箱地址
+    telephone: Optional[str] = None  # 电话号码
+    third_attr: Optional[str] = None  # 第三方应用属性
+    third_id: Optional[str] = None  # 第三方应用id
+    user_type: Optional[int] = None  # 用户类型
+    groups: Optional[list] = None  # 用户及其所属部门所在的用户组
+    parent_deps: Optional[list] = None  # 组织结构
 
 
 class UserManagementPort(ABC):

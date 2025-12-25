@@ -75,25 +75,20 @@ def create_refresh_token_router(
         刷新令牌接口。
 
         流程：
-        1. 从 Cookie 或 Header 获取 session_id 和 token
+        1. 从 Cookie 获取 session_id 和 token
         2. 执行刷新
         3. 更新 Cookie
         4. 返回响应
         """
         try:
             # 获取 Cookie 值
-            session_id = _get_cookie_value(request, "session_id")
-            token = _get_cookie_value(request, "oauth2_token")
-            
-            if not session_id:
-                session_id = _get_header_value(request, "X-Session-Id")
-            if not token:
-                token = _get_header_value(request, "X-OAuth2-Token")
+            session_id = _get_cookie_value(request, "dip.session_id")
+            token = _get_cookie_value(request, "dip.oauth2_token")
             
             if not session_id or not token:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Session ID 或 Token 不存在",
+                    detail={"code": "GET_COOKIE_VALUE_NOT_EXIST", "description": "Session ID 或 Token 不存在"},
                 )
 
             # 执行刷新
@@ -111,7 +106,7 @@ def create_refresh_token_router(
             # 更新 Cookie
             _set_cookie(
                 response,
-                "oauth2_token",
+                "dip.oauth2_token",
                 refresh_result.token,
                 max_age=settings.cookie_timeout,
                 domain=settings.cookie_domain if settings.cookie_domain else None,
@@ -124,13 +119,13 @@ def create_refresh_token_router(
             logger.error(f"刷新 Token 失败: {e}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"刷新 Token 失败: {str(e)}",
+                detail={"code": "REFRESH_TOKEN_ERROR", "description": f"刷新 Token 失败: {str(e)}"},
             )
         except Exception as e:
             logger.exception(f"刷新 Token 异常: {e}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"刷新 Token 失败: {str(e)}",
+                detail={"code": "REFRESH_TOKEN_ERROR", "description": f"刷新 Token 失败: {str(e)}"},
             )
 
     return router

@@ -91,7 +91,7 @@ def create_login_router(login_service: LoginService, settings: Settings = None) 
         """
         try:
             # 检查是否有有效的 token
-            token = _get_cookie_value(request, "oauth2_token")
+            token = _get_cookie_value(request, "dip.oauth2_token")
             if token:
                 token_effect = await login_service.check_token_effect(token)
                 if token_effect:
@@ -110,7 +110,7 @@ def create_login_router(login_service: LoginService, settings: Settings = None) 
             nonce = login_service.generate_nonce()
 
             # 获取或创建 session
-            existing_session_id = _get_cookie_value(request, "session_id")
+            existing_session_id = _get_cookie_value(request, "dip.session_id")
             session_id, session_info = await login_service.get_or_create_session(
                 existing_session_id,
                 state,
@@ -138,7 +138,7 @@ def create_login_router(login_service: LoginService, settings: Settings = None) 
             response = RedirectResponse(url=auth_url, status_code=status.HTTP_302_FOUND)
             _set_cookie(
                 response,
-                "session_id",
+                "dip.session_id",
                 session_id,
                 max_age=settings.cookie_timeout,
                 domain=settings.cookie_domain if settings.cookie_domain else None,
@@ -181,7 +181,7 @@ def create_login_router(login_service: LoginService, settings: Settings = None) 
         """
         try:
             # 获取 session_id
-            session_id = _get_cookie_value(request, "session_id")
+            session_id = _get_cookie_value(request, "dip.session_id")
             if not session_id:
                 logger.warning("登录回调：Session ID 不存在")
                 frontend_path = _get_frontend_path()
@@ -204,13 +204,13 @@ def create_login_router(login_service: LoginService, settings: Settings = None) 
                 logger.error(f"登录回调：参数错误 - error: {error}, code: {code}")
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail={"code": "INVALID_PARAMETER", "description": "授权码或状态参数错误"},
+                    detail={"code": "GET_CODE_FAILED", "description": "授权码或状态参数错误"},
                 )
 
             if not state:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail={"code": "INVALID_PARAMETER", "description": "状态参数缺失"},
+                    detail={"code": "PUBLIC_INVALID_PARAMETER", "description": "状态参数缺失"},
                 )
 
             logger.info(f"登录回调 Code: {code}")
@@ -235,7 +235,7 @@ def create_login_router(login_service: LoginService, settings: Settings = None) 
             if session_info.token:
                 _set_cookie(
                     response,
-                    "oauth2_token",
+                    "dip.oauth2_token",
                     session_info.token,
                     max_age=settings.cookie_timeout,
                     domain=settings.cookie_domain if settings.cookie_domain else None,
@@ -243,7 +243,7 @@ def create_login_router(login_service: LoginService, settings: Settings = None) 
             if session_info.userid:
                 _set_cookie(
                     response,
-                    "userid",
+                    "dip.userid",
                     session_info.userid,
                     max_age=settings.cookie_timeout,
                     domain=settings.cookie_domain if settings.cookie_domain else None,

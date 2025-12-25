@@ -328,7 +328,7 @@ components:
     # ============ 用户信息 Schema ============
     UserInfo:
       summary: 用户信息
-      description: 用户基本信息
+      description: 用户基本信息（完整结构，与 session 项目一致）
       type: object
       properties:
         id:
@@ -346,12 +346,65 @@ components:
           title: 显示名称
           description: 用户的显示名称
           example: "管理员"
+        csf_level:
+          type: integer
+          title: 密级
+          description: 用户密级
+          example: 0
+        frozen:
+          type: boolean
+          title: 冻结状态
+          description: 用户是否被冻结
+          example: false
+        roles:
+          type: object
+          title: 角色
+          description: 用户角色映射，key 为角色名称，value 为 true
+          additionalProperties:
+            type: boolean
+          example:
+            normal_user: true
+            org_manager: true
         email:
           type: string
           format: email
           title: 邮箱
           description: 用户邮箱地址
           example: "admin@example.com"
+        telephone:
+          type: string
+          title: 电话号码
+          description: 用户电话号码
+          example: "13800138000"
+        third_attr:
+          type: string
+          title: 第三方应用属性
+          description: 第三方应用属性
+          example: ""
+        third_id:
+          type: string
+          title: 第三方应用 ID
+          description: 第三方应用 ID
+          example: ""
+        user_type:
+          type: integer
+          title: 用户类型
+          description: 访问者类型，1 表示用户
+          example: 1
+        groups:
+          type: array
+          title: 用户组
+          description: 用户及其所属部门所在的用户组
+          items:
+            type: object
+          example: []
+        parent_deps:
+          type: array
+          title: 组织结构
+          description: 用户的父部门信息
+          items:
+            type: object
+          example: []
       required:
         - id
         - account

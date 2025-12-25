@@ -49,7 +49,7 @@ def create_logout_router(logout_service: LogoutService, settings: Settings = Non
 
     def _clear_cookies(response: Response):
         """清除所有相关 Cookie"""
-        for cookie_name in ["session_id", "oauth2_token", "userid"]:
+        for cookie_name in ["dip.session_id", "dip.oauth2_token", "dip.userid"]:
             response.delete_cookie(
                 key=cookie_name,
                 path="/",
@@ -67,7 +67,7 @@ def create_logout_router(logout_service: LogoutService, settings: Settings = Non
         登出接口。
 
         流程：
-        1. 从 Cookie 或 Header 获取 session_id
+        1. 从 Cookie 获取 session_id
         2. 获取 Session 信息
         3. SSO 登录特殊处理
         4. 获取主机信息
@@ -75,17 +75,15 @@ def create_logout_router(logout_service: LogoutService, settings: Settings = Non
         """
         try:
             # 获取 Session ID
-            session_id = _get_cookie_value(request, "session_id")
+            session_id = _get_cookie_value(request, "dip.session_id")
             if not session_id:
-                session_id = _get_header_value(request, "X-Session-Id")
-                if not session_id:
-                    # Session ID 不存在，清除 Cookie，返回登出页面
-                    response = HTMLResponse(
-                        content=f'<html><body><script>window.location.href="{_get_frontend_path()}";</script></body></html>',
-                        status_code=status.HTTP_200_OK,
-                    )
-                    _clear_cookies(response)
-                    return response
+                # Session ID 不存在，清除 Cookie，返回登出页面
+                response = HTMLResponse(
+                    content=f'<html><body><script>window.location.href="{_get_frontend_path()}";</script></body></html>',
+                    status_code=status.HTTP_200_OK,
+                )
+                _clear_cookies(response)
+                return response
 
             # 获取 Session 信息
             session_info = await logout_service.get_session(session_id)
@@ -158,7 +156,7 @@ def create_logout_router(logout_service: LogoutService, settings: Settings = Non
         """
         try:
             # 获取 Session ID
-            session_id = _get_cookie_value(request, "session_id")
+            session_id = _get_cookie_value(request, "dip.session_id")
             if not session_id:
                 # Session ID 不存在，清除 Cookie，返回登出页面
                 response = HTMLResponse(
@@ -168,15 +166,13 @@ def create_logout_router(logout_service: LogoutService, settings: Settings = Non
                 _clear_cookies(response)
                 return response
 
-            # 参数验证
+            # 参数验证（与 session 项目一致：error 存在时返回 400 错误）
             if error:
-                logger.warning(f"登出回调错误: {error} - {error_description}")
-                response = HTMLResponse(
-                    content=f'<html><body><script>window.location.href="{_get_frontend_path()}";</script></body></html>',
+                logger.error(f"登出回调错误: {error} - {error_description}")
+                raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={"code": "DO_LOGOUT_CALLBACK_FAILED", "description": f"登出回调失败: {error}"},
                 )
-                _clear_cookies(response)
-                return response
 
             # 执行登出回调
             session_info = await logout_service.do_logout_callback(session_id, state)
