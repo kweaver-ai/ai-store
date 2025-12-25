@@ -1,8 +1,8 @@
 import { useState, useEffect, memo } from 'react'
 import { Spin, Alert } from 'antd'
 import { ShareAltOutlined } from '@ant-design/icons'
-import { getApplicationsAgents } from '@/apis/dip-hub/applications'
-import type { AgentInfo } from '@/apis/dip-hub'
+import { getApplicationsAgents } from '@/apis/applications'
+import type { AgentInfo } from '@/apis/applications'
 
 interface AgentConfigProps {
   appId?: string

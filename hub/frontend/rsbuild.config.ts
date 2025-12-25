@@ -2,36 +2,33 @@ import { defineConfig } from '@rsbuild/core'
 import { pluginReact } from '@rsbuild/plugin-react'
 import { pluginLess } from '@rsbuild/plugin-less'
 import { pluginSvgr } from '@rsbuild/plugin-svgr'
+import { rsbuildMiddlewarePlugin } from './rsbuild-plugin-middleware'
 
 // Docs: https://rsbuild.rs/config/
+// 确保 assetPrefix 始终以 / 结尾，而 BASE_PATH 不带尾部斜杠
+const rawPublicPath = process.env.PUBLIC_PATH || '/dip-hub/'
+const assetPrefix = rawPublicPath.endsWith('/')
+  ? rawPublicPath
+  : `${rawPublicPath}/`
+const basePath = assetPrefix.endsWith('/')
+  ? assetPrefix.slice(0, -1)
+  : assetPrefix
+
 export default defineConfig({
-  server: {
-    port: 3001,
-    // 配置代理，解决远程微应用 CORS 问题
-    // 将 /micro-app-proxy/* 的请求代理到远程服务器
-    proxy: {
-      '/micro-app-proxy': {
-        target: 'https://10.4.111.16',
-        changeOrigin: true, // 修改请求头中的 origin
-        secure: false, // 如果是自签名证书或内网环境，设置为 false
-        // 重写路径：移除 /micro-app-proxy 前缀
-        pathRewrite: {
-          '^/micro-app-proxy': '',
-        },
-      },
-      '/api/dip-hub': {
-        target: 'http://127.0.0.1:8082',
-        changeOrigin: true,
-      },
-    },
-  },
-  plugins: [pluginReact(), pluginLess(), pluginSvgr()],
-  html: {
-    // 使用 public/dip.svg 作为浏览器标签页图标
-    // 这里路径相对于项目根目录（public/dip.svg）
-    favicon: 'public/dip.svg',
+  output: {
+    // 设置公共路径，默认为 /dip-hub/
+    // 可以通过环境变量 PUBLIC_PATH 覆盖
+    // rsbuild 使用 assetPrefix 而不是 publicPath
+    // assetPrefix 应该以 / 结尾
+    assetPrefix,
   },
   source: {
+    // 注入全局变量，供前端代码使用
+    // BASE_PATH 不带尾部斜杠（用于路由和路径拼接）
+    // 使用项目特定的命名，避免与其他项目冲突（特别是微前端场景）
+    define: {
+      'window.__DIP_HUB_BASE_PATH__': JSON.stringify(basePath),
+    },
     // 配置 antd 按需加载（antd 6.0 使用 CSS-in-JS，自动按需加载）
     transformImport: [
       {
@@ -44,6 +41,45 @@ export default defineConfig({
         customName: 'lodash/{{ member }}',
       },
     ],
+  },
+  server: {
+    port: 3001,
+    // 配置代理，解决远程微应用 CORS 问题
+    proxy: {
+      // 开发环境：将 API 请求代理到远程服务器
+      // 登录相关路由由中间件插件处理，不走代理
+      '/api/dip-hub': {
+        target: process.env.DEBUG_ORIGIN || 'https://10.4.111.24',
+        changeOrigin: true,
+        secure: false,
+        // 排除登录相关路由，这些由中间件插件处理
+        bypass(req) {
+          const url = req.url || ''
+          if (
+            url.includes('/v1/login') ||
+            url.includes('/v1/logout') ||
+            url.includes('/v1/login/callback') ||
+            url.includes('/v1/logout/callback')
+          ) {
+            // 返回 false 表示不使用代理，由中间件处理
+            return false
+          }
+          return undefined // 其他路由继续使用代理
+        },
+      },
+    },
+  },
+  plugins: [
+    pluginReact(),
+    pluginLess(),
+    pluginSvgr(),
+    // 开发环境中间件插件：处理登录和服务转发
+    rsbuildMiddlewarePlugin(),
+  ],
+  html: {
+    // 使用 public/dip.svg 作为浏览器标签页图标
+    // 这里路径相对于项目根目录（public/dip.svg）
+    favicon: 'public/dip.svg',
   },
   resolve: {
     alias: {

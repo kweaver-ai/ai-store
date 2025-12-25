@@ -69,24 +69,6 @@ export interface ApplicationConfigRequest {
   agent_ids?: number[]
 }
 
-/** 用户对象 */
-export interface UserInfo {
-  /** 用户ID */
-  user_id: string
-  /** 用户显示名 */
-  display_name: string
-  /** 角色ID列表 */
-  role_ids: string[]
-}
-
-/** 角色对象 */
-export interface RoleInfo {
-  /** 角色ID */
-  role_id: string
-  /** 角色名称 */
-  role_name: string
-}
-
 /** 获取钉住的微应用列表响应 */
 export interface PinnedMicroAppsResponse {
   /** 钉住的微应用 ID 列表 */
@@ -100,3 +82,4 @@ export interface PinMicroAppParams {
   /** 是否钉住 */
   pinned: boolean
 }
+

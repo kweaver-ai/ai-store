@@ -1,21 +1,27 @@
-import { useRef, memo } from 'react'
+import { useRef, memo, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { getLoginUrl } from '@/apis/login'
 
 function Content() {
   const iframeRef = useRef<HTMLIFrameElement>(null)
+  const [searchParams] = useSearchParams()
+
+  // 获取重定向地址（登录成功后跳转）
+  const asredirect = searchParams.get('asredirect') || undefined
 
   // 构建登录 URL
-  const getLoginUrl = () => {
-    const state = new Date().getTime()
-    // 根据实际 OAuth 服务地址调整
-    const baseUrl =
-      'https://192.168.181.18/interface/studioweb/login?lang=zh-cn&state=491Yo813uQ&x-forwarded-prefix=&integrated=false&product=adp&_t=1765178984017'
+  const loginUrl = getLoginUrl(asredirect)
 
-    return `${baseUrl}?state=${state}`
-  }
+  // 开发环境下直接跳转到登录URL（登录回调会由后端处理并重定向到/login-success）
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      window.location.href = loginUrl
+    }
+  }, [loginUrl])
 
   return (
     <iframe
-      src={getLoginUrl()}
+      src={loginUrl}
       ref={iframeRef}
       className="w-[560px] h-[460px] border-none bg-white"
       title="登录"

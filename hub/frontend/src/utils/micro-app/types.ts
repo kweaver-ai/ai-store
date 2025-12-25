@@ -4,10 +4,12 @@
 export interface MicroAppProps {
   /** ========== 认证相关 ========== */
   token: {
-    /** 访问令牌（accessToken） */
-    accessToken: string
+    /** 访问令牌（accessToken），使用 getter，每次访问时都从 Cookie 读取最新值 */
+    get accessToken(): string
     /** Token 刷新能力（微应用可以调用此函数刷新 token） */
     refreshToken: () => Promise<{ accessToken: string }>
+    /** Token 过期处理函数 */
+    onTokenExpired?: (code?: number) => void
   }
 
   /** ========== 路由信息 ========== */
@@ -20,12 +22,10 @@ export interface MicroAppProps {
   user: {
     /** 用户 ID */
     id: string
-    /** 用户名称 */
-    name: string
-    /** 用户账号 */
-    loginName: string
-    /** 用户角色 */
-    role?: string
+    /** 用户显示名称，使用 getter，每次访问时都从 store 读取最新值 */
+    get vision_name(): string
+    /** 用户账号，使用 getter，每次访问时都从 store 读取最新值 */
+    get account(): string
   }
 
   /** ========== UI 组件渲染函数 ========== */
@@ -44,6 +44,6 @@ export interface MicroAppProps {
   ) => () => void
 
   /** ========== UI 相关 ========== */
-  /** 容器 DOM 元素（可选，微应用可通过 document.getElementById 自行获取） */
-  container?: HTMLElement
+  /** 容器 DOM 元素 */
+  container: HTMLElement
 }

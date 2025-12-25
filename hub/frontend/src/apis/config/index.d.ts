@@ -3,4 +3,3 @@ export interface AppConfigResponse {
   language: string
   [key: string]: any
 }
-

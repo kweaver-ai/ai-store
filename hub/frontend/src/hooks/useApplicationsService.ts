@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { getApplications, type ApplicationInfo } from '@/apis/dip-hub'
+import { getApplications, type ApplicationInfo } from '@/apis/applications'
 
 interface UseApplicationsServiceOptions {
   /** 是否自动加载，默认为 true */

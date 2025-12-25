@@ -1,18 +1,62 @@
-# Local
-.DS_Store
-*.local
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Rsbuild cache
+.rsbuild/
+.rspack-profile-*/
+.cache/
+.temp/
+.tmp/
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# Environment variables
+.env*
+
+# Logs
 *.log*
 
-# Dist
-node_modules
-dist/
-
-# Profile
-.rspack-profile-*/
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
 # IDE
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
+.cursor/
+.cursorignore
+*.swp
+*.swo
+*~
+*.pid
+*.seed
+*.pid.lock
 
+# Package manager lock files (keep yarn.lock)
+package-lock.json
+pnpm-lock.yaml
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Documentation
 docs/

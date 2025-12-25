@@ -5,8 +5,8 @@ import {
   InfoCircleOutlined,
   ShareAltOutlined,
 } from '@ant-design/icons'
-import { getApplicationsOntologies } from '@/apis/dip-hub/applications'
-import type { OntologyInfo } from '@/apis/dip-hub'
+import { getApplicationsOntologies } from '@/apis/applications'
+import type { OntologyInfo } from '@/apis/applications'
 
 interface OntologyConfigProps {
   appId?: string

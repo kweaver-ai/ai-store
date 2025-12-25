@@ -14,9 +14,9 @@ import {
   validateFileSize,
   getFileInfo,
 } from './utils'
-import { postApplications } from '@/apis/dip-hub/applications'
+import { postApplications } from '@/apis/applications'
 import type { FileInfo } from './types'
-import type { ApplicationInfo } from '@/apis/dip-hub'
+import type { ApplicationInfo } from '@/apis/applications'
 import UploadFileIcon from '@/assets/images/uploadFile.svg?react'
 import styles from './index.module.less'
 import clsx from 'clsx'

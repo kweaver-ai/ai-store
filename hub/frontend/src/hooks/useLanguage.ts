@@ -3,7 +3,8 @@ import intl from 'react-intl-universal'
 import { useLanguageStore } from '../stores/languageStore'
 import { DEFAULT_LOCALE, getNavigatorLanguage } from '../i18n/config'
 import locales from '../i18n/locales'
-import { getAppConfigApi, postLanguageApi } from '../apis/config'
+// TODO: 后端接口待接入，暂时注释导入
+// import { getAppConfigApi, postLanguageApi } from '../apis/config'
 import { setMicroAppGlobalState } from '../utils/micro-app/globalState'
 
 interface InitOptions {
@@ -71,23 +72,24 @@ export const useLanguage = () => {
     )
 
     // 2. 异步同步后端语言配置（不阻塞首屏）
-    try {
-      const language = await getAppConfigApi()
-      if (language?.language && language.language !== fallbackLanguage) {
-        const serverLang = language.language
-        setLanguage(serverLang)
-        await updateI18n(serverLang)
-        // 使用后端语言覆盖时，同步到微应用全局状态
-        setMicroAppGlobalState(
-          {
-            language: serverLang,
-          },
-          { allowAllFields: true }
-        )
-      }
-    } catch (error) {
-      console.warn('getLanguageService failed, keep fallback language:', error)
-    }
+    // TODO: 后端接口待接入，暂时注释
+    // try {
+    //   const language = await getAppConfigApi()
+    //   if (language?.language && language.language !== fallbackLanguage) {
+    //     const serverLang = language.language
+    //     setLanguage(serverLang)
+    //     await updateI18n(serverLang)
+    //     // 使用后端语言覆盖时，同步到微应用全局状态
+    //     setMicroAppGlobalState(
+    //       {
+    //         language: serverLang,
+    //       },
+    //       { allowAllFields: true }
+    //     )
+    //   }
+    // } catch (error) {
+    //   console.warn('getLanguageService failed, keep fallback language:', error)
+    // }
   }
 
   /**
@@ -96,7 +98,8 @@ export const useLanguage = () => {
   const updateLanguage = async (lang: string) => {
     try {
       // 1. 同步到后端
-      await postLanguageApi(lang)
+      // TODO: 后端接口待接入，暂时注释
+      // await postLanguageApi(lang)
       // 2. 更新 store
       setLanguage(lang)
       // 3. 更新 intl

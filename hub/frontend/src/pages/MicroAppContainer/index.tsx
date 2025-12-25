@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import {
   getApplicationsBasicInfo,
   type ApplicationBasicInfo,
-} from '@/apis/dip-hub'
+} from '@/apis/applications'
 import MicroAppComponent from '../../components/MicroAppComponent'
 import { useMicroAppStore } from '../../stores/microAppStore'
 import { setMicroAppGlobalState } from '@/utils/micro-app/globalState'

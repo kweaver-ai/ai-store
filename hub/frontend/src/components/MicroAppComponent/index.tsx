@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
 import { loadMicroApp, type MicroApp as QiankunMicroApp } from 'qiankun'
 import { message, Spin } from 'antd'
-import { useAuthStore, useMicroAppStore } from '@/stores'
+import { useUserInfoStore, useMicroAppStore } from '@/stores'
 import { httpConfig, getAccessToken } from '@/utils/http/token-config'
 import {
   setMicroAppGlobalState,
@@ -11,7 +11,8 @@ import { AppMenu } from '../MicroAppHeader/AppMenu'
 import { UserInfo } from '../MicroAppHeader/UserInfo'
 import { createRoot } from 'react-dom/client'
 import type { Root as ReactRoot } from 'react-dom/client'
-import type { ApplicationBasicInfo } from '@/apis/dip-hub'
+import type { ApplicationBasicInfo } from '@/apis/applications'
+import type { MicroAppProps } from '@/utils/micro-app/types'
 
 interface MicroAppComponentProps {
   /** 应用基础信息 */
@@ -22,14 +23,14 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const microAppRef = useRef<QiankunMicroApp | null>(null)
   const [loading, setLoading] = useState(true)
-  const { userInfo } = useAuthStore()
+  const { userInfo } = useUserInfoStore()
   const { currentMicroApp } = useMicroAppStore()
   // 用于存储渲染根实例
   const appMenuRootRef = useRef<Map<string, ReactRoot>>(new Map())
   const userInfoRootRef = useRef<Map<string, ReactRoot>>(new Map())
 
   // 构建标准化的微应用 props（所有微应用统一使用此结构）
-  const microAppProps = useMemo<any>(
+  const microAppProps: MicroAppProps = useMemo<any>(
     () => ({
       // ========== 认证相关 ==========
       token: {
@@ -39,6 +40,7 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
         },
         refreshToken:
           httpConfig.refreshToken || (async () => ({ accessToken: '' })),
+        onTokenExpired: httpConfig.onTokenExpired,
       },
 
       // ========== 路由信息 ==========
@@ -50,12 +52,14 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
 
       // ========== 用户信息 ==========
       user: {
-        id: userInfo?.user_id || '',
+        id: userInfo?.id || '',
         // 使用 getter，每次访问时都从 store 读取最新值，无需更新 props
-        get name() {
-          return useAuthStore.getState().userInfo?.display_name || ''
+        get vision_name() {
+          return useUserInfoStore.getState().userInfo?.vision_name || ''
         },
-        // loginName: userInfo?.username || '',
+        get account() {
+          return useUserInfoStore.getState().userInfo?.account || ''
+        },
       },
 
       // ========== UI 组件渲染函数 ==========
@@ -131,7 +135,7 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
       appBasicInfo.micro_app.name,
       appBasicInfo.micro_app.entry,
       appBasicInfo.key,
-      userInfo?.user_id,
+      userInfo?.id,
       currentMicroApp?.routeBasename,
     ]
   )
