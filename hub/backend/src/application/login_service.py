@@ -1,12 +1,12 @@
 """
 登录服务
 
-实现登录相关的业务逻辑。
+实现登录相关的业务逻辑（与 session 服务逻辑严格一致）。
 """
 import logging
-import secrets
 from typing import Optional, Tuple
 
+from src.common.units import rand_len_rand_string, parse_host
 from src.domains.session import SessionInfo
 from src.domains.login import LoginRequest
 from src.ports.session_port import SessionPort
@@ -49,29 +49,23 @@ class LoginService:
         self._user_management_port = user_management_port
         self._deploy_manager_port = deploy_manager_port
 
-    def generate_state(self, length: int = 30) -> str:
+    def generate_state(self) -> str:
         """
-        生成随机 state 字符串。
-
-        参数:
-            length: 字符串长度
+        生成随机 state 字符串（与 session 服务一致：10-50 随机长度）。
 
         返回:
             str: 随机字符串
         """
-        return secrets.token_urlsafe(length)
+        return rand_len_rand_string(10, 50)
 
-    def generate_nonce(self, length: int = 30) -> str:
+    def generate_nonce(self) -> str:
         """
-        生成随机 nonce 字符串。
-
-        参数:
-            length: 字符串长度
+        生成随机 nonce 字符串（与 session 服务一致：10-50 随机长度）。
 
         返回:
             str: 随机字符串
         """
-        return secrets.token_urlsafe(length)
+        return rand_len_rand_string(10, 50)
 
     async def check_token_effect(self, token: str) -> bool:
         """
@@ -132,13 +126,16 @@ class LoginService:
 
     async def get_host_url(self) -> str:
         """
-        获取主机 URL。
+        获取主机 URL（与 session 服务一致：https://host:port）。
+        
+        使用 parse_host 处理 IPv6 地址。
 
         返回:
             str: 主机 URL
         """
         host_res = await self._deploy_manager_port.get_host()
-        return f"{host_res.scheme}://{host_res.host}:{host_res.port}"
+        # 与 session 服务一致：使用 https://ParseHost(host):port 格式
+        return f"https://{parse_host(host_res.host)}:{host_res.port}"
 
     async def do_login(self, code: str, state: str, session_id: str) -> SessionInfo:
         """
@@ -163,13 +160,12 @@ class LoginService:
         if session_info.state != state:
             raise ValueError("State 不匹配")
 
-        # 获取主机信息
+        # 获取主机信息（与 session 服务一致：accessUrl = https://host:port）
         host_res = await self._deploy_manager_port.get_host()
-        access_url = f"{host_res.scheme}://{host_res.host}:{host_res.port}"
+        access_url = f"https://{parse_host(host_res.host)}:{host_res.port}"
 
-        # 将授权码转换为 Token
-        redirect_uri = f"{access_url}/api/dip-hub/v1/login/callback"
-        code2token_res = await self._oauth2_port.code2token(code, redirect_uri)
+        # 将授权码转换为 Token（与 session 服务一致：传入 access_url 而不是 redirect_uri）
+        code2token_res = await self._oauth2_port.code2token(code, access_url)
 
         # 内省 Token 获取用户信息
         introspect = await self._hydra_port.introspect(code2token_res.access_token)
