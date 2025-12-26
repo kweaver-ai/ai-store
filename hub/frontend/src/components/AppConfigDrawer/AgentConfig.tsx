@@ -117,7 +117,7 @@ const AgentConfig = ({ appId }: AgentConfigProps) => {
 
                 {/* 链接 */}
                 <a
-                  href={`https://dip.aishu.cn/studio/dataagent/agent-web-space/agent-web-myagents/config?agentId=${item.id}`}
+                  href={`${window.location.origin}/studio/dataagent/agent-web-space/agent-web-myagents/config?agentId=${item.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 mt-2 text-xs text-[var(--dip-primary-color)] hover:text-[var(--dip-primary-color)] hover:underline"

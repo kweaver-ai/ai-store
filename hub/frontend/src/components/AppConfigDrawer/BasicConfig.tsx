@@ -19,7 +19,7 @@ const BasicConfig = ({ appId }: BasicConfigProps) => {
       if (!appId) return
       setLoading(true)
       try {
-        const data = await getApplicationsBasicInfo(appId)
+        const data = await getApplicationsBasicInfo({ appId })
         if (mounted) {
           setBasicInfo(data)
         }

@@ -2,7 +2,11 @@ import { useRef, memo, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { getLoginUrl } from '@/apis/login'
 
-function Content() {
+interface ContentProps {
+  iframeHeight: number
+}
+
+function Content({ iframeHeight }: ContentProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [searchParams] = useSearchParams()
 
@@ -23,7 +27,8 @@ function Content() {
     <iframe
       src={loginUrl}
       ref={iframeRef}
-      className="w-[560px] h-[460px] border-none bg-white"
+      className="w-[560px] border-none bg-white"
+      style={{ height: `${iframeHeight}px` }}
       title="登录"
     />
   )

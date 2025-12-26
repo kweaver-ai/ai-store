@@ -66,11 +66,6 @@
     json2mq "^0.2.0"
     throttle-debounce "^5.0.0"
 
-"@anyshare/template@7.3.5":
-  version "7.3.5"
-  resolved "http://repository.aishu.cn:8081/repository/npm-all/@anyshare/template/-/template-7.3.5.tgz"
-  integrity sha512-/I4myCXVHPa9BUVbCrlug21LhXfRRJFKJJJbuhJvUnezCwcapJySYn3DODlPa6miEnxJL5BJwlraafExyUEBKw==
-
 "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.27.1":
   version "7.27.1"
   resolved "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.27.1.tgz#200f715e66d52a23b221a9435534a91cc13ad5be"

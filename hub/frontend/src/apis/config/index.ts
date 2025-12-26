@@ -1,6 +1,8 @@
-// TODO: 后端接口待接入，暂时注释导入
-// import { get, post } from '@/utils/http'
+import { get } from '@/utils/http'
 import type { AppConfigResponse } from './index.d'
+import type { OEMConfig } from './index.d'
+
+export type { OEMConfig } from './index.d'
 
 /**
  * 获取应用配置接口
@@ -21,4 +23,59 @@ export function postLanguageApi(_language: string): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return Promise.resolve()
   // return post('/config/app', { body: { language } })
+}
+
+/**
+ * 将语言代码转换为 section 参数
+ * @param language 语言代码，如 'zh-CN', 'zh-TW', 'en-US'
+ * @returns section 参数，如 'shareweb_zh-cn', 'shareweb_zh-tw', 'shareweb_en-us'
+ */
+function getSectionByLanguage(language: string): string {
+  const langMap: Record<string, string> = {
+    'zh-CN': 'shareweb_zh-cn',
+    'zh-TW': 'shareweb_zh-tw',
+    'zh-HK': 'shareweb_zh-tw',
+    'en-US': 'shareweb_en-us',
+    en: 'shareweb_en-us',
+  }
+
+  // 优先精确匹配
+  if (langMap[language]) {
+    return langMap[language]
+  }
+
+  // 尝试匹配前缀
+  const langPrefix = language.split('-')[0].toLowerCase()
+  if (langPrefix === 'zh') {
+    return 'shareweb_zh-cn' // 默认简体中文
+  }
+  if (langPrefix === 'en') {
+    return 'shareweb_en-us'
+  }
+
+  // 默认返回简体中文
+  return 'shareweb_zh-cn'
+}
+
+/**
+ * 获取 OEM 配置
+ * @param language 语言代码，如 'zh-CN', 'zh-TW', 'en-US'
+ * @param product product 参数，默认为 'dip'
+ */
+export function getOEMConfigApi(
+  language: string = 'zh-CN',
+  product: string = 'dip'
+): Promise<OEMConfig> {
+  const section = getSectionByLanguage(language)
+  return get('/api/deploy-web-service/v1/oemconfig', {
+    params: { section, product },
+  })
+}
+
+/**
+ * 获取 iframe 高度
+ * @returns iframe 高度（像素）
+ */
+export function getIframeSizeApi(): Promise<number> {
+  return get('/oauth2/iframe-size')
 }

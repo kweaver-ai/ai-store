@@ -8,7 +8,7 @@ function Footer() {
   }
 
   return (
-    <div className="mt-1.5 flex items-center justify-center gap-0.5 text-sm leading-5 text-[rgba(127,131,145,0.7)]">
+    <div className="mt-1.5 flex items-center justify-center gap-0.5 text-[13px] text-[rgba(127,131,145,0.7)]">
       <div>登录即表示同意</div>
       <div
         className="text-[rgba(52,97,236,0.75)] cursor-pointer hover:text-[#3461ec]"

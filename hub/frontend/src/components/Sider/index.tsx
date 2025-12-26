@@ -2,6 +2,8 @@ import { useState, useMemo, useCallback } from 'react'
 import { Layout, Avatar, message, Tooltip } from 'antd'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { usePreferenceStore } from '@/stores'
+import { useOEMConfigStore } from '@/stores/oemConfigStore'
+import { useLanguageStore } from '@/stores/languageStore'
 import {
   getFirstVisibleSidebarRoute,
   getRouteByPath,
@@ -35,6 +37,9 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
   const navigate = useNavigate()
   const location = useLocation()
   const { pinnedMicroApps, unpinMicroApp } = usePreferenceStore()
+  const { language } = useLanguageStore()
+  const { getOEMConfig } = useOEMConfigStore()
+  const oemConfig = getOEMConfig(language)
 
   // TODO: 微应用列表获取待实现
   const [microApps] = useState<ApplicationInfo[]>([])
@@ -158,21 +163,23 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
       })
       .filter((item): item is NonNullable<typeof item> => item !== null)
 
-    // Figma 顺序：AI Data Platform（y=622）在上，系统工作台（y=663）在下
+    const getExternalUrl = (path: string) => {
+      return `${window.location.origin}${path}`
+    }
     const externalItems = [
       {
         key: 'data-platform',
         label: 'AI Data Platform',
         icon: <SidebarAiDataPlatformIcon />,
         type: 'external' as const,
-        onClick: () => openExternal('https://dip.aishu.cn/'),
+        onClick: () => openExternal(getExternalUrl('/studio')),
       },
       {
         key: 'system',
         label: '系统工作台',
         icon: <SidebarSystemIcon />,
         type: 'external' as const,
-        onClick: () => openExternal('https://anyshare.aishu.cn/'),
+        onClick: () => openExternal(getExternalUrl('/deploy')),
       },
     ]
 
@@ -188,6 +195,21 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
 
   const siderWidth = collapsed ? 60 : 240
   const selectedKey = getSelectedKey()
+
+  // 获取 OEM logo，如果获取不到则使用默认 logo
+  const getLogoUrl = () => {
+    const base64Image = oemConfig?.['logo.png']
+    if (!base64Image) {
+      return null
+    }
+    // 如果已经是 data URL 格式，直接使用
+    if (base64Image.startsWith('data:image/')) {
+      return base64Image
+    }
+    // 否则添加 base64 前缀
+    return `data:image/png;base64,${base64Image}`
+  }
+  const logoUrl = getLogoUrl()
 
   return (
     <AntdSider
@@ -215,7 +237,15 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
               : 'justify-between pl-3 pr-2'
           )}
         >
-          <LogoIcon className={clsx('h-6 w-auto', collapsed && 'hidden')} />
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt="logo"
+              className={clsx('h-6 w-auto', collapsed && 'hidden')}
+            />
+          ) : (
+            <LogoIcon className={clsx('h-6 w-auto', collapsed && 'hidden')} />
+          )}
           <Tooltip title={collapsed ? '展开' : '收起'} placement="right">
             <span
               className={clsx(

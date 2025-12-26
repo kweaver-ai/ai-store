@@ -15,6 +15,7 @@ function getUILocale(lang: string): typeof enUS | typeof zhTW | typeof zhCN {
 
 const App = () => {
   const { language } = useLanguageStore()
+
   return (
     <ConfigProvider
       prefixCls="dip"
