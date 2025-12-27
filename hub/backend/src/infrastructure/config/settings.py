@@ -4,11 +4,38 @@
 使用 pydantic-settings 进行配置管理。
 配置可以通过环境变量或 .env 文件进行设置。
 """
+import os
 from functools import lru_cache
 from typing import Optional
 
-from pydantic import Field
+import yaml
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# OAuth registry 配置文件路径
+OAUTH_REGISTRY_CONFIG_PATH = "/etc/globalConfig/oauth/oauth-registry-info.yaml"
+
+
+def _load_oauth_client_id_from_registry() -> Optional[str]:
+    """
+    从 oauth-registry-info.yaml 文件中读取 dip-hub 的 oauthClientID。
+    
+    返回:
+        Optional[str]: OAuth 客户端 ID，如果文件不存在或解析失败则返回 None。
+    """
+    if not os.path.exists(OAUTH_REGISTRY_CONFIG_PATH):
+        return None
+    
+    try:
+        with open(OAUTH_REGISTRY_CONFIG_PATH, "r", encoding="utf-8") as f:
+            config = yaml.safe_load(f)
+        
+        if config and "dip-hub" in config:
+            return config["dip-hub"].get("oauthClientID")
+    except Exception:
+        pass
+    
+    return None
 
 
 class Settings(BaseSettings):
@@ -98,6 +125,23 @@ class Settings(BaseSettings):
     # OAuth2 配置
     oauth_client_id: str = Field(default="", description="OAuth2 客户端 ID")
     oauth_client_id2: Optional[str] = Field(default=None, description="OAuth2 客户端 ID2")
+
+    @model_validator(mode="after")
+    def load_oauth_client_id_from_registry(self) -> "Settings":
+        """
+        从 oauth-registry-info.yaml 文件中加载 oauth_client_id。
+        
+        优先级逻辑：
+        1. 如果配置文件中有值，使用配置文件中的值（最高优先级）
+        2. 如果配置文件中没有值，但环境变量有值，保持环境变量的值
+        3. 如果都没有，使用默认空字符串
+        """
+        registry_client_id = _load_oauth_client_id_from_registry()
+        if registry_client_id:
+            # 配置文件中有值，优先使用
+            object.__setattr__(self, "oauth_client_id", registry_client_id)
+        # 如果配置文件没有值，保持环境变量加载的值（pydantic-settings 默认行为）
+        return self
 
     # Hydra 配置
     hydra_host: str = Field(

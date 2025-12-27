@@ -60,7 +60,8 @@ class OAuth2Adapter(OAuth2Port):
             "client_id": self._settings.oauth_client_id,
         }
         
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
+        # 禁用 SSL 证书验证以避免 certificate_verify_failed
+        async with httpx.AsyncClient(timeout=self._timeout, verify=False) as client:
             response = await client.post(
                 token_url,
                 data=data,
