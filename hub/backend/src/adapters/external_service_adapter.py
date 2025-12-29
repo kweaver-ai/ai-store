@@ -66,13 +66,41 @@ class DeployInstallerAdapter(DeployInstallerPort):
         if token:
             headers["Authorization"] = token
 
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
-            response = await client.put(
-                url,
-                content=image_data.read(),
-                headers=headers,
+        try:
+            logger.info(f"[upload_image] 开始上传镜像到: {url}, timeout={self._timeout}s")
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                response = await client.put(
+                    url,
+                    content=image_data.read(),
+                    headers=headers,
+                )
+                response.raise_for_status()
+        except httpx.ConnectError as e:
+            logger.error(
+                f"[upload_image] 连接失败: 无法连接到 {url}\n"
+                f"  错误详情: {e}\n"
+                f"  服务地址: {self._settings.proton_url}\n"
+                f"  完整URL: {url}\n"
+                f"  超时设置: {self._timeout}s"
             )
-            response.raise_for_status()
+            raise ConnectionError(
+                f"无法连接到 Deploy Installer 服务: {url}。"
+                f"请检查服务地址配置是否正确: {self._settings.proton_url}"
+            ) from e
+        except httpx.TimeoutException as e:
+            logger.error(
+                f"[upload_image] 请求超时: {url}, timeout={self._timeout}s"
+            )
+            raise TimeoutError(f"请求超时: {url} (超时时间: {self._timeout}s)") from e
+        except httpx.HTTPStatusError as e:
+            logger.error(
+                f"[upload_image] HTTP 错误: {e.response.status_code}\n"
+                f"  响应内容: {e.response.text if e.response else '<no response>'}"
+            )
+            raise
+        except Exception as e:
+            logger.exception(f"[upload_image] 上传镜像时发生未知错误: {e}")
+            raise
             
             data = response.json()
             images = data.get("images", [])
@@ -108,13 +136,41 @@ class DeployInstallerAdapter(DeployInstallerPort):
         if token:
             headers["Authorization"] = token
 
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
-            response = await client.put(
-                url,
-                content=chart_data.read(),
-                headers=headers,
+        try:
+            logger.info(f"[upload_chart] 开始上传 Chart 到: {url}, timeout={self._timeout}s")
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                response = await client.put(
+                    url,
+                    content=chart_data.read(),
+                    headers=headers,
+                )
+                response.raise_for_status()
+        except httpx.ConnectError as e:
+            logger.error(
+                f"[upload_chart] 连接失败: 无法连接到 {url}\n"
+                f"  错误详情: {e}\n"
+                f"  服务地址: {self._settings.proton_url}\n"
+                f"  完整URL: {url}\n"
+                f"  超时设置: {self._timeout}s"
             )
-            response.raise_for_status()
+            raise ConnectionError(
+                f"无法连接到 Deploy Installer 服务: {url}。"
+                f"请检查服务地址配置是否正确: {self._settings.proton_url}"
+            ) from e
+        except httpx.TimeoutException as e:
+            logger.error(
+                f"[upload_chart] 请求超时: {url}, timeout={self._timeout}s"
+            )
+            raise TimeoutError(f"请求超时: {url} (超时时间: {self._timeout}s)") from e
+        except httpx.HTTPStatusError as e:
+            logger.error(
+                f"[upload_chart] HTTP 错误: {e.response.status_code}\n"
+                f"  响应内容: {e.response.text if e.response else '<no response>'}"
+            )
+            raise
+        except Exception as e:
+            logger.exception(f"[upload_chart] 上传 Chart 时发生未知错误: {e}")
+            raise
             
             data = response.json()
             chart_data = data.get("chart", {})
