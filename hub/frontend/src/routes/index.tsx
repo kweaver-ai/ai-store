@@ -20,7 +20,7 @@ const LoginFailed = lazy(() => import('../pages/Login/LoginFailed'))
  * 默认首页重定向
  */
 const DefaultIndexRedirect = () => {
-  const { userInfo } = useUserInfoStore()
+  // const { userInfo } = useUserInfoStore()
 
   // TODO: 角色信息需要从其他地方获取，暂时使用空数组
   const roleIds = useMemo(() => new Set<string>([]), [])

@@ -39,7 +39,7 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
-.cursor/
+.cursor/*
 .cursorignore
 *.swp
 *.swo

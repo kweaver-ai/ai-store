@@ -20,7 +20,7 @@ You carefully provide accurate, factual, thoughtful answers, and are a genius at
 
 # Project-Specific Guidelines
 
-1. This project uses Ant Design (antd) as the UI component library. Always follow Ant Design patterns and conventions.
+1. This project uses Ant Design 6.0 (antd) as the UI component library. Always follow Ant Design patterns and conventions.
 2. Follow existing code structure - check neighboring files for patterns before making changes.
 3. This is a React application using TypeScript with state management via Zustand and React hooks.
 4. File and component naming follows PascalCase for components and camelCase for variables/functions.

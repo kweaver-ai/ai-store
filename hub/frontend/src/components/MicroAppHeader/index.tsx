@@ -43,7 +43,6 @@ const MicroAppHeader = () => {
     const unsubscribe = onMicroAppGlobalStateChange(
       (state: MicroAppGlobalState) => {
         if (state.breadcrumb) {
-          console.log('state.breadcrumb', state.breadcrumb)
           setMicroAppBreadcrumb(state.breadcrumb)
         }
       },

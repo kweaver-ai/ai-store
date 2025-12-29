@@ -23,6 +23,11 @@ export const UserMenuItem = ({ collapsed }: UserMenuItemProps) => {
     },
   ]
 
+  const menuStyle: React.CSSProperties = {
+    minWidth: '120px !important',
+    width: 'max-content', // 使用 max-content 确保菜单宽度根据内容自适应
+  }
+
   const content = (
     <div
       className={clsx(
@@ -42,7 +47,11 @@ export const UserMenuItem = ({ collapsed }: UserMenuItemProps) => {
   )
   return (
     <Dropdown
-      menu={{ items: menuItems }}
+      menu={{
+        items: menuItems,
+        style: menuStyle,
+        inlineCollapsed: false,
+      }}
       placement="topLeft"
       trigger={['click']}
     >

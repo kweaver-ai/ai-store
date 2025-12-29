@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Spin } from 'antd'
 import { useUserInfoStore } from '@/stores'
@@ -6,28 +6,55 @@ import { getFirstVisibleSidebarRoute } from '@/routes/utils'
 
 const LoginSuccess = () => {
   const navigate = useNavigate()
-  const { fetchUserInfo, userInfo, isLoading } = useUserInfoStore()
+  const { fetchUserInfo } = useUserInfoStore()
+  // 用于跟踪是否已经开始获取用户信息
+  const hasStartedFetch = useRef(false)
+  // 防止重复导航
+  const hasNavigatedRef = useRef(false)
 
   useEffect(() => {
     // 登录成功后获取用户信息
-    fetchUserInfo()
-  }, [fetchUserInfo])
+    if (!hasStartedFetch.current) {
+      hasStartedFetch.current = true
+      fetchUserInfo()
+        .then(() => {
+          // Promise 完成后，使用 queueMicrotask 确保状态已经更新
+          // queueMicrotask 会在当前同步代码执行完成后、下一个事件循环之前执行
+          queueMicrotask(() => {
+            // 防止重复导航（如果组件已卸载或已导航过）
+            if (hasNavigatedRef.current) {
+              return
+            }
 
-  useEffect(() => {
-    // 用户信息加载完成后，根据权限跳转
-    // 注意：如果有 asredirect 参数，后端会直接重定向到该地址，不会到 login-success 页面
-    // 所以这里只需要处理没有 asredirect 的情况（跳转到首页）
-    if (!isLoading && userInfo) {
-      // TODO: 角色信息需要从其他地方获取，暂时使用空数组
-      const roleIds = new Set<string>([])
-      const firstRoute = getFirstVisibleSidebarRoute(roleIds)
-      const to = firstRoute?.path ? `/${firstRoute.path}` : '/'
-      navigate(to, { replace: true })
-    } else if (!isLoading && !userInfo) {
-      // 如果获取用户信息失败，跳转到登录失败页面
-      navigate('/login-failed', { replace: true })
+            const { userInfo: currentUserInfo } = useUserInfoStore.getState()
+            if (currentUserInfo) {
+              // 用户信息加载成功，根据权限跳转
+              // 注意：如果有 asredirect 参数，后端会直接重定向到该地址，不会到 login-success 页面
+              // 所以这里只需要处理没有 asredirect 的情况（跳转到首页）
+              // TODO: 角色信息需要从其他地方获取，暂时使用空数组
+              const roleIds = new Set<string>([])
+              const firstRoute = getFirstVisibleSidebarRoute(roleIds)
+              const to = firstRoute?.path ? `/${firstRoute.path}` : '/'
+              hasNavigatedRef.current = true
+              navigate(to, { replace: true })
+            } else {
+              // 请求完成但没有用户信息，说明获取失败
+              hasNavigatedRef.current = true
+              navigate('/login-failed', { replace: true })
+            }
+          })
+        })
+        .catch((error: unknown) => {
+          // 防止重复导航
+          if (hasNavigatedRef.current) {
+            return
+          }
+          hasNavigatedRef.current = true
+          // 请求失败，跳转到失败页面
+          navigate('/login-failed', { replace: true })
+        })
     }
-  }, [isLoading, userInfo, navigate])
+  }, [fetchUserInfo, navigate])
 
   return (
     <div className="w-full h-full flex items-center justify-center">
