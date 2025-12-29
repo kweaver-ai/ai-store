@@ -28,3 +28,14 @@ resources:
 
 nodeSelector: []
 
+# Nginx 配置挂载选项（测试环境使用）
+nginx:
+  # 是否启用数据卷挂载
+  enabled: false
+  # 挂载方式：hostPath 或 configMap
+  mountType: hostPath  # hostPath 或 configMap
+  # hostPath 方式：测试环境节点上的 nginx.conf 文件路径
+  hostPath: /data/dip-frontend/nginx.conf
+  # ConfigMap 方式：ConfigMap 名称（如果 mountType=configMap）
+  configMapName: dip-frontend-nginx-config
+
