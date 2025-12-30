@@ -4,7 +4,7 @@
 
 ### 组件用途
 
-微应用壳导航头组件，专门用于微应用容器路由场景（`/application/:appName/*`）。提供统一的导航体验，包括应用菜单、面包屑导航、Copilot 按钮和用户信息。
+微应用壳导航头组件，专门用于微应用容器路由场景（`/application/:appId/*`）。提供统一的导航体验，包括应用菜单、面包屑导航、Copilot 按钮和用户信息。
 
 ### 整体结构
 
@@ -15,7 +15,7 @@
 
 ### 使用场景
 
-- 仅在微应用容器路由下使用（`/application/:appName/*`）
+- 仅在微应用容器路由下使用（`/application/:appId/*`）
 - 通过路由的 `handle.layout.hasHeader` 配置控制是否显示
 - 不支持 headless 微应用（headless 微应用不显示任何壳层组件）
 
@@ -91,7 +91,7 @@ MicroAppHeader/
 
 ### 3.4 外部链接/跳转
 
-- **应用菜单跳转**：`/application/${app.micro_app.name}`（新标签页）
+- **应用菜单跳转**：`/application/${app.id}`（新标签页）
 - **面包屑跳转**：使用 React Router 的 `navigate` 进行路由跳转
 
 ## 4. 代码实现
@@ -138,12 +138,12 @@ MicroAppHeader/
 微应用传递的面包屑路径会被自动处理：
 
 - 如果路径以 `/` 开头，会去掉前导斜杠
-- 统一拼接 `routeBasename` 前缀（如 `/dip-hub/application/:appName`，包含 BASE_PATH 前缀）
+- 统一拼接 `routeBasename` 前缀（如 `/dip-hub/application/:appId`，包含 BASE_PATH 前缀）
 - 示例：
   - 微应用传递：`{ path: '/alarm', name: '告警' }`
-  - 最终路径：`/dip-hub/application/:appName/alarm`
+  - 最终路径：`/dip-hub/application/:appId/alarm`
   - 微应用传递：`{ path: 'alarm', name: '告警' }`
-  - 最终路径：`/dip-hub/application/:appName/alarm`
+  - 最终路径：`/dip-hub/application/:appId/alarm`
 
 **注意**：`routeBasename` 包含 `/dip-hub` 前缀，因为微应用的路由系统是独立的，需要知道浏览器中的完整路径才能正确匹配路由。
 
@@ -173,7 +173,7 @@ MicroAppHeader/
 #### 面包屑路径拼接
 
 - 微应用传递的路径视为「微应用内部路径」，需要统一挂载到 `routeBasename` 之下
-- `routeBasename` 包含 `/dip-hub` 前缀（如 `/dip-hub/application/:appName`），因为微应用的路由系统是独立的，需要知道浏览器中的完整路径才能正确匹配路由
+- `routeBasename` 包含 `/dip-hub` 前缀（如 `/dip-hub/application/:appId`），因为微应用的路由系统是独立的，需要知道浏览器中的完整路径才能正确匹配路由
 - 路径处理时会去掉前导斜杠，统一按相对路径处理
 - 如果路径为空，则使用 `routeBasename` 作为完整路径
 
@@ -216,7 +216,7 @@ MicroAppHeader/
 ```typescript
 // src/routes/index.tsx
 {
-  path: 'application/:appName/*',
+  path: 'application/:appId/*',
   element: <MicroAppContainer />,
   handle: {
     layout: {

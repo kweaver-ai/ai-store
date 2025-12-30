@@ -18,12 +18,98 @@
 
 ---
 
+## 本地调试支持
+
+在开发环境下，支持通过 localStorage 配置覆盖微应用的 entry URL，方便其他部门的微应用进行本地调试。
+
+### 使用方法
+
+#### 方法一：浏览器控制台设置
+
+在浏览器控制台执行以下代码：
+
+```javascript
+localStorage.setItem('DIP_HUB_LOCAL_DEV_MICRO_APPS', JSON.stringify({
+  'micro-app-name': 'http://localhost:8081'
+}))
+```
+
+然后刷新页面即可。
+
+#### 方法二：浏览器开发者工具设置
+
+1. 打开浏览器开发者工具（F12）
+2. 切换到 **Application**（或 **存储**）标签页
+3. 展开 **Local Storage**
+4. 选择当前网站域名
+5. 添加新项：
+   - **Key**: `DIP_HUB_LOCAL_DEV_MICRO_APPS`
+   - **Value**: `{"micro-app-name": "http://localhost:8081"}`
+6. 刷新页面
+
+### 配置格式
+
+配置为 JSON 对象，key 为微应用名称（`micro_app.name`），value 为本地开发服务器的 entry URL：
+
+```json
+{
+  "micro-app-name-1": "http://localhost:8081",
+  "micro-app-name-2": "http://localhost:8082"
+}
+```
+
+### 示例场景
+
+假设有一个微应用名称为 `my-micro-app`，部署环境的 entry 为 `http://10.4.134.36/apps/my-micro-app`，现在需要在本地调试：
+
+1. **启动本地开发服务器**（端口 8081）
+2. **设置本地调试配置**：
+   ```javascript
+   localStorage.setItem('DIP_HUB_LOCAL_DEV_MICRO_APPS', JSON.stringify({
+     'my-micro-app': 'http://localhost:8081'
+   }))
+   ```
+3. **刷新页面**，主应用会自动使用 `http://localhost:8081` 加载微应用
+
+### 注意事项
+
+- ⚠️ **仅在开发环境下生效**：此功能仅在 `NODE_ENV === 'development'` 时可用，生产环境会自动忽略
+- ⚠️ **需要刷新页面**：修改配置后需要刷新页面才能生效
+- ⚠️ **CORS 问题**：确保本地开发服务器配置了正确的 CORS 头，允许主应用域名访问
+- ⚠️ **微应用名称必须匹配**：配置中的 key 必须与微应用的 `micro_app.name` 完全一致
+
+### 清除配置
+
+#### 清除单个微应用的配置
+
+```javascript
+// 在浏览器控制台执行
+const config = JSON.parse(localStorage.getItem('DIP_HUB_LOCAL_DEV_MICRO_APPS') || '{}')
+delete config['micro-app-name']
+localStorage.setItem('DIP_HUB_LOCAL_DEV_MICRO_APPS', JSON.stringify(config))
+```
+
+#### 清除所有配置
+
+```javascript
+localStorage.removeItem('DIP_HUB_LOCAL_DEV_MICRO_APPS')
+```
+
+### 调试信息
+
+在开发环境下，控制台会输出调试信息：
+
+- 当使用本地调试入口时，会显示：`[本地调试] 微应用 "xxx" 使用本地入口: http://localhost:8081 (默认: http://...)`
+- 当使用默认入口时，不会显示额外信息
+
+---
+
 ## 路由约定
 
 微应用统一挂载在：
 
-- `/dip-hub/application/:appName/*`（完整路径，包含 BASE_PATH 前缀）
-- 其中 `:appName` 为微应用的应用包唯一标识（对应 `ApplicationBasicInfo.micro_app.name`）
+- `/dip-hub/application/:appId/*`（完整路径，包含 BASE_PATH 前缀）
+- 其中 `:appId` 为微应用的应用 ID（对应 `ApplicationBasicInfo.id`）
 - 采用 History 模式
 - **注意**：`route.basename` 会包含 `/dip-hub` 前缀，因为微应用的路由系统是独立的，需要知道浏览器中的完整路径才能正确匹配路由
 
@@ -49,7 +135,7 @@ interface MicroAppProps {
 
   /** ========== 路由信息 ========== */
   route: {
-    /** 应用路由基础路径，包含 BASE_PATH 前缀（如 `/dip-hub/application/:appName`） */
+    /** 应用路由基础路径，包含 BASE_PATH 前缀（如 `/dip-hub/application/:appId`） */
     basename: string
   }
 
@@ -66,8 +152,12 @@ interface MicroAppProps {
   /** ========== UI 组件渲染函数 ========== */
   /** 渲染应用菜单组件（AppMenu）到指定容器，使用主应用的 React 上下文渲染 */
   renderAppMenu: (container: HTMLElement | string) => void
-  /** 渲染用户信息组件（UserInfo）到指定容器，使用主应用的 React 上下文渲染 */
-  renderUserInfo: (container: HTMLElement | string) => void
+  // /** 渲染用户信息组件（UserInfo）到指定容器，使用主应用的 React 上下文渲染 */
+  // renderUserInfo: (container: HTMLElement | string) => void
+
+  /** ========== 用户操作 ========== */
+  /** 退出登录 */
+  logout: () => void
 
   /** ========== 全局状态管理 ========== */
   /** 设置全局状态（微应用可以通过此方法更新全局状态） */
@@ -94,7 +184,8 @@ export async function mount(props) {
     route,
     user,
     renderAppMenu,
-    renderUserInfo,
+    // renderUserInfo,
+    logout,
     setMicroAppState,
     onMicroAppStateChange,
     container,
@@ -120,6 +211,9 @@ export async function mount(props) {
   const userId = user.id
   const userName = user.vision_name // 使用 getter，每次访问都获取最新值（用户显示名称）
   const userAccount = user.account // 使用 getter，每次访问都获取最新值（用户账号）
+
+  // 退出登录
+  // logout() // 调用后会清除用户信息并跳转到登出页面
 
   // 使用主应用提供的 UI 组件
   // 这些组件在主应用的 React 上下文中渲染，使用 ReactDOM.createRoot 渲染到微应用指定的容器
@@ -311,9 +405,9 @@ props.setMicroAppState({
 
 主应用会自动将这些路径挂载到 `route.basename` 之下，例如：
 
-- `route.basename = /dip-hub/application/app-1`（包含 BASE_PATH 前缀）
-- `/alarm` -> `/dip-hub/application/app-1/alarm`
-- `/alarm/problem` -> `/dip-hub/application/app-1/alarm/problem`
+- `route.basename = /dip-hub/application/app-id-123`（包含 BASE_PATH 前缀）
+- `/alarm` -> `/dip-hub/application/app-id-123/alarm`
+- `/alarm/problem` -> `/dip-hub/application/app-id-123/alarm/problem`
 
 **注意**：`route.basename` 包含 `/dip-hub` 前缀，因为微应用的路由系统是独立的，需要知道浏览器中的完整路径才能正确匹配路由。
 
@@ -341,8 +435,8 @@ const MicroAppHeader = () => {
     }
   }, [])
 
-  // 这里会先插入一条“微应用根”项（应用图标+名称），
-  // 再把微应用上报的 breadcrumb 映射到 /dip-hub/application/:appName/... 下
+  // 这里会先插入一条"微应用根"项（应用图标+名称），
+  // 再把微应用上报的 breadcrumb 映射到 /dip-hub/application/:appId/... 下
   // 最终通过 Breadcrumb 组件渲染（内部自动加首页图标）
 }
 ```
@@ -388,24 +482,23 @@ const MicroAppHeader = () => {
   - 点击菜单项会在新标签页打开对应的应用
   - 主应用会自动管理渲染实例的生命周期，微应用卸载时会自动清理
 
-- **`renderUserInfo(container)`**：渲染用户信息组件（UserInfo）到指定容器
-  - 参数：`container` - 容器元素（HTMLElement）或容器元素 ID（string）
-  - 使用 `ReactDOM.createRoot` 在主应用的 React 上下文中渲染到微应用指定的容器
-  - 组件在主应用的 React 上下文中渲染，可以访问主应用的 store 和 hooks
-  - 显示当前登录用户的头像和名称，点击可以退出登录
-  - 主应用会自动管理渲染实例的生命周期，微应用卸载时会自动清理
+### 用户操作
+
+- **`logout()`**：退出登录
+  - 无参数
+  - 调用后会清除用户信息并跳转到登出页面
+  - 会触发完整的登出流程（包括清除本地状态、清除 Cookie、跳转到后端登出 URL 等）
 
 **使用示例**：
 
 ```javascript
 import React, { useRef, useEffect } from 'react'
-import { Layout } from 'antd'
+import { Layout, Button } from 'antd'
 
 const { Header } = Layout
 
-function MyHeader({ renderAppMenu, renderUserInfo }) {
+function MyHeader({ renderAppMenu, logout }) {
   const appMenuContainerRef = useRef(null)
-  const userInfoContainerRef = useRef(null)
 
   // 在容器准备好后渲染主应用的组件
   useEffect(() => {
@@ -422,26 +515,14 @@ function MyHeader({ renderAppMenu, renderUserInfo }) {
     }
   }, [renderAppMenu])
 
-  useEffect(() => {
-    if (userInfoContainerRef.current) {
-      renderUserInfo(userInfoContainerRef.current)
-    }
-
-    return () => {
-      if (userInfoContainerRef.current) {
-        userInfoContainerRef.current.innerHTML = ''
-      }
-    }
-  }, [renderUserInfo])
-
   return (
     <Header>
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         {/* 左侧：应用菜单 */}
         <div ref={appMenuContainerRef} />
 
-        {/* 右侧：用户信息 */}
-        <div ref={userInfoContainerRef} />
+        {/* 右侧：退出登录按钮 */}
+        <Button onClick={logout}>退出登录</Button>
       </div>
     </Header>
   )
@@ -454,14 +535,28 @@ function MyHeader({ renderAppMenu, renderUserInfo }) {
 // 如果容器有固定的 ID
 useEffect(() => {
   renderAppMenu('app-menu-container')
-  renderUserInfo('user-info-container')
-}, [renderAppMenu, renderUserInfo])
+}, [renderAppMenu])
 
 // JSX
 <div>
   <div id="app-menu-container" />
-  <div id="user-info-container" />
 </div>
+```
+
+**退出登录使用示例**：
+
+```javascript
+// 在微应用中调用退出登录
+function MyComponent({ logout }) {
+  const handleLogout = () => {
+    // 调用退出登录，会清除用户信息并跳转到登出页面
+    logout()
+  }
+
+  return (
+    <button onClick={handleLogout}>退出登录</button>
+  )
+}
 ```
 
 **注意事项**：
@@ -493,7 +588,7 @@ useEffect(() => {
 
 ## 注意事项
 
-1. **appName 必须一致**：微应用配置的 `name` 必须与 package.json 中的 name 保持一致
+1. **appId 必须一致**：微应用的路由参数使用 `appId`（对应 `ApplicationBasicInfo.id`），必须与后端配置的应用 ID 保持一致
 2. **字段白名单**：微应用只能更新 `allowedFields` 中允许的字段（当前只有 `breadcrumb`），其他字段只能由主应用更新
 3. **函数命名**：使用 `setMicroAppState` / `onMicroAppStateChange`（微应用）和 `setMicroAppGlobalState` / `onMicroAppGlobalStateChange`（主应用）
 4. **状态初始化**：全局状态的 `language` 字段会在初始化时从 `languageStore` 读取，支持从 localStorage 恢复
@@ -501,7 +596,8 @@ useEffect(() => {
 6. **取消监听**：`onMicroAppStateChange` 返回取消监听的函数，组件卸载时应该调用以清理资源
 7. **Token 刷新**：Token 刷新后，微应用通过 `token.accessToken` 访问时会自动获取最新值，无需更新 props。如果提供了 `token.onTokenExpired`，可以在 token 过期时调用
 8. **用户信息**：`user.id` 通过 props 传递，`user.vision_name` 和 `user.account` 使用 getter 每次访问时从 store 读取最新值
-9. **语言获取**：语言不再通过 props 传递，微应用必须在 `mount` 时通过 `onMicroAppStateChange(callback, true)` 获取初始值和监听变化
-10. **UI 组件渲染**：`renderAppMenu` 和 `renderUserInfo` 需要传入容器元素，使用 `useRef` 和 `useEffect` 在容器准备好后调用。主应用会自动管理渲染实例的生命周期
-11. **容器元素**：`container` 是必需的 DOM 元素，主应用会在加载微应用时传递
-12. **React 上下文隔离**：UI 组件渲染函数使用 `ReactDOM.createRoot` 在主应用的 React 上下文中渲染，确保组件可以正常使用主应用的 hooks 和 store
+9. **退出登录**：通过 `logout()` 方法调用，会清除用户信息并跳转到登出页面
+10. **语言获取**：语言不再通过 props 传递，微应用必须在 `mount` 时通过 `onMicroAppStateChange(callback, true)` 获取初始值和监听变化
+11. **UI 组件渲染**：`renderAppMenu` 需要传入容器元素，使用 `useRef` 和 `useEffect` 在容器准备好后调用。主应用会自动管理渲染实例的生命周期
+12. **容器元素**：`container` 是必需的 DOM 元素，主应用会在加载微应用时传递
+13. **React 上下文隔离**：UI 组件渲染函数使用 `ReactDOM.createRoot` 在主应用的 React 上下文中渲染，确保组件可以正常使用主应用的 hooks 和 store

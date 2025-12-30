@@ -1,8 +1,0 @@
-# Ignore charts directory
-charts/
-
-# Ignore assets directory
-src/assets/
-
-# Ignore Tailwind CSS entry file
-src/index.css

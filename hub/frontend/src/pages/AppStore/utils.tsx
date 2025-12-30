@@ -14,11 +14,11 @@ export const getAppStoreMenuItems = () => {
       icon: <IconFont type="icon-dip-run" />,
       label: '运行',
     },
-    {
-      key: AppStoreActionEnum.Auth,
-      icon: <IconFont type="icon-dip-User" />,
-      label: '授权管理',
-    },
+    // {
+    //   key: AppStoreActionEnum.Auth,
+    //   icon: <IconFont type="icon-dip-User" />,
+    //   label: '授权管理',
+    // },
     { type: 'divider' },
     {
       key: AppStoreActionEnum.Uninstall,

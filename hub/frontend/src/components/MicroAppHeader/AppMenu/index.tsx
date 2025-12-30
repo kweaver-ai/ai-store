@@ -16,22 +16,23 @@ export const AppMenu = () => {
 
   // 处理点击按钮触发加载
   const handleButtonClick = () => {
+    if (loading) return
     fetchAppList()
   }
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
-    const app = apps.find((item) => item.key === key)
-    if (app && app.micro_app.name) {
+    const app = apps.find((item) => item.id === Number(key))
+    if (app?.id) {
       // 以新标签页形式打开应用
-      window.open(getFullPath(`/application/${app.micro_app.name}`), '_blank')
+      window.open(getFullPath(`/application/${app.id}`), '_blank')
     }
   }
 
   const menuItems: MenuProps['items'] = useMemo(
     () =>
       Array.isArray(apps)
-        ? [...apps, ...apps].map((app) => ({
-            key: app.key,
+        ? apps.map((app) => ({
+            key: app.id,
             icon: app.icon ? (
               <img
                 src={`data:image/png;base64,${app.icon}`}
@@ -46,7 +47,7 @@ export const AppMenu = () => {
             label: app.name,
           }))
         : [],
-    [apps],
+    [apps]
   )
 
   return (
@@ -72,7 +73,6 @@ export const AppMenu = () => {
     >
       <Button
         type="text"
-        disabled={loading}
         onClick={handleButtonClick}
         icon={
           <span>

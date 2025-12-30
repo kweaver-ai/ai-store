@@ -2,7 +2,6 @@ import { lazy, useMemo } from 'react'
 import type { RouteObject } from 'react-router-dom'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { BASE_PATH } from '@/utils/config'
-import { useUserInfoStore } from '../stores'
 import { ProtectedRoute } from './ProtectedRoute'
 import { routeConfigs } from './routes'
 import { getFirstVisibleSidebarRoute } from './utils'
@@ -93,7 +92,7 @@ export const router = createBrowserRouter(
         ...generateRoutesFromConfig(),
         // 动态路由（微应用容器）
         {
-          path: 'application/:appName/*',
+          path: 'application/:appId/*',
           element: <MicroAppContainer />,
           handle: {
             layout: {
@@ -112,5 +111,5 @@ export const router = createBrowserRouter(
   ],
   {
     basename: BASE_PATH === '/' ? undefined : BASE_PATH,
-  },
+  }
 )

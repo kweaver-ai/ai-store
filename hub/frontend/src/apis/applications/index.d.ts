@@ -1,5 +1,7 @@
 /** 应用基础信息 */
 export interface ApplicationBasicInfo {
+  /** 应用 ID */
+  id: number
   /** 应用包唯一标识 */
   key: string
   /** 应用名称 */

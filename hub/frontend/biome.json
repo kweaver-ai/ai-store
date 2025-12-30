@@ -70,7 +70,7 @@
         "useSimplifiedLogicExpression": "warn"
       },
       "suspicious": {
-        "noExplicitAny": "warn",
+        "noExplicitAny": "off",
         "noArrayIndexKey": "warn",
         "noDoubleEquals": "error"
       },
@@ -90,9 +90,10 @@
   },
   "files": {
     "includes": [
-      "src/**/*.ts",
-      "src/**/*.tsx",
-      "src/**/*.json"
+      "src/**",
+      "!src/assets",
+      "!src/index.css",
+      "!charts"
     ]
   }
 }

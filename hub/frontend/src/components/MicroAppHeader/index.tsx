@@ -18,7 +18,7 @@ const { Header: AntHeader } = Layout
 /**
  * 微应用壳导航头（MicroAppHeader）
  *
- * - 只在微应用容器路由下使用（/application/:appKey/*）
+ * - 只在微应用容器路由下使用（/application/:appId/*）
  * - 负责渲染：应用菜单 + 微应用图标和名称 + 微应用面包屑 + Copilot + 用户信息
  */
 const MicroAppHeader = () => {
@@ -27,9 +27,12 @@ const MicroAppHeader = () => {
 
   const { currentMicroApp } = useMicroAppStore()
 
-  const [microAppBreadcrumb, setMicroAppBreadcrumb] = useState<BreadcrumbItem[]>([])
+  const [microAppBreadcrumb, setMicroAppBreadcrumb] = useState<
+    BreadcrumbItem[]
+  >([])
 
   const isMicroAppRoute = location.pathname.startsWith('/application/')
+  console.log('isMicroAppRoute', isMicroAppRoute)
 
   // 监听微应用的全局状态（面包屑）
   useEffect(() => {
@@ -38,11 +41,14 @@ const MicroAppHeader = () => {
       return
     }
 
-    const unsubscribe = onMicroAppGlobalStateChange((state: MicroAppGlobalState) => {
-      if (state.breadcrumb) {
-        setMicroAppBreadcrumb(state.breadcrumb)
-      }
-    }, true)
+    const unsubscribe = onMicroAppGlobalStateChange(
+      (state: MicroAppGlobalState) => {
+        if (state.breadcrumb) {
+          setMicroAppBreadcrumb(state.breadcrumb)
+        }
+      },
+      true
+    )
 
     return () => {
       unsubscribe()
@@ -59,7 +65,7 @@ const MicroAppHeader = () => {
     // 微应用根节点：应用图标 + 名称
     if (currentMicroApp) {
       items.push({
-        key: currentMicroApp.key,
+        key: currentMicroApp.id.toString(),
         name: currentMicroApp.name,
         path: currentMicroApp.routeBasename,
         icon: currentMicroApp.icon,
@@ -74,10 +80,10 @@ const MicroAppHeader = () => {
      * ]
      *
      * 这里的 path 视为「微应用内部路径」，需要统一挂载到 routeBasename 之下：
-     * - routeBasename: /application/:appKey
-     * - '/alarm'           -> /application/:appKey/alarm
-     * - '/alarm/problem'   -> /application/:appKey/alarm/problem
-     * - 'alarm'            -> /application/:appKey/alarm
+     * - routeBasename: /application/:appId
+     * - '/alarm'           -> /application/:appId/alarm
+     * - '/alarm/problem'   -> /application/:appId/alarm/problem
+     * - 'alarm'            -> /application/:appId/alarm
      */
     if (microAppBreadcrumb.length > 0 && currentMicroApp?.routeBasename) {
       const base = currentMicroApp.routeBasename.replace(/\/$/, '')
@@ -111,7 +117,7 @@ const MicroAppHeader = () => {
       if (!item.path) return
       navigate(item.path)
     },
-    [navigate],
+    [navigate]
   )
 
   // Copilot 按钮点击：通过全局状态通知微应用
@@ -125,7 +131,7 @@ const MicroAppHeader = () => {
           clickedAt: Date.now(),
         },
       },
-      { allowAllFields: true },
+      { allowAllFields: true }
     )
   }, [])
 
@@ -134,12 +140,17 @@ const MicroAppHeader = () => {
       {/* 左侧：应用菜单和面包屑 */}
       <div className="flex items-center gap-x-4">
         <AppMenu />
-        <Breadcrumb items={breadcrumbItems} onNavigate={handleBreadcrumbNavigate} />
+        <Breadcrumb
+          items={breadcrumbItems}
+          onNavigate={handleBreadcrumbNavigate}
+        />
       </div>
 
       {/* 右侧：Copilot 按钮和用户信息 */}
       <div className="flex items-center gap-x-4">
-        {isMicroAppRoute && currentMicroApp && <CopilotButton onClick={handleCopilotClick} />}
+        {isMicroAppRoute && currentMicroApp && (
+          <CopilotButton onClick={handleCopilotClick} />
+        )}
         <UserInfo />
       </div>
     </AntHeader>

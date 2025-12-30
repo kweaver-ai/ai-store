@@ -49,7 +49,7 @@ export const UserMenuItem = ({ collapsed }: UserMenuItemProps) => {
     <Dropdown
       menu={{
         items: menuItems,
-        // style: menuStyle,
+        style: menuStyle,
         inlineCollapsed: false,
       }}
       placement="topLeft"

@@ -8,7 +8,11 @@ import LogoIcon from '@/assets/images/brand/logo.svg?react'
 import SidebarAiDataPlatformIcon from '@/assets/images/sider/adp.svg?react'
 import SidebarSystemIcon from '@/assets/images/sider/proton.svg?react'
 import { routeConfigs } from '@/routes/routes'
-import { getFirstVisibleSidebarRoute, getRouteByPath, isRouteVisibleForRoles } from '@/routes/utils'
+import {
+  getFirstVisibleSidebarRoute,
+  getRouteByPath,
+  isRouteVisibleForRoles,
+} from '@/routes/utils'
 import { usePreferenceStore } from '@/stores'
 import { useLanguageStore } from '@/stores/languageStore'
 import { useOEMConfigStore } from '@/stores/oemConfigStore'
@@ -41,7 +45,10 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
   const [microApps] = useState<ApplicationInfo[]>([])
   // TODO: 角色信息需要从其他地方获取，暂时使用空数组
   const roleIds = useMemo(() => new Set<string>([]), [])
-  const firstVisibleRoute = useMemo(() => getFirstVisibleSidebarRoute(roleIds), [roleIds])
+  const firstVisibleRoute = useMemo(
+    () => getFirstVisibleSidebarRoute(roleIds),
+    [roleIds]
+  )
 
   // 根据当前路由确定选中的菜单项
   const getSelectedKey = () => {
@@ -53,9 +60,10 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
     const route = getRouteByPath(pathname)
 
     // 如果是微应用路由
+    // 注意：location.pathname 是相对于 basename 的路径，不包含 BASE_PATH
     if (pathname.startsWith('/application/')) {
-      const appKey = pathname.split('/')[2]
-      return `micro-app-${appKey}`
+      const appId = pathname.split('/')[2]
+      return `micro-app-${appId}`
     }
 
     return route?.key || 'my-app'
@@ -63,8 +71,8 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
 
   const handleItemClick = (key: string) => {
     if (key.startsWith('micro-app-')) {
-      const appKey = key.replace('micro-app-', '')
-      window.open(getFullPath(`/application/${appKey}`), '_blank')
+      const appId = key.replace('micro-app-', '')
+      window.open(getFullPath(`/application/${appId}`), '_blank')
       return
     }
 
@@ -75,28 +83,28 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
   }
 
   // 处理打开微应用
-  const handleOpenApp = useCallback((appKey: string, e?: React.MouseEvent) => {
+  const handleOpenApp = useCallback((appId: string, e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation()
     }
-    window.open(getFullPath(`/application/${appKey}`), '_blank')
+    window.open(getFullPath(`/application/${appId}`), '_blank')
   }, [])
 
   // 处理取消钉住
   const handleUnpin = useCallback(
-    async (appKey: string, e?: React.MouseEvent) => {
+    async (appId: string, e?: React.MouseEvent) => {
       if (e) {
         e.stopPropagation()
       }
       try {
-        await unpinMicroApp(appKey)
+        await unpinMicroApp(appId)
         message.success('已取消钉住')
       } catch (error) {
         console.error('Failed to unpin micro app:', error)
         message.error('取消钉住失败，请稍后重试')
       }
     },
-    [unpinMicroApp],
+    [unpinMicroApp]
   )
 
   const openExternal = useCallback((url: string) => {
@@ -127,10 +135,10 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
 
     const pinnedItems = pinnedMicroApps
       .map((appId) => {
-        const app = microApps.find((a) => a.name === appId)
+        const app = microApps.find((a) => a.id === Number(appId))
         if (!app) return null
         return {
-          key: `micro-app-${app.name}`,
+          key: `micro-app-${app.id}`,
           label: app.name,
           icon: (
             <Avatar
@@ -144,12 +152,12 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
             {
               key: 'open',
               label: '打开',
-              onClick: () => handleOpenApp(app.name),
+              onClick: () => handleOpenApp(app.id.toString()),
             },
             {
               key: 'unpin',
               label: '取消钉住',
-              onClick: () => handleUnpin(app.name),
+              onClick: () => handleUnpin(app.id.toString()),
             },
           ] as MenuProps['items'],
         }
@@ -177,7 +185,14 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
     ]
 
     return { myAppItem, pinnedItems, appStoreItem, externalItems }
-  }, [pinnedMicroApps, microApps, handleOpenApp, handleUnpin, openExternal, roleIds])
+  }, [
+    pinnedMicroApps,
+    microApps,
+    handleOpenApp,
+    handleUnpin,
+    openExternal,
+    roleIds,
+  ])
 
   const siderWidth = collapsed ? 60 : 240
   const selectedKey = getSelectedKey()
@@ -218,23 +233,30 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
         <div
           className={clsx(
             'flex items-center gap-2 pb-4',
-            collapsed ? 'justify-center pl-1.5 pr-1.5' : 'justify-between pl-3 pr-2',
+            collapsed
+              ? 'justify-center pl-1.5 pr-1.5'
+              : 'justify-between pl-3 pr-2'
           )}
         >
           {logoUrl ? (
-            <img src={logoUrl} alt="logo" className={clsx('h-6 w-auto', collapsed && 'hidden')} />
+            <img
+              src={logoUrl}
+              alt="logo"
+              className={clsx('h-6 w-auto', collapsed && 'hidden')}
+            />
           ) : (
             <LogoIcon className={clsx('h-6 w-auto', collapsed && 'hidden')} />
           )}
           <Tooltip title={collapsed ? '展开' : '收起'} placement="right">
-            <span
+            <button
+              type="button"
               className={clsx(
-                'text-sm cursor-pointer flex items-center justify-center w-8 h-8 rounded-md text-[--dip-text-color] hover:text-[--dip-primary-color]',
+                'text-sm cursor-pointer flex items-center justify-center w-8 h-8 rounded-md text-[--dip-text-color] hover:text-[--dip-primary-color]'
               )}
               onClick={() => onCollapse(!collapsed)}
             >
               <IconFont type="icon-dip-cebianlan" />
-            </span>
+            </button>
           </Tooltip>
         </div>
 
@@ -282,7 +304,14 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
         {/* AI Data Platform + 系统工作台 */}
         <div className="flex flex-col gap-0">
           {sidebarData.externalItems.map((item) => {
-            return <BottomLinkItem item={item} collapsed={collapsed} onClick={item.onClick} />
+            return (
+              <BottomLinkItem
+                key={item.key}
+                item={item}
+                collapsed={collapsed}
+                onClick={item.onClick}
+              />
+            )
           })}
         </div>
 

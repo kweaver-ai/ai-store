@@ -1,4 +1,4 @@
-import { Button } from 'antd'
+import { Avatar, Button } from 'antd'
 import type { ReactNode } from 'react'
 import HomeIcon from '@/assets/images/header/home.svg?react'
 import type { BreadcrumbItem } from '@/utils/micro-app/globalState'
@@ -9,18 +9,19 @@ interface BreadcrumbProps {
 }
 
 /**
- * 悬浮背景色公共样式
- */
-const HOVER_STYLE = 'hover:bg-black/4 transition-colors duration-200'
-
-/**
  * 渲染面包屑图标
  */
-const renderIcon = (icon: string | ReactNode, alt?: string) => {
-  if (!icon) return null
+const renderIcon = (icon: string | ReactNode) => {
+  if (!icon) return <Avatar size={24} className="shrink-0" />
 
   if (typeof icon === 'string') {
-    return <img src={icon} alt={alt || ''} className="w-4 h-4 object-contain" />
+    return (
+      <img
+        src={`data:image/png;base64,${icon}`}
+        alt=""
+        className="w-4 h-4 object-contain"
+      />
+    )
   }
 
   return icon
@@ -37,17 +38,22 @@ export const Breadcrumb = ({ items = [], onNavigate }: BreadcrumbProps) => {
   }
 
   // 所有面包屑项（包含首页）
-  const allItems: Array<BreadcrumbItem> = [{ key: 'main-home', name: '', path: '/' }, ...items]
+  const allItems: Array<BreadcrumbItem> = [
+    { key: 'main-home', name: '', path: '/' },
+    ...items,
+  ]
 
   return (
-    <div className="h-6 flex items-center" aria-label="面包屑导航">
+    <div className="h-6 flex items-center">
       {allItems.map((item, index) => {
         const isLast = index === allItems.length - 1
         const isHome = index === 0
         const isRootItem = !isHome && 'icon' in item
+        // 使用 item.key、item.path 或组合值作为 key，避免使用数组索引
+        const itemKey = item.key || `breadcrumb-${index}`
 
         return (
-          <div key={index} className="flex items-center">
+          <div key={itemKey} className="flex items-center">
             {/* 首页图标 */}
             {isHome ? (
               <Button
@@ -59,7 +65,11 @@ export const Breadcrumb = ({ items = [], onNavigate }: BreadcrumbProps) => {
             ) : (
               <>
                 {/* 分隔符 */}
-                {index > 0 && <span className="text-sm font-medium text-black/25 mx-2">/</span>}
+                {index > 0 && (
+                  <span className="text-sm font-medium text-black/25 mx-2">
+                    /
+                  </span>
+                )}
                 {/* 面包屑项 */}
                 {isLast ? (
                   <Button
@@ -71,7 +81,11 @@ export const Breadcrumb = ({ items = [], onNavigate }: BreadcrumbProps) => {
                     {item.name}
                   </Button>
                 ) : (
-                  <Button size="small" type="text" onClick={(e) => handleNavigate(item, e)}>
+                  <Button
+                    size="small"
+                    type="text"
+                    onClick={(e) => handleNavigate(item, e)}
+                  >
                     {isRootItem && renderIcon(item.icon)}
                     {item.name}
                   </Button>

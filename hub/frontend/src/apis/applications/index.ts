@@ -1,9 +1,10 @@
-import { del, get, post, put } from '@/utils/http'
+import { del, get, post } from '@/utils/http'
 import type {
+  AgentInfo,
   AgentList,
   ApplicationBasicInfo,
-  ApplicationConfigRequest,
   ApplicationInfo,
+  OntologyInfo,
   OntologyList,
   PinMicroAppParams,
   PinnedMicroAppsResponse,
@@ -34,54 +35,44 @@ export const getApplications = (): Promise<ApplicationInfo[]> => get(`/api/dip-h
  * 配置应用（业务知识网络 & 智能体）
  * OpenAPI: PUT /applications/config?app_id=xxx
  */
-export const putApplicationsConfig = (
-  appId: string,
-  body: ApplicationConfigRequest,
-): Promise<ApplicationInfo> =>
-  put(`/api/dip-hub/v1/applications/config`, {
-    params: { app_id: appId },
-    body,
-  })
+// export const putApplicationsConfig = (
+//   appId: string,
+//   body: ApplicationConfigRequest,
+// ): Promise<ApplicationInfo> =>
+//   put(`/api/dip-hub/v1/applications/config`, {
+//     params: { app_id: appId },
+//     body,
+//   })
 
 /**
  * 查看应用基础信息
  * OpenAPI: GET /applications/basic-info?app_id=xxx 或 ?package_name=xxx
  * 支持通过 appId 或 packageName 任意一个参数查询
  */
-export const getApplicationsBasicInfo = (params: {
-  appId?: string
-  packageName?: string
-}): Promise<ApplicationBasicInfo> => {
-  const queryParams: Record<string, string> = {}
-  if (params.appId) {
-    queryParams.app_id = params.appId
-  }
-  if (params.packageName) {
-    queryParams.package_name = params.packageName
-  }
-  return get(`/api/dip-hub/v1/applications/basic-info`, { params: queryParams })
+export const getApplicationsBasicInfo = (id?: number): Promise<ApplicationBasicInfo> => {
+  return get(`/api/dip-hub/v1/applications/basic-info`, { params: { id } })
 }
 
 /**
  * 查看业务知识网络配置
  * OpenAPI: GET /applications/ontologies?app_id=xxx
  */
-export const getApplicationsOntologies = (appId: string): Promise<OntologyList> =>
-  get(`/api/dip-hub/v1/applications/ontologies`, { params: { app_id: appId } })
+export const getApplicationsOntologies = (id: number): Promise<OntologyList> =>
+  get(`/api/dip-hub/v1/applications/ontologies`, { params: { id } })
 
 /**
  * 查看智能体配置
  * OpenAPI: GET /applications/agents?app_id=xxx
  */
-export const getApplicationsAgents = (appId: string): Promise<AgentList> =>
-  get(`/api/dip-hub/v1/applications/agents`, { params: { app_id: appId } })
+export const getApplicationsAgents = (id: number): Promise<AgentList> =>
+  get(`/api/dip-hub/v1/applications/agents`, { params: { id } })
 
 /**
  * 卸载应用
  * @param key 应用唯一标识
  */
-export const deleteApplications = (key: string): Promise<void> => {
-  return del(`/api/dip-hub/v1/applications/${key}`)
+export const deleteApplications = (id: number): Promise<void> => {
+  return del(`/api/dip-hub/v1/applications/${id}`)
 }
 
 /**

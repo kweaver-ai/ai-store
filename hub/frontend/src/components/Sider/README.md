@@ -80,7 +80,7 @@ Sider/
 ### 菜单项点击行为
 
 - **路由菜单项**：点击后使用 `react-router-dom` 的 `navigate` 进行路由跳转
-- **微应用菜单项**：点击后在新标签页打开 `/application/${appKey}`
+- **微应用菜单项**：点击后在新标签页打开 `/application/${appId}`
 - **外部链接菜单项**：
   - AI Data Platform：`https://dip.aishu.cn/`
   - 系统工作台：`https://anyshare.aishu.cn/`
@@ -90,7 +90,7 @@ Sider/
 
 - 根据当前路由路径（`location.pathname`）自动确定选中的菜单项
 - 根路径 `/` 时，默认选中第一个可见菜单项
-- 微应用路由 `/application/:appKey` 时，选中对应的钉住应用菜单项
+- 微应用路由 `/application/:appId` 时，选中对应的钉住应用菜单项
 
 # 代码实现
 
@@ -148,7 +148,7 @@ interface SiderProps {
 
 1. **权限控制**：菜单项的可见性根据用户角色动态过滤，使用 `isRouteVisibleForRoles` 判断
 2. **路由匹配**：选中菜单项的逻辑需要与路由配置保持一致
-3. **微应用路由**：微应用路由格式为 `/application/:appKey`，菜单项 key 格式为 `micro-app-${appKey}`
+3. **微应用路由**：微应用路由格式为 `/application/:appId`，菜单项 key 格式为 `micro-app-${appId}`
 4. **钉住应用**：钉住的应用使用应用本身的图标（Base64 编码），不受选中态渐变影响
 5. **外部链接**：AI Data Platform 和系统工作台固定顺序，AI Data Platform 在上
 6. **响应式**：组件高度使用 `calc(100vh - ${topOffset}px)` 动态计算，适配不同顶部导航栏高度

@@ -1,11 +1,15 @@
-import { CheckCircleOutlined, InfoCircleOutlined, ShareAltOutlined } from '@ant-design/icons'
+import {
+  CheckCircleOutlined,
+  InfoCircleOutlined,
+  ShareAltOutlined,
+} from '@ant-design/icons'
 import { Alert, Spin, Tag } from 'antd'
 import { memo, useEffect, useState } from 'react'
 import type { OntologyInfo } from '@/apis/applications'
 import { getApplicationsOntologies } from '@/apis/applications'
 
 interface OntologyConfigProps {
-  appId?: string
+  appId?: number
 }
 
 const OntologyConfig = ({ appId }: OntologyConfigProps) => {
@@ -43,7 +47,9 @@ const OntologyConfig = ({ appId }: OntologyConfigProps) => {
 
   return (
     <div className="flex flex-col gap-y-2">
-      <div className="text-sm font-medium text-[--dip-text-color]">业务知识网络</div>
+      <div className="text-sm font-medium text-[--dip-text-color]">
+        业务知识网络
+      </div>
 
       {/* 提示信息框 */}
       <Alert
@@ -76,7 +82,13 @@ const OntologyConfig = ({ appId }: OntologyConfigProps) => {
                     {item.name || `业务知识网络 #${item.id}`}
                   </div>
                   <Tag
-                    icon={isConfigured ? <CheckCircleOutlined /> : <InfoCircleOutlined />}
+                    icon={
+                      isConfigured ? (
+                        <CheckCircleOutlined />
+                      ) : (
+                        <InfoCircleOutlined />
+                      )
+                    }
                     color={isConfigured ? 'success' : 'warning'}
                     className="m-0 rounded border flex-shrink-0"
                     style={{
