@@ -25,6 +25,66 @@ from src.infrastructure.context.token_context import get_auth_token
 logger = logging.getLogger(__name__)
 
 
+def _build_headers(auth_token: Optional[str] = None) -> dict:
+    """
+    构建 HTTP 请求头。
+    
+    参数:
+        auth_token: 认证令牌
+        
+    返回:
+        dict: 请求头字典
+    """
+    headers = {}
+    token = get_auth_token() or auth_token
+    if token:
+        headers["Authorization"] = token
+    return headers
+
+
+def _handle_http_error(
+    operation: str,
+    url: str,
+    e: Exception,
+    service_url: str = "",
+    timeout: int = 0,
+) -> None:
+    """
+    处理 HTTP 请求错误。
+    
+    参数:
+        operation: 操作名称
+        url: 请求 URL
+        e: 异常对象
+        service_url: 服务地址
+        timeout: 超时时间
+    """
+    if isinstance(e, httpx.ConnectError):
+        logger.error(
+            f"[{operation}] 连接失败: 无法连接到 {url}\n"
+            f"  错误详情: {e}\n"
+            f"  服务地址: {service_url}\n"
+            f"  完整URL: {url}\n"
+            f"  超时设置: {timeout}s"
+        )
+        raise ConnectionError(
+            f"无法连接到服务: {url}。"
+            f"请检查服务地址配置是否正确: {service_url}"
+        ) from e
+    elif isinstance(e, httpx.TimeoutException):
+        logger.error(f"[{operation}] 请求超时: {url}, timeout={timeout}s")
+        raise TimeoutError(f"请求超时: {url} (超时时间: {timeout}s)") from e
+    elif isinstance(e, httpx.HTTPStatusError):
+        logger.error(
+            f"[{operation}] HTTP 错误: {e.response.status_code}\n"
+            f"  响应内容: {e.response.text if e.response else '<no response>'}"
+        )
+        raise
+    else:
+        logger.exception(f"[{operation}] 发生未知错误: {e}")
+        raise
+
+
 class DeployInstallerAdapter(DeployInstallerPort):
     """
     Deploy Installer 服务适配器。
@@ -58,13 +118,8 @@ class DeployInstallerAdapter(DeployInstallerPort):
             List[ImageUploadResult]: 上传的镜像列表
         """
         url = f"{self._base_url}/agents/image"
-        
-        # 统一从TokenContext获取token，如果上下文没有则使用传入的参数（向后兼容）
-        token = get_auth_token() or auth_token
-        
-        headers = {"Content-Type": "application/octet-stream"}
-        if token:
-            headers["Authorization"] = token
+        headers = _build_headers(auth_token)
+        headers["Content-Type"] = "application/octet-stream"
 
         try:
             logger.info(f"[upload_image] 开始上传镜像到: {url}, timeout={self._timeout}s")
@@ -75,43 +130,25 @@ class DeployInstallerAdapter(DeployInstallerPort):
                     headers=headers,
                 )
                 response.raise_for_status()
-        except httpx.ConnectError as e:
-            logger.error(
-                f"[upload_image] 连接失败: 无法连接到 {url}\n"
-                f"  错误详情: {e}\n"
-                f"  服务地址: {self._settings.proton_url}\n"
-                f"  完整URL: {url}\n"
-                f"  超时设置: {self._timeout}s"
-            )
-            raise ConnectionError(
-                f"无法连接到 Deploy Installer 服务: {url}。"
-                f"请检查服务地址配置是否正确: {self._settings.proton_url}"
-            ) from e
-        except httpx.TimeoutException as e:
-            logger.error(
-                f"[upload_image] 请求超时: {url}, timeout={self._timeout}s"
-            )
-            raise TimeoutError(f"请求超时: {url} (超时时间: {self._timeout}s)") from e
-        except httpx.HTTPStatusError as e:
-            logger.error(
-                f"[upload_image] HTTP 错误: {e.response.status_code}\n"
-                f"  响应内容: {e.response.text if e.response else '<no response>'}"
-            )
-            raise
+                data = response.json()
         except Exception as e:
-            logger.exception(f"[upload_image] 上传镜像时发生未知错误: {e}")
-            raise
-            
-            data = response.json()
-            images = data.get("images", [])
-            
-            return [
-                ImageUploadResult(
-                    from_name=img.get("from", ""),
-                    to_name=img.get("to", ""),
-                )
-                for img in images
-            ]
+            _handle_http_error(
+                "upload_image",
+                url,
+                e,
+                self._settings.proton_url,
+                self._timeout,
+            )
+            raise  # 如果 _handle_http_error 没有抛出异常，这里确保抛出
+        images = data.get("images", [])
+        
+        return [
+            ImageUploadResult(
+                from_name=img.get("from", ""),
+                to_name=img.get("to", ""),
+            )
+            for img in images
+        ]
 
     async def upload_chart(
         self,
@@ -128,13 +165,8 @@ class DeployInstallerAdapter(DeployInstallerPort):
             ChartUploadResult: Chart 上传结果
         """
         url = f"{self._base_url}/agents/chart"
-        
-        # 统一从TokenContext获取token，如果上下文没有则使用传入的参数（向后兼容）
-        token = get_auth_token() or auth_token
-        
-        headers = {"Content-Type": "application/octet-stream"}
-        if token:
-            headers["Authorization"] = token
+        headers = _build_headers(auth_token)
+        headers["Content-Type"] = "application/octet-stream"
 
         try:
             logger.info(f"[upload_chart] 开始上传 Chart 到: {url}, timeout={self._timeout}s")
@@ -145,43 +177,25 @@ class DeployInstallerAdapter(DeployInstallerPort):
                     headers=headers,
                 )
                 response.raise_for_status()
-        except httpx.ConnectError as e:
-            logger.error(
-                f"[upload_chart] 连接失败: 无法连接到 {url}\n"
-                f"  错误详情: {e}\n"
-                f"  服务地址: {self._settings.proton_url}\n"
-                f"  完整URL: {url}\n"
-                f"  超时设置: {self._timeout}s"
-            )
-            raise ConnectionError(
-                f"无法连接到 Deploy Installer 服务: {url}。"
-                f"请检查服务地址配置是否正确: {self._settings.proton_url}"
-            ) from e
-        except httpx.TimeoutException as e:
-            logger.error(
-                f"[upload_chart] 请求超时: {url}, timeout={self._timeout}s"
-            )
-            raise TimeoutError(f"请求超时: {url} (超时时间: {self._timeout}s)") from e
-        except httpx.HTTPStatusError as e:
-            logger.error(
-                f"[upload_chart] HTTP 错误: {e.response.status_code}\n"
-                f"  响应内容: {e.response.text if e.response else '<no response>'}"
-            )
-            raise
+                data = response.json()
         except Exception as e:
-            logger.exception(f"[upload_chart] 上传 Chart 时发生未知错误: {e}")
-            raise
-            
-            data = response.json()
-            chart_data = data.get("chart", {})
-            
-            return ChartUploadResult(
-                chart=ChartInfo(
-                    name=chart_data.get("name", ""),
-                    version=chart_data.get("version", ""),
-                ),
-                values=data.get("values", {}),
+            _handle_http_error(
+                "upload_chart",
+                url,
+                e,
+                self._settings.proton_url,
+                self._timeout,
             )
+            raise
+        chart_data = data.get("chart", {})
+        
+        return ChartUploadResult(
+            chart=ChartInfo(
+                name=chart_data.get("name", ""),
+                version=chart_data.get("version", ""),
+            ),
+            values=data.get("values", {}),
+        )
 
     async def install_release(
         self,
@@ -218,24 +232,30 @@ class DeployInstallerAdapter(DeployInstallerPort):
             "values": values,
         }
         
-        # 统一从TokenContext获取token，如果上下文没有则使用传入的参数（向后兼容）
-        token = get_auth_token() or auth_token
-        
-        headers = {}
-        if token:
-            headers["Authorization"] = token
+        headers = _build_headers(auth_token)
 
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
-            response = await client.post(
+        try:
+            logger.info(f"[install_release] 安装 Release: {url}, release_name={release_name}")
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                response = await client.post(
+                    url,
+                    params=params,
+                    json=body,
+                    headers=headers or None,
+                )
+                response.raise_for_status()
+                data = response.json()
+        except Exception as e:
+            _handle_http_error(
+                "install_release",
                 url,
-                params=params,
-                json=body,
-                headers=headers or None,
+                e,
+                self._settings.proton_url,
+                self._timeout,
             )
-            response.raise_for_status()
-            
-            data = response.json()
-            return ReleaseResult(values=data.get("values", {}))
+            raise
+        
+        return ReleaseResult(values=data.get("values", {}))
 
     async def delete_release(
         self,
@@ -256,19 +276,25 @@ class DeployInstallerAdapter(DeployInstallerPort):
         url = f"{self._base_url}/agents/release/{release_name}"
         params = {"namespace": namespace}
         
-        # 统一从TokenContext获取token，如果上下文没有则使用传入的参数（向后兼容）
-        token = get_auth_token() or auth_token
-        
-        headers = {}
-        if token:
-            headers["Authorization"] = token
+        headers = _build_headers(auth_token)
 
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
-            response = await client.delete(url, params=params, headers=headers or None)
-            response.raise_for_status()
-            
-            data = response.json()
-            return ReleaseResult(values=data.get("values", {}))
+        try:
+            logger.info(f"[delete_release] 删除 Release: {url}, release_name={release_name}")
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                response = await client.delete(url, params=params, headers=headers or None)
+                response.raise_for_status()
+                data = response.json()
+        except Exception as e:
+            _handle_http_error(
+                "delete_release",
+                url,
+                e,
+                self._settings.proton_url,
+                self._timeout,
+            )
+            raise
+        
+        return ReleaseResult(values=data.get("values", {}))
 
 
 class OntologyManagerAdapter(OntologyManagerPort):
@@ -308,27 +334,34 @@ class OntologyManagerAdapter(OntologyManagerPort):
         """
         url = f"{self._base_url}/knowledge-networks/{kn_id}"
         
-        # 统一从TokenContext获取token，如果上下文没有则使用传入的参数（向后兼容）
-        token = get_auth_token() or auth_token
-        
-        headers = {}
-        if token:
-            headers["Authorization"] = token
+        headers = _build_headers(auth_token)
 
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
-            response = await client.get(url, headers=headers or None)
-            
-            if response.status_code == 404:
-                raise ValueError(f"业务知识网络不存在: {kn_id}")
-            
-            response.raise_for_status()
-            
-            data = response.json()
-            return KnowledgeNetworkInfo(
-                id=data.get("id", kn_id),
-                name=data.get("name", ""),
-                comment=data.get("comment"),
+        try:
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                response = await client.get(url, headers=headers or None)
+                
+                if response.status_code == 404:
+                    raise ValueError(f"业务知识网络不存在: {kn_id}")
+                
+                response.raise_for_status()
+                data = response.json()
+        except ValueError:
+            raise
+        except Exception as e:
+            _handle_http_error(
+                "get_knowledge_network",
+                url,
+                e,
+                self._settings.ontology_manager_url,
+                self._timeout,
             )
+            raise
+        
+        return KnowledgeNetworkInfo(
+            id=data.get("id", kn_id),
+            name=data.get("name", ""),
+            comment=data.get("comment"),
+        )
 
     async def create_knowledge_network(
         self,
@@ -346,22 +379,27 @@ class OntologyManagerAdapter(OntologyManagerPort):
         """
         url = f"{self._base_url}/knowledge-networks"
         
-        # 统一从TokenContext获取token，如果上下文没有则使用传入的参数（向后兼容）
-        token = get_auth_token() or auth_token
-        
-        headers = {}
-        if token:
-            headers["Authorization"] = token
+        headers = _build_headers(auth_token)
 
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
-            response = await client.post(url, json=data, headers=headers or None)
-            response.raise_for_status()
-            
-            result = response.json()
-            # 返回的是 ID 数组
-            if isinstance(result, list) and len(result) > 0:
-                return result[0].get("id", "")
-            return ""
+        try:
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                response = await client.post(url, json=data, headers=headers or None)
+                response.raise_for_status()
+                result = response.json()
+        except Exception as e:
+            _handle_http_error(
+                "create_knowledge_network",
+                url,
+                e,
+                self._settings.ontology_manager_url,
+                self._timeout,
+            )
+            raise
+        
+        # 返回的是 ID 数组
+        if isinstance(result, list) and len(result) > 0:
+            return result[0].get("id", "")
+        return ""
 
 
 class AgentFactoryAdapter(AgentFactoryPort):
@@ -398,20 +436,25 @@ class AgentFactoryAdapter(AgentFactoryPort):
         """
         url = f"{self._base_url}/agent"
         
-        # 统一从TokenContext获取token，如果上下文没有则使用传入的参数（向后兼容）
-        token = get_auth_token() or auth_token
-        
-        headers = {}
-        if token:
-            headers["Authorization"] = token
+        headers = _build_headers(auth_token)
 
-        async with httpx.AsyncClient(timeout=self._timeout) as client:
-            response = await client.post(url, json=data, headers=headers or None)
-            response.raise_for_status()
-            
-            result = response.json()
-            return AgentFactoryResult(
-                id=result.get("id", ""),
-                version=result.get("version", "v0"),
+        try:
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                response = await client.post(url, json=data, headers=headers or None)
+                response.raise_for_status()
+                result = response.json()
+        except Exception as e:
+            _handle_http_error(
+                "create_agent",
+                url,
+                e,
+                self._settings.agent_factory_url,
+                self._timeout,
             )
+            raise
+        
+        return AgentFactoryResult(
+            id=result.get("id", ""),
+            version=result.get("version", "v0"),
+        )
 

@@ -6,6 +6,7 @@
 """
 import base64
 import io
+import json
 import logging
 import os
 import shutil
@@ -330,8 +331,8 @@ class ApplicationService:
                         
                         # 安装 release
                         release_name = chart_config.get("release_name", chart_result.chart.name)
-                        namespace = chart_config.get("namespace", "default")
-                        values = chart_config.get("values", {})
+                        namespace = chart_config.get("namespace", "anyshare")
+                        values = chart_result.values
                         
                         await self._deploy_installer_port.install_release(
                             release_name=release_name,
@@ -343,39 +344,63 @@ class ApplicationService:
                         )
                         release_configs.append(release_name)
             
-            # 导入业务知识网络
+            # 导入业务知识网络（从 ontologies 目录读取 JSON 文件）
             ontology_config = []
             if self._ontology_manager_port:
-                for onto_config in manifest.ontologies:
-                    try:
-                        onto_id = await self._ontology_manager_port.create_knowledge_network(
-                            onto_config,
-                            auth_token=auth_token,
-                        )
-                        if onto_id:
-                            ontology_config.append(OntologyConfigItem(
-                                id=int(onto_id),
-                                is_config=False,  # 安装时默认为未配置
-                            ))
-                    except Exception as e:
-                        logger.warning(f"导入业务知识网络失败: {e}")
+                ontologies_dir = os.path.join(manifest_dir, "ontologies")
+                if os.path.exists(ontologies_dir) and os.path.isdir(ontologies_dir):
+                    for filename in os.listdir(ontologies_dir):
+                        if filename.endswith(('.json', '.yaml', '.yml')):
+                            ontology_file_path = os.path.join(ontologies_dir, filename)
+                            try:
+                                with open(ontology_file_path, "r", encoding="utf-8") as f:
+                                    if filename.endswith('.json'):
+                                        onto_config = json.load(f)
+                                    else:
+                                        onto_config = yaml.safe_load(f)
+                                
+                                logger.info(f"从文件读取业务知识网络配置: {filename}")
+                                onto_id = await self._ontology_manager_port.create_knowledge_network(
+                                    onto_config,
+                                    auth_token=auth_token,
+                                )
+                                if onto_id:
+                                    ontology_config.append(OntologyConfigItem(
+                                        id=int(onto_id),
+                                        is_config=False,  # 安装时默认为未配置
+                                    ))
+                                    logger.info(f"成功导入业务知识网络: {onto_id}")
+                            except Exception as e:
+                                logger.warning(f"导入业务知识网络失败 ({filename}): {e}")
             
-            # 导入智能体
+            # 导入智能体（从 agents 目录读取 JSON 文件）
             agent_config = []
             if self._agent_factory_port:
-                for agent_config_data in manifest.agents:
-                    try:
-                        agent_result = await self._agent_factory_port.create_agent(
-                            agent_config_data,
-                            auth_token=auth_token,
-                        )
-                        if agent_result.id:
-                            agent_config.append(AgentConfigItem(
-                                id=int(agent_result.id),
-                                is_config=False,  # 安装时默认为未配置
-                            ))
-                    except Exception as e:
-                        logger.warning(f"导入智能体失败: {e}")
+                agents_dir = os.path.join(manifest_dir, "agents")
+                if os.path.exists(agents_dir) and os.path.isdir(agents_dir):
+                    for filename in os.listdir(agents_dir):
+                        if filename.endswith(('.json', '.yaml', '.yml')):
+                            agent_file_path = os.path.join(agents_dir, filename)
+                            try:
+                                with open(agent_file_path, "r", encoding="utf-8") as f:
+                                    if filename.endswith('.json'):
+                                        agent_config_data = json.load(f)
+                                    else:
+                                        agent_config_data = yaml.safe_load(f)
+                                
+                                logger.info(f"从文件读取智能体配置: {filename}")
+                                agent_result = await self._agent_factory_port.create_agent(
+                                    agent_config_data,
+                                    auth_token=auth_token,
+                                )
+                                if agent_result.id:
+                                    agent_config.append(AgentConfigItem(
+                                        id=int(agent_result.id),
+                                        is_config=False,  # 安装时默认为未配置
+                                    ))
+                                    logger.info(f"成功导入智能体: {agent_result.id}")
+                            except Exception as e:
+                                logger.warning(f"导入智能体失败 ({filename}): {e}")
             
             # 创建或更新应用
             application = Application(
