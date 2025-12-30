@@ -5,7 +5,7 @@ import { getApplicationsBasicInfo } from '@/apis/applications'
 
 interface BasicConfigProps {
   /** 应用 ID */
-  appId?: string
+  appId?: number
 }
 
 const BasicConfig = ({ appId }: BasicConfigProps) => {
@@ -19,7 +19,7 @@ const BasicConfig = ({ appId }: BasicConfigProps) => {
       if (!appId) return
       setLoading(true)
       try {
-        const data = await getApplicationsBasicInfo({ appId })
+        const data = await getApplicationsBasicInfo(appId)
         if (mounted) {
           setBasicInfo(data)
         }
@@ -53,7 +53,9 @@ const BasicConfig = ({ appId }: BasicConfigProps) => {
 
   return (
     <div className="flex flex-col gap-y-2">
-      <div className="text-sm font-medium text-[--dip-text-color]">基本信息</div>
+      <div className="text-sm font-medium text-[--dip-text-color]">
+        基本信息
+      </div>
       <div className="flex flex-col rounded-xl border border-[#E3E8EF] p-3 text-sm text-[--dip-text-color] gap-2">
         {/* 应用名称：告警与故障分析 */}
         <div className="flex flex-1">
@@ -63,7 +65,9 @@ const BasicConfig = ({ appId }: BasicConfigProps) => {
 
         {/* 应用描述：... */}
         <div className="flex flex-1">
-          <span className="text-[--dip-text-color-45] mr-1 align-top">应用描述：</span>
+          <span className="text-[--dip-text-color-45] mr-1 align-top">
+            应用描述：
+          </span>
           <span className="inline-block flex-1 align-top break-words">
             {basicInfo?.description ?? '--'}
           </span>

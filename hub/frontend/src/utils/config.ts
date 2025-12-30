@@ -25,15 +25,16 @@ export const BASE_PATH =
  * 规范化路径：确保路径以 / 开头，但不以 / 结尾（除了根路径）
  */
 export function normalizePath(path: string): string {
+  let tempPath = path
   // 移除尾部斜杠（根路径除外）
-  if (path !== '/' && path.endsWith('/')) {
-    path = path.slice(0, -1)
+  if (tempPath !== '/' && tempPath.endsWith('/')) {
+    tempPath = tempPath.slice(0, -1)
   }
   // 确保以 / 开头
-  if (!path.startsWith('/')) {
-    path = '/' + path
+  if (!tempPath.startsWith('/')) {
+    tempPath = `/${tempPath}`
   }
-  return path
+  return tempPath
 }
 
 /**

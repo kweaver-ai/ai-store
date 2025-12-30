@@ -1,31 +1,42 @@
-import { message, Spin } from 'antd'
+import { Button, message, Spin } from 'antd'
 import { loadMicroApp, type MicroApp as QiankunMicroApp } from 'qiankun'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Root as ReactRoot } from 'react-dom/client'
 import { createRoot } from 'react-dom/client'
-import type { ApplicationBasicInfo } from '@/apis/applications'
-import { useMicroAppStore, useUserInfoStore } from '@/stores'
-import { getFullPath } from '@/utils/config'
+import Empty from '@/components/Empty'
+import { useUserInfoStore } from '@/stores'
+import type { CurrentMicroAppInfo } from '@/stores/microAppStore'
 import { getAccessToken, httpConfig } from '@/utils/http/token-config'
-import { onMicroAppGlobalStateChange, setMicroAppGlobalState } from '@/utils/micro-app/globalState'
+import {
+  onMicroAppGlobalStateChange,
+  setMicroAppGlobalState,
+} from '@/utils/micro-app/globalState'
+import { microAppLoadFailureManager } from '@/utils/micro-app/loadFailureManager'
+import { getMicroAppEntry } from '@/utils/micro-app/localDev'
 import type { MicroAppProps } from '@/utils/micro-app/types'
 import { AppMenu } from '../MicroAppHeader/AppMenu'
-import { UserInfo } from '../MicroAppHeader/UserInfo'
 
 interface MicroAppComponentProps {
   /** 应用基础信息 */
-  appBasicInfo: ApplicationBasicInfo
+  appBasicInfo: CurrentMicroAppInfo
 }
 
 const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const microAppRef = useRef<QiankunMicroApp | null>(null)
   const [loading, setLoading] = useState(true)
-  const { userInfo } = useUserInfoStore()
-  const { currentMicroApp } = useMicroAppStore()
+  const [loadFailed, setLoadFailed] = useState(false)
+  const [retryKey, setRetryKey] = useState(0) // 用于强制重新加载
+  const [failureInfo, setFailureInfo] = useState<{
+    error: Error | string
+    appName: string
+    entry: string
+  } | null>(null)
+  const { userInfo, logout } = useUserInfoStore()
   // 用于存储渲染根实例
   const appMenuRootRef = useRef<Map<string, ReactRoot>>(new Map())
-  const userInfoRootRef = useRef<Map<string, ReactRoot>>(new Map())
+  // 用于存储最新的 microAppProps，避免 useEffect 依赖整个对象导致无限循环
+  const microAppPropsRef = useRef<MicroAppProps | null>(null)
 
   // 构建标准化的微应用 props（所有微应用统一使用此结构）
   const microAppProps: MicroAppProps = useMemo<any>(
@@ -36,15 +47,14 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
         get accessToken() {
           return getAccessToken()
         },
-        refreshToken: httpConfig.refreshToken || (async () => ({ accessToken: '' })),
+        refreshToken:
+          httpConfig.refreshToken || (async () => ({ accessToken: '' })),
         onTokenExpired: httpConfig.onTokenExpired,
       },
 
       // ========== 路由信息 ==========
       route: {
-        basename:
-          currentMicroApp?.routeBasename ||
-          getFullPath(`/application/${appBasicInfo.micro_app.name}`),
+        basename: appBasicInfo.routeBasename,
       },
 
       // ========== 用户信息 ==========
@@ -66,15 +76,20 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
       renderAppMenu: (container: HTMLElement | string) => {
         // 支持传入元素或元素 ID
         const targetContainer =
-          typeof container === 'string' ? document.getElementById(container) : container
+          typeof container === 'string'
+            ? document.getElementById(container)
+            : container
 
         if (!targetContainer) {
-          console.warn('容器元素不存在:', container)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('容器元素不存在:', container)
+          }
           return
         }
 
         // 清理旧的渲染实例
-        const containerKey = typeof container === 'string' ? container : container.id || 'app-menu'
+        const containerKey =
+          typeof container === 'string' ? container : container.id || 'app-menu'
         const oldRoot = appMenuRootRef.current.get(containerKey)
         if (oldRoot) {
           oldRoot.unmount()
@@ -85,27 +100,11 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
         root.render(<AppMenu />)
         appMenuRootRef.current.set(containerKey, root)
       },
-      renderUserInfo: (container: HTMLElement | string) => {
-        // 支持传入元素或元素 ID
-        const targetContainer =
-          typeof container === 'string' ? document.getElementById(container) : container
 
-        if (!targetContainer) {
-          console.warn('容器元素不存在:', container)
-          return
-        }
-
-        // 清理旧的渲染实例
-        const containerKey = typeof container === 'string' ? container : container.id || 'user-info'
-        const oldRoot = userInfoRootRef.current.get(containerKey)
-        if (oldRoot) {
-          oldRoot.unmount()
-        }
-
-        // 在主应用的 React 上下文中渲染到微应用的容器
-        const root = createRoot(targetContainer)
-        root.render(<UserInfo />)
-        userInfoRootRef.current.set(containerKey, root)
+      // ========== 用户操作 ==========
+      logout: () => {
+        // 调用主应用的退出登录函数
+        logout()
       },
 
       // ========== 全局状态管理 ==========
@@ -115,24 +114,59 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
       },
       onMicroAppStateChange: (
         callback: (state: any, prev: any) => void,
-        fireImmediately?: boolean,
+        fireImmediately?: boolean
       ) => {
         return onMicroAppGlobalStateChange(callback, fireImmediately)
       },
     }),
-    [
-      appBasicInfo.micro_app.name,
-      appBasicInfo.micro_app.entry,
-      appBasicInfo.key,
-      userInfo?.id,
-      currentMicroApp?.routeBasename,
-    ],
+    []
   )
+
+  // 更新 ref，确保 useEffect 能访问到最新的 props
+  microAppPropsRef.current = microAppProps
 
   // 只在应用配置变化时重新加载微应用
   useEffect(() => {
     let isMounted = true
     let microAppInstance: QiankunMicroApp | null = null
+
+    // 检查是否已经失败过
+    const appIdStr = String(appBasicInfo.id)
+    const hasFailed = microAppLoadFailureManager.hasFailed(appIdStr)
+    const isPageReload = microAppLoadFailureManager.isPageReload()
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[微应用加载] 检查失败状态:`, {
+        appId: appIdStr,
+        hasFailed,
+        isPageReload,
+        pageLoadTime: microAppLoadFailureManager.getPageLoadTime(),
+      })
+    }
+
+    if (hasFailed) {
+      const failureInfo = microAppLoadFailureManager.getFailureInfo(appIdStr)
+      if (failureInfo) {
+        setLoadFailed(true)
+        setFailureInfo({
+          error: failureInfo.error,
+          appName: failureInfo.appName,
+          entry: failureInfo.entry,
+        })
+        setLoading(false)
+        if (process.env.NODE_ENV === 'development') {
+          console.log(
+            `[微应用加载] 检测到之前的失败记录，跳过加载: ${failureInfo.appName} (${appBasicInfo.id})`,
+            isPageReload ? '(页面刷新后恢复)' : '(组件重新渲染)'
+          )
+        }
+        return
+      }
+    }
+
+    // 重置失败状态
+    setLoadFailed(false)
+    setFailureInfo(null)
 
     // 加载微应用
     if (!containerRef.current) {
@@ -148,7 +182,9 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
           microAppRef.current = null
         })
         .catch((err) => {
-          console.warn('卸载旧微应用实例时出错:', err)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('卸载旧微应用实例时出错:', err)
+          }
           microAppRef.current = null
         })
     }
@@ -156,40 +192,54 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
     // 处理 entry 路径：移除路由 hash（qiankun 的 entry 不能包含 #）
     const microAppEntry = appBasicInfo.micro_app.entry
     if (!microAppEntry) {
-      console.error('微应用入口不存在:', appBasicInfo)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('微应用入口不存在:', appBasicInfo)
+      }
       setLoading(false)
       message.error('微应用配置错误：缺少入口地址')
       return
     }
 
-    let entryUrl = microAppEntry
+    // 获取微应用 entry URL，支持本地调试覆盖
+    const microAppName = appBasicInfo.micro_app.name
+    let entryUrl = getMicroAppEntry(microAppName, microAppEntry)
+
+    // 移除路由 hash（qiankun 的 entry 不能包含 #）
     const hashIndex = entryUrl.indexOf('#')
     if (hashIndex !== -1) {
       entryUrl = entryUrl.substring(0, hashIndex)
       if (process.env.NODE_ENV === 'development') {
-        console.warn('entry 包含路由 hash，已自动移除:', microAppEntry, '->', entryUrl)
+        console.log(
+          'entry 包含路由 hash，已自动移除:',
+          entryUrl,
+          '->',
+          entryUrl.substring(0, hashIndex)
+        )
       }
     }
 
     // 确保 container 存在
     if (!containerRef.current) {
-      console.error('Container element not found')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Container element not found')
+      }
       setLoading(false)
       return
     }
 
     // 开发环境：调试信息
-    const microAppName = appBasicInfo.micro_app.name
     if (process.env.NODE_ENV === 'development') {
       console.log('加载微应用:', { name: microAppName, entry: entryUrl })
     }
 
     // 加载微应用
+    // 使用 ref 获取最新的 props，避免闭包问题
+    const latestProps = microAppPropsRef.current || microAppProps
     microAppInstance = loadMicroApp({
       name: microAppName,
       entry: entryUrl,
       container: containerRef.current,
-      props: { ...microAppProps, container: containerRef.current },
+      props: { ...latestProps, container: containerRef.current },
     })
 
     microAppRef.current = microAppInstance
@@ -207,14 +257,36 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
       .catch((err) => {
         if (isMounted) {
           setLoading(false)
-          console.error('微应用加载失败:', {
-            name: microAppName,
-            entry: entryUrl,
-            error: err,
-          })
-          message.error(
-            `"${microAppName}" 加载失败。请检查：1) 微应用是否正确导出生命周期函数；2) 微应用的 UMD 库名是否与配置的 name 一致；3) entry 路径是否正确`,
+          if (process.env.NODE_ENV === 'development') {
+            console.log('微应用加载失败:', {
+              name: microAppName,
+              entry: entryUrl,
+              error: err,
+            })
+          }
+
+          // 记录失败状态
+          microAppLoadFailureManager.recordFailure(
+            appIdStr,
+            microAppName,
+            entryUrl,
+            err instanceof Error ? err : String(err)
           )
+
+          // 设置失败状态
+          setLoadFailed(true)
+          setFailureInfo({
+            error: err instanceof Error ? err : String(err),
+            appName: microAppName,
+            entry: entryUrl,
+          })
+
+          if (process.env.NODE_ENV === 'development') {
+            console.log(
+              '失败信息:',
+              microAppLoadFailureManager.getFailureInfo(appIdStr)?.error
+            )
+          }
         }
       })
 
@@ -228,19 +300,12 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
         try {
           root.unmount()
         } catch (err) {
-          console.warn('清理 AppMenu 渲染实例时出错:', err)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('清理 AppMenu 渲染实例时出错:', err)
+          }
         }
       })
       appMenuRootRef.current.clear()
-
-      userInfoRootRef.current.forEach((root) => {
-        try {
-          root.unmount()
-        } catch (err) {
-          console.warn('清理 UserInfo 渲染实例时出错:', err)
-        }
-      })
-      userInfoRootRef.current.clear()
 
       if (microAppInstance) {
         // 异步卸载微应用，避免阻塞
@@ -253,7 +318,9 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
             }
           })
           .catch((err) => {
-            console.warn('微应用卸载时出错:', err)
+            if (process.env.NODE_ENV === 'development') {
+              console.log('微应用卸载时出错:', err)
+            }
             if (microAppRef.current === microAppInstance) {
               microAppRef.current = null
             }
@@ -261,14 +328,58 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
       }
     }
     // 只依赖应用配置和 props 的核心字段
-  }, [appBasicInfo.micro_app.name, appBasicInfo.micro_app.entry, appBasicInfo.key, microAppProps])
+    // 注意：不依赖整个 microAppProps 对象，而是依赖具体的值，避免对象引用变化导致的无限循环
+    // retryKey 用于手动重试时触发重新加载
+  }, [appBasicInfo.id, retryKey])
+
+  // 处理重试
+  const handleRetry = () => {
+    // 清除失败记录
+    microAppLoadFailureManager.clearFailure(String(appBasicInfo.id))
+    // 重置状态
+    setLoadFailed(false)
+    setFailureInfo(null)
+    setLoading(true)
+    // 通过改变 retryKey 触发 useEffect 重新执行
+    setRetryKey((prev) => prev + 1)
+  }
+
+  // 如果加载失败，显示错误信息
+  if (loadFailed && failureInfo) {
+    const errorMessage =
+      failureInfo.error instanceof Error
+        ? failureInfo.error.message
+        : String(failureInfo.error)
+
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <Empty
+          type="failed"
+          // desc="微应用加载失败"
+          subDesc={
+            <div className="mt-4 text-center">
+              <div className="mb-2 text-sm text-gray-600">
+                应用名称: {failureInfo.appName}
+              </div>
+              <div className="mb-4 text-sm text-red-600">
+                错误信息: {errorMessage}
+              </div>
+              <Button type="primary" onClick={handleRetry}>
+                重试
+              </Button>
+            </div>
+          }
+        />
+      </div>
+    )
+  }
 
   return (
     <>
       <div
         ref={containerRef}
         className="h-full w-full"
-        id={`micro-app-container-${appBasicInfo.micro_app.name}`}
+        id={`micro-app-container-${appBasicInfo.id}`}
       />
       {loading && (
         <Spin

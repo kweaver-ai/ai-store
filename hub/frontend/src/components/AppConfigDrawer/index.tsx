@@ -9,13 +9,22 @@ import OntologyConfig from './OntologyConfig'
 import { ConfigMenuType } from './types'
 import { menuItems } from './utils'
 
-export interface AppConfigDrawerProps extends Pick<DrawerProps, 'open' | 'onClose'> {
+export interface AppConfigDrawerProps extends Pick<
+  DrawerProps,
+  'open' | 'onClose'
+> {
   /** 已有的应用基础信息 */
   appData?: ApplicationBasicInfo | null
 }
 
-export const AppConfigDrawer = ({ appData, open, onClose }: AppConfigDrawerProps) => {
-  const [selectedMenu, setSelectedMenu] = useState<ConfigMenuType>(ConfigMenuType.BASIC)
+export const AppConfigDrawer = ({
+  appData,
+  open,
+  onClose,
+}: AppConfigDrawerProps) => {
+  const [selectedMenu, setSelectedMenu] = useState<ConfigMenuType>(
+    ConfigMenuType.BASIC
+  )
 
   // 当抽屉打开时，重置选中菜单
   useEffect(() => {
@@ -62,7 +71,7 @@ export const AppConfigDrawer = ({ appData, open, onClose }: AppConfigDrawerProps
                   className={clsx(
                     'h-10 px-3 flex items-center text-sm cursor-pointer rounded transition-colors relative text-[--dip-text-color] hover:bg-[--dip-hover-bg-color]',
                     selectedMenu === item.key &&
-                      'bg-[rgba(var(--dip-primary-color-rgb),0.05)] hover:bg-[rgba(var(--dip-primary-color-rgb),0.05)]',
+                      'bg-[rgba(var(--dip-primary-color-rgb),0.05)] hover:bg-[rgba(var(--dip-primary-color-rgb),0.05)]'
                   )}
                   onClick={() => handleMenuClick(item.key)}
                 >
@@ -70,10 +79,12 @@ export const AppConfigDrawer = ({ appData, open, onClose }: AppConfigDrawerProps
                     className={clsx(
                       'absolute left-[-2px] top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-sm',
                       'bg-[linear-gradient(180deg,#3FA9F5_0%,#126EE3_100%)]',
-                      selectedMenu === item.key ? 'opacity-100' : 'opacity-0',
+                      selectedMenu === item.key ? 'opacity-100' : 'opacity-0'
                     )}
                   />
-                  <span className="flex-1 truncate font-normal text-sm">{item.label}</span>
+                  <span className="flex-1 truncate font-normal text-sm">
+                    {item.label}
+                  </span>
                 </button>
               ))}
             </div>
@@ -82,13 +93,16 @@ export const AppConfigDrawer = ({ appData, open, onClose }: AppConfigDrawerProps
           {/* 右侧配置区域 */}
           <ScrollBarContainer className="flex-1 p-4">
             {selectedMenu === ConfigMenuType.BASIC && (
-              <BasicConfig key={`basic-${appData?.key}`} appId={appData?.key} />
+              <BasicConfig key={`basic-${appData?.id}`} appId={appData?.id} />
             )}
             {selectedMenu === ConfigMenuType.ONTOLOGY && (
-              <OntologyConfig key={`ontology-${appData?.key}`} appId={appData?.key} />
+              <OntologyConfig
+                key={`ontology-${appData?.id}`}
+                appId={appData?.id}
+              />
             )}
             {selectedMenu === ConfigMenuType.AGENT && (
-              <AgentConfig key={`agent-${appData?.key}`} appId={appData?.key} />
+              <AgentConfig key={`agent-${appData?.id}`} appId={appData?.id} />
             )}
           </ScrollBarContainer>
         </div>
