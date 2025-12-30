@@ -1,6 +1,6 @@
 import { Avatar, Button } from 'antd'
 import type { ReactNode } from 'react'
-import HomeIcon from '@/assets/images/header/home.svg?react'
+import IconFont from '@/components/IconFont'
 import type { BreadcrumbItem } from '@/utils/micro-app/globalState'
 
 interface BreadcrumbProps {
@@ -56,12 +56,13 @@ export const Breadcrumb = ({ items = [], onNavigate }: BreadcrumbProps) => {
           <div key={itemKey} className="flex items-center">
             {/* 首页图标 */}
             {isHome ? (
-              <Button
-                size="small"
-                type="text"
-                icon={<HomeIcon />}
+              <button
+                type="button"
+                className="cursor-pointer flex items-center justify-center w-7 h-7 rounded-md text-[--dip-text-color] hover:bg-[--dip-hover-bg-color]"
                 onClick={(e) => handleNavigate(item, e)}
-              />
+              >
+                <IconFont type="icon-dip-back" className="!text-base" />
+              </button>
             ) : (
               <>
                 {/* 分隔符 */}
@@ -75,7 +76,7 @@ export const Breadcrumb = ({ items = [], onNavigate }: BreadcrumbProps) => {
                   <Button
                     size="small"
                     type="text"
-                    className="font-medium hover:!bg-transparent hover:!cursor-default"
+                    className="h-7 font-medium hover:!bg-transparent hover:!cursor-default"
                   >
                     {isRootItem && renderIcon(item.icon)}
                     {item.name}
@@ -83,6 +84,7 @@ export const Breadcrumb = ({ items = [], onNavigate }: BreadcrumbProps) => {
                 ) : (
                   <Button
                     size="small"
+                    className="h-7"
                     type="text"
                     onClick={(e) => handleNavigate(item, e)}
                   >
