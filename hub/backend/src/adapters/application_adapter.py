@@ -274,6 +274,35 @@ class ApplicationAdapter(ApplicationPort):
                     return None
                 return self._row_to_application(row)
 
+    async def get_application_by_id(self, app_id: int) -> Application:
+        """
+        根据应用主键 ID 获取应用信息。
+
+        参数:
+            app_id: 应用主键 ID
+
+        返回:
+            Application: 应用实体
+
+        异常:
+            ValueError: 当应用不存在时抛出
+        """
+        pool = await self._get_pool()
+        async with pool.acquire() as conn:
+            async with conn.cursor() as cursor:
+                await cursor.execute(
+                    """SELECT id, `key`, name, description, icon, version, category, micro_app,
+                              release_config, ontology_ids, agent_ids, is_config,
+                              updated_by, updated_at 
+                       FROM t_application 
+                       WHERE id = %s""",
+                    (app_id,)
+                )
+                row = await cursor.fetchone()
+                if row is None:
+                    raise ValueError(f"应用不存在: id={app_id}")
+                return self._row_to_application(row)
+
     async def create_application(self, application: Application) -> Application:
         """
         创建新应用。
@@ -504,5 +533,31 @@ class ApplicationAdapter(ApplicationPort):
 
                 if cursor.rowcount == 0:
                     raise ValueError(f"应用不存在: {key}")
+
+                return True
+
+    async def delete_application_by_id(self, app_id: int) -> bool:
+        """
+        根据应用主键 ID 删除应用。
+
+        参数:
+            app_id: 应用主键 ID
+
+        返回:
+            bool: 是否删除成功
+
+        异常:
+            ValueError: 当应用不存在时抛出
+        """
+        pool = await self._get_pool()
+        async with pool.acquire() as conn:
+            async with conn.cursor() as cursor:
+                await cursor.execute(
+                    "DELETE FROM t_application WHERE id = %s",
+                    (app_id,)
+                )
+
+                if cursor.rowcount == 0:
+                    raise ValueError(f"应用不存在: id={app_id}")
 
                 return True

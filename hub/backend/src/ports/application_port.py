@@ -57,6 +57,22 @@ class ApplicationPort(ABC):
         pass
 
     @abstractmethod
+    async def get_application_by_id(self, app_id: int) -> Application:
+        """
+        根据应用主键 ID 获取应用信息。
+
+        参数:
+            app_id: 应用主键 ID
+
+        返回:
+            Application: 应用实体
+
+        异常:
+            ValueError: 当应用不存在时抛出
+        """
+        pass
+
+    @abstractmethod
     async def create_application(self, application: Application) -> Application:
         """
         创建新应用。
@@ -120,6 +136,22 @@ class ApplicationPort(ABC):
 
         参数:
             key: 应用包唯一标识
+
+        返回:
+            bool: 是否删除成功
+
+        异常:
+            ValueError: 当应用不存在时抛出
+        """
+        pass
+
+    @abstractmethod
+    async def delete_application_by_id(self, app_id: int) -> bool:
+        """
+        根据应用主键 ID 删除应用。
+
+        参数:
+            app_id: 应用主键 ID
 
         返回:
             bool: 是否删除成功

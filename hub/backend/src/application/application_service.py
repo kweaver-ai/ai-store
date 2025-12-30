@@ -88,12 +88,27 @@ class ApplicationService:
         """
         return await self._application_port.get_application_by_key(key)
 
-    async def get_application_basic_info(self, app_id: str) -> Application:
+    async def get_application_by_id(self, app_id: int) -> Application:
+        """
+        根据应用主键 ID 获取应用信息。
+
+        参数:
+            app_id: 应用主键 ID
+
+        返回:
+            Application: 应用实体
+
+        异常:
+            ValueError: 当应用不存在时抛出
+        """
+        return await self._application_port.get_application_by_id(app_id)
+
+    async def get_application_basic_info(self, app_id: int) -> Application:
         """
         获取应用基础信息。
 
         参数:
-            app_id: 应用 ID（key）
+            app_id: 应用主键 ID
 
         返回:
             Application: 应用基础信息
@@ -101,18 +116,18 @@ class ApplicationService:
         异常:
             ValueError: 当应用不存在时抛出
         """
-        return await self._application_port.get_application_by_key(app_id)
+        return await self._application_port.get_application_by_id(app_id)
 
     async def get_application_ontologies(
         self,
-        app_id: str,
+        app_id: int,
         auth_token: Optional[str] = None,
     ) -> List[OntologyInfo]:
         """
         获取应用的业务知识网络配置。
 
         参数:
-            app_id: 应用 ID（key）
+            app_id: 应用主键 ID
 
         返回:
             List[OntologyInfo]: 业务知识网络信息列表
@@ -120,7 +135,7 @@ class ApplicationService:
         异常:
             ValueError: 当应用不存在时抛出
         """
-        application = await self._application_port.get_application_by_key(app_id)
+        application = await self._application_port.get_application_by_id(app_id)
         
         ontologies = []
         for config_item in application.ontology_config:
@@ -144,12 +159,12 @@ class ApplicationService:
         
         return ontologies
 
-    async def get_application_agents(self, app_id: str) -> List[AgentInfo]:
+    async def get_application_agents(self, app_id: int) -> List[AgentInfo]:
         """
         获取应用的智能体配置。
 
         参数:
-            app_id: 应用 ID（key）
+            app_id: 应用主键 ID
 
         返回:
             List[AgentInfo]: 智能体信息列表
@@ -157,7 +172,7 @@ class ApplicationService:
         异常:
             ValueError: 当应用不存在时抛出
         """
-        application = await self._application_port.get_application_by_key(app_id)
+        application = await self._application_port.get_application_by_id(app_id)
         
         agents = []
         for config_item in application.agent_config:
@@ -169,7 +184,7 @@ class ApplicationService:
 
     async def configure_application(
         self,
-        app_id: str,
+        app_id: int,
         updated_by: str = "",
     ) -> Application:
         """
@@ -179,7 +194,7 @@ class ApplicationService:
         和智能体配置 (agent_config)，将每一项的 is_config 设置为 True。
 
         参数:
-            app_id: 应用 ID（key）
+            app_id: 应用主键 ID
             updated_by: 更新者用户 ID
 
         返回:
@@ -189,7 +204,7 @@ class ApplicationService:
             ValueError: 当应用不存在时抛出
         """
         # 获取现有应用
-        application = await self._application_port.get_application_by_key(app_id)
+        application = await self._application_port.get_application_by_id(app_id)
 
         # 基于现有配置，将 is_config 统一置为 True
         new_ontology_config = [
@@ -299,10 +314,19 @@ class ApplicationService:
             # 校验版本
             existing_app = await self._application_port.get_application_by_key_optional(manifest.key)
             if existing_app:
+                if manifest.version == existing_app.version:
+                    raise ValueError(
+                        f"版本号冲突: 新版本 {manifest.version} 与已安装版本相同。"
+                        f"请更新版本号或先卸载现有应用 (key: {manifest.key})"
+                    )
                 if not self._is_version_greater(manifest.version, existing_app.version):
                     raise ValueError(
-                        f"版本号冲突: 新版本 {manifest.version} 必须大于已安装版本 {existing_app.version}"
+                        f"版本号冲突: 新版本 {manifest.version} 必须大于已安装版本 {existing_app.version}。"
+                        f"当前已安装版本: {existing_app.version} (key: {manifest.key})"
                     )
+                logger.info(
+                    f"版本校验通过: 新版本 {manifest.version} > 已安装版本 {existing_app.version} (key: {manifest.key})"
+                )
             
             # 读取图标（路径相对于 manifest.yaml 所在目录）
             icon_base64 = None
@@ -434,7 +458,7 @@ class ApplicationService:
 
     async def uninstall_application(
         self,
-        key: str,
+        app_id: int,
         auth_token: Optional[str] = None,
     ) -> bool:
         """
@@ -446,7 +470,7 @@ class ApplicationService:
         3. 删除数据库中的应用记录
 
         参数:
-            key: 应用包唯一标识
+            app_id: 应用主键 ID
 
         返回:
             bool: 是否卸载成功
@@ -455,7 +479,7 @@ class ApplicationService:
             ValueError: 当应用不存在时抛出
         """
         # 获取应用信息
-        application = await self._application_port.get_application_by_key(key)
+        application = await self._application_port.get_application_by_id(app_id)
         
         # 删除 Release
         if self._deploy_installer_port and application.release_config:
@@ -470,7 +494,7 @@ class ApplicationService:
                     logger.warning(f"删除 Release 失败 ({release_name}): {e}")
         
         # 删除数据库记录
-        return await self._application_port.delete_application(key)
+        return await self._application_port.delete_application_by_id(app_id)
 
     async def create_application(self, application: Application) -> Application:
         """
