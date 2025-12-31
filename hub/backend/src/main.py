@@ -22,6 +22,7 @@ from src.infrastructure.config.settings import get_settings, Settings
 from src.infrastructure.container import init_container, get_container
 from src.infrastructure.logging.logger import setup_logging
 from src.infrastructure.middleware.auth_middleware import AuthMiddleware
+from src.infrastructure.database.init import ensure_tables_exist
 from src.routers.health_router import create_health_router
 from src.routers.application_router import create_application_router
 from src.routers.login_router import create_login_router
@@ -54,6 +55,16 @@ def create_app(settings: Settings = None) -> FastAPI:
         """应用生命周期管理器。"""
         logger.info(f"启动 {settings.app_name} v{settings.app_version}")
         logger.info(f"服务运行在 {settings.host}:{settings.port}")
+
+        # 确保数据库表存在
+        try:
+            logger.info("检查数据库表...")
+            await ensure_tables_exist(settings)
+        except Exception as e:
+            logger.error(f"数据库表初始化失败: {e}", exc_info=True)
+            # 根据需求决定是否继续启动或退出
+            # 这里选择继续启动，但记录错误
+            logger.warning("服务将在数据库表可能不完整的情况下启动")
 
         # 初始化完成后标记服务为就绪状态
         container.set_ready(True)
