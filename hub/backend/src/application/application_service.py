@@ -153,6 +153,7 @@ class ApplicationService:
                     kn_data = await self._ontology_manager_port.get_knowledge_network(
                         config_item.id,
                         auth_token=auth_token,
+                        business_domain=application.business_domain,
                     )
                     ontologies.append(kn_data)
                 else:
@@ -200,6 +201,7 @@ class ApplicationService:
                     agent_data = await self._agent_factory_port.get_agent(
                         config_item.id,
                         auth_token=auth_token,
+                        business_domain=application.business_domain,
                     )
                     agents.append(agent_data)
                 else:
@@ -417,6 +419,7 @@ class ApplicationService:
                                 onto_id = await self._ontology_manager_port.create_knowledge_network(
                                     onto_config,
                                     auth_token=auth_token,
+                                    business_domain=manifest.business_domain,
                                 )
                                 if onto_id:
                                     ontology_config.append(OntologyConfigItem(
@@ -446,6 +449,7 @@ class ApplicationService:
                                 agent_result = await self._agent_factory_port.create_agent(
                                     agent_config_data,
                                     auth_token=auth_token,
+                                    business_domain=manifest.business_domain,
                                 )
                                 if agent_result.id:
                                     agent_config.append(AgentConfigItem(
@@ -465,6 +469,7 @@ class ApplicationService:
                 icon=icon_base64,
                 version=manifest.version,
                 category=manifest.category,
+                business_domain=manifest.business_domain,
                 micro_app=manifest.micro_app,
                 release_config=release_configs,
                 ontology_config=ontology_config,
@@ -619,6 +624,7 @@ class ApplicationService:
             manifest_version=manifest_version,
             description=data.get("description"),
             category=data.get("category"),
+            business_domain=data.get("business-domain", "db_public"),
             micro_app=micro_app,
             icon_path=data.get("icon"),
             charts=data.get("charts", []),

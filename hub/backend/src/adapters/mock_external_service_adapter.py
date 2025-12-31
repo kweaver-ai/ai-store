@@ -198,12 +198,15 @@ class MockOntologyManagerAdapter(OntologyManagerPort):
         self,
         kn_id: str,
         auth_token: Optional[str] = None,
+        business_domain: Optional[str] = None,
     ) -> dict:
         """
         模拟获取业务知识网络详情。
 
         参数:
             kn_id: 业务知识网络 ID
+            auth_token: 认证令牌
+            business_domain: 业务域
 
         返回:
             dict: 业务知识网络信息（原始数据）
@@ -228,12 +231,15 @@ class MockOntologyManagerAdapter(OntologyManagerPort):
         self,
         data: dict,
         auth_token: Optional[str] = None,
+        business_domain: Optional[str] = None,
     ) -> str:
         """
         模拟创建业务知识网络。
 
         参数:
             data: 创建请求数据
+            auth_token: 认证令牌
+            business_domain: 业务域
 
         返回:
             str: 创建的业务知识网络 ID
@@ -281,12 +287,15 @@ class MockAgentFactoryAdapter(AgentFactoryPort):
         self,
         agent_id: str,
         auth_token: Optional[str] = None,
+        business_domain: Optional[str] = None,
     ) -> dict:
         """
         模拟获取智能体详情。
 
         参数:
             agent_id: 智能体 ID
+            auth_token: 认证令牌
+            business_domain: 业务域
 
         返回:
             dict: 智能体信息（原始数据）
@@ -310,12 +319,15 @@ class MockAgentFactoryAdapter(AgentFactoryPort):
         self,
         data: dict,
         auth_token: Optional[str] = None,
+        business_domain: Optional[str] = None,
     ) -> AgentFactoryResult:
         """
         模拟创建智能体。
 
         参数:
             data: 创建请求数据
+            auth_token: 认证令牌
+            business_domain: 业务域
 
         返回:
             AgentFactoryResult: 创建结果

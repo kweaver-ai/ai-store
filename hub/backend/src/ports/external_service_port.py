@@ -159,12 +159,15 @@ class OntologyManagerPort(ABC):
         self,
         kn_id: str,
         auth_token: Optional[str] = None,
+        business_domain: Optional[str] = None,
     ) -> dict:
         """
         获取业务知识网络详情。
 
         参数:
             kn_id: 业务知识网络 ID
+            auth_token: 认证令牌
+            business_domain: 业务域，默认为 None
 
         返回:
             dict: 业务知识网络信息（原始数据）
@@ -179,12 +182,15 @@ class OntologyManagerPort(ABC):
         self,
         data: dict,
         auth_token: Optional[str] = None,
+        business_domain: Optional[str] = None,
     ) -> str:
         """
         创建业务知识网络。
 
         参数:
             data: 创建请求数据
+            auth_token: 认证令牌
+            business_domain: 业务域，默认为 None
 
         返回:
             str: 创建的业务知识网络 ID
@@ -204,12 +210,15 @@ class AgentFactoryPort(ABC):
         self,
         agent_id: str,
         auth_token: Optional[str] = None,
+        business_domain: Optional[str] = None,
     ) -> dict:
         """
         获取智能体详情。
 
         参数:
             agent_id: 智能体 ID
+            auth_token: 认证令牌
+            business_domain: 业务域，默认为 None
 
         返回:
             dict: 智能体信息（原始数据）
@@ -224,12 +233,15 @@ class AgentFactoryPort(ABC):
         self,
         data: dict,
         auth_token: Optional[str] = None,
+        business_domain: Optional[str] = None,
     ) -> AgentFactoryResult:
         """
         创建智能体。
 
         参数:
             data: 创建请求数据
+            auth_token: 认证令牌
+            business_domain: 业务域，默认为 None
 
         返回:
             AgentFactoryResult: 创建结果

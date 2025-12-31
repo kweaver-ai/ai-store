@@ -24,12 +24,16 @@ from src.infrastructure.context.token_context import get_auth_token
 logger = logging.getLogger(__name__)
 
 
-def _build_headers(auth_token: Optional[str] = None) -> dict:
+def _build_headers(
+    auth_token: Optional[str] = None,
+    business_domain: Optional[str] = None,
+) -> dict:
     """
     构建 HTTP 请求头。
     
     参数:
         auth_token: 认证令牌
+        business_domain: 业务域，如果提供则添加到 X-Business-Domain header
         
     返回:
         dict: 请求头字典
@@ -38,6 +42,8 @@ def _build_headers(auth_token: Optional[str] = None) -> dict:
     token = get_auth_token() or auth_token
     if token:
         headers["Authorization"] = token
+    if business_domain:
+        headers["X-Business-Domain"] = business_domain
     return headers
 
 
@@ -318,12 +324,15 @@ class OntologyManagerAdapter(OntologyManagerPort):
         self,
         kn_id: str,
         auth_token: Optional[str] = None,
+        business_domain: Optional[str] = None,
     ) -> dict:
         """
         获取业务知识网络详情。
 
         参数:
             kn_id: 业务知识网络 ID
+            auth_token: 认证令牌
+            business_domain: 业务域
 
         返回:
             dict: 业务知识网络信息（原始数据）
@@ -333,7 +342,7 @@ class OntologyManagerAdapter(OntologyManagerPort):
         """
         url = f"{self._base_url}/knowledge-networks/{kn_id}"
         
-        headers = _build_headers(auth_token)
+        headers = _build_headers(auth_token, business_domain)
 
         try:
             async with httpx.AsyncClient(timeout=self._timeout) as client:
@@ -362,19 +371,22 @@ class OntologyManagerAdapter(OntologyManagerPort):
         self,
         data: dict,
         auth_token: Optional[str] = None,
+        business_domain: Optional[str] = None,
     ) -> str:
         """
         创建业务知识网络。
 
         参数:
             data: 创建请求数据
+            auth_token: 认证令牌
+            business_domain: 业务域
 
         返回:
             str: 创建的业务知识网络 ID
         """
         url = f"{self._base_url}/knowledge-networks"
         
-        headers = _build_headers(auth_token)
+        headers = _build_headers(auth_token, business_domain)
 
         try:
             async with httpx.AsyncClient(timeout=self._timeout) as client:
@@ -419,12 +431,15 @@ class AgentFactoryAdapter(AgentFactoryPort):
         self,
         agent_id: str,
         auth_token: Optional[str] = None,
+        business_domain: Optional[str] = None,
     ) -> dict:
         """
         获取智能体详情。
 
         参数:
             agent_id: 智能体 ID
+            auth_token: 认证令牌
+            business_domain: 业务域
 
         返回:
             dict: 智能体信息（原始数据）
@@ -434,7 +449,7 @@ class AgentFactoryAdapter(AgentFactoryPort):
         """
         url = f"{self._base_url}/agent/{agent_id}"
         
-        headers = _build_headers(auth_token)
+        headers = _build_headers(auth_token, business_domain)
 
         try:
             async with httpx.AsyncClient(timeout=self._timeout) as client:
@@ -463,19 +478,22 @@ class AgentFactoryAdapter(AgentFactoryPort):
         self,
         data: dict,
         auth_token: Optional[str] = None,
+        business_domain: Optional[str] = None,
     ) -> AgentFactoryResult:
         """
         创建智能体。
 
         参数:
             data: 创建请求数据
+            auth_token: 认证令牌
+            business_domain: 业务域
 
         返回:
             AgentFactoryResult: 创建结果
         """
         url = f"{self._base_url}/agent"
         
-        headers = _build_headers(auth_token)
+        headers = _build_headers(auth_token, business_domain)
 
         try:
             async with httpx.AsyncClient(timeout=self._timeout) as client:

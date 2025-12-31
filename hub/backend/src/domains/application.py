@@ -32,7 +32,7 @@ class OntologyConfigItem:
         id: 业务知识网络 ID
         is_config: 是否已配置
     """
-    id: int
+    id: str
     is_config: bool = False
 
 
@@ -45,7 +45,7 @@ class AgentConfigItem:
         id: 智能体 ID
         is_config: 是否已配置
     """
-    id: int
+    id: str
     is_config: bool = False
 
 
@@ -62,6 +62,7 @@ class Application:
         icon: 应用图标（Base64编码字符串）
         version: 当前版本号
         category: 应用所属分类
+        business_domain: 业务域，默认为 db_public
         micro_app: 微应用配置信息
         release_config: 应用安装配置（helm release 名称列表）
         ontology_config: 业务知识网络配置列表（每个配置项包含 id 和 is_config）
@@ -77,6 +78,7 @@ class Application:
     icon: Optional[str] = None
     version: Optional[str] = None
     category: Optional[str] = None
+    business_domain: str = "db_public"
     micro_app: Optional[MicroAppInfo] = None
     release_config: List[str] = field(default_factory=list)
     ontology_config: List[OntologyConfigItem] = field(default_factory=list)
@@ -164,6 +166,7 @@ class ManifestInfo:
         description: 应用描述
         version: 应用版本号
         category: 应用分类
+        business_domain: 业务域，默认为 db_public
         micro_app: 微应用配置
         icon_path: 图标路径（相对于安装包根目录）
         charts: helm chart 列表
@@ -177,6 +180,7 @@ class ManifestInfo:
     manifest_version: int = 1
     description: Optional[str] = None
     category: Optional[str] = None
+    business_domain: str = "db_public"
     micro_app: Optional[MicroAppInfo] = None
     icon_path: Optional[str] = None
     charts: List[dict] = field(default_factory=list)
