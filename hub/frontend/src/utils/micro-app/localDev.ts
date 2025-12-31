@@ -54,9 +54,9 @@ function getLocalDevConfig(): Record<string, string> {
  * @returns 实际使用的 entry URL
  */
 export function getMicroAppEntry(microAppName: string, defaultEntry: string): string {
-  if (process.env.NODE_ENV !== 'development') {
-    return defaultEntry
-  }
+  // if (process.env.NODE_ENV !== 'development') {
+  //   return defaultEntry
+  // }
 
   const localDevConfig = getLocalDevConfig()
   const localEntry = localDevConfig[microAppName]

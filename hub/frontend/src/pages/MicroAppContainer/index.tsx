@@ -1,17 +1,14 @@
 import { Spin } from 'antd'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import {
-  type ApplicationBasicInfo,
-  getApplicationsBasicInfo,
-} from '@/apis/applications'
+import { getApplicationsBasicInfo } from '@/apis/applications'
 import Empty from '@/components/Empty'
 import { getFullPath } from '@/utils/config'
 import { setMicroAppGlobalState } from '@/utils/micro-app/globalState'
 import MicroAppComponent from '../../components/MicroAppComponent'
 import {
-  useMicroAppStore,
   type CurrentMicroAppInfo,
+  useMicroAppStore,
 } from '../../stores/microAppStore'
 
 const MicroAppContainer = () => {

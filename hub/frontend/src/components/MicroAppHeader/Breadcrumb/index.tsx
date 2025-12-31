@@ -19,7 +19,7 @@ const renderIcon = (icon: string | ReactNode) => {
       <img
         src={`data:image/png;base64,${icon}`}
         alt=""
-        className="w-4 h-4 object-contain"
+        className="w-4 h-4 rounded-full shrink-0"
       />
     )
   }

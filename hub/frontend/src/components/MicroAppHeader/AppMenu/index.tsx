@@ -37,7 +37,7 @@ export const AppMenu = () => {
               <img
                 src={`data:image/png;base64,${app.icon}`}
                 alt={app.name}
-                className="w-4 h-4 shrink-0"
+                className="w-4 h-4 shrink-0 rounded-full"
               />
             ) : (
               <Avatar size={24} className="shrink-0">

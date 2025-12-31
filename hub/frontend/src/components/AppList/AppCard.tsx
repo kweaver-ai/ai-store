@@ -51,7 +51,7 @@ const AppCard: React.FC<AppCardProps> = ({ app, mode, onMenuClick }) => {
             <img
               src={`data:image/png;base64,${app.icon}`}
               alt=""
-              className="w-full h-full rounded-full object-cover"
+              className="w-full h-full rounded-full"
             />
           ) : (
             <span className="text-white text-base font-medium">

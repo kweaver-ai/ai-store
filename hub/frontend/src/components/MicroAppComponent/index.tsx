@@ -119,11 +119,18 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
         return onMicroAppGlobalStateChange(callback, fireImmediately)
       },
     }),
-    []
+    [appBasicInfo.routeBasename, userInfo?.id]
   )
 
   // 更新 ref，确保 useEffect 能访问到最新的 props
   microAppPropsRef.current = microAppProps
+
+  // 清理容器的辅助函数
+  const clearContainer = () => {
+    if (containerRef.current) {
+      containerRef.current.innerHTML = ''
+    }
+  }
 
   // 只在应用配置变化时重新加载微应用
   useEffect(() => {
@@ -154,6 +161,7 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
           entry: failureInfo.entry,
         })
         setLoading(false)
+        clearContainer() // 确保容器为空
         if (process.env.NODE_ENV === 'development') {
           console.log(
             `[微应用加载] 检测到之前的失败记录，跳过加载: ${failureInfo.appName} (${appBasicInfo.id})`,
@@ -168,28 +176,12 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
     setLoadFailed(false)
     setFailureInfo(null)
 
-    // 加载微应用
+    // 检查容器和 entry
     if (!containerRef.current) {
+      setLoading(false)
       return
     }
 
-    // 如果已经存在微应用实例，先卸载
-    if (microAppRef.current) {
-      // 同步卸载，避免竞态条件
-      microAppRef.current
-        .unmount()
-        .then(() => {
-          microAppRef.current = null
-        })
-        .catch((err) => {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('卸载旧微应用实例时出错:', err)
-          }
-          microAppRef.current = null
-        })
-    }
-
-    // 处理 entry 路径：移除路由 hash（qiankun 的 entry 不能包含 #）
     const microAppEntry = appBasicInfo.micro_app.entry
     if (!microAppEntry) {
       if (process.env.NODE_ENV === 'development') {
@@ -200,6 +192,21 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
       return
     }
 
+    // 如果已经存在微应用实例，先卸载（异步等待完成）
+    const unmountOldInstance = async () => {
+      if (microAppRef.current) {
+        try {
+          await microAppRef.current.unmount()
+          microAppRef.current = null
+        } catch (err) {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('卸载旧微应用实例时出错:', err)
+          }
+          microAppRef.current = null
+        }
+      }
+    }
+
     // 获取微应用 entry URL，支持本地调试覆盖
     const microAppName = appBasicInfo.micro_app.name
     let entryUrl = getMicroAppEntry(microAppName, microAppEntry)
@@ -207,54 +214,60 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
     // 移除路由 hash（qiankun 的 entry 不能包含 #）
     const hashIndex = entryUrl.indexOf('#')
     if (hashIndex !== -1) {
+      const originalUrl = entryUrl
       entryUrl = entryUrl.substring(0, hashIndex)
       if (process.env.NODE_ENV === 'development') {
         console.log(
           'entry 包含路由 hash，已自动移除:',
-          entryUrl,
+          originalUrl,
           '->',
-          entryUrl.substring(0, hashIndex)
+          entryUrl
         )
       }
     }
 
-    // 确保 container 存在
-    if (!containerRef.current) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Container element not found')
+    // 异步加载流程
+    const loadMicroAppAsync = async () => {
+      // 等待旧实例卸载完成
+      await unmountOldInstance()
+
+      // 再次检查容器和挂载状态
+      if (!containerRef.current) {
+        setLoading(false)
+        return
       }
-      setLoading(false)
-      return
-    }
+      if (!isMounted) {
+        setLoading(false)
+        return
+      }
 
-    // 开发环境：调试信息
-    if (process.env.NODE_ENV === 'development') {
-      console.log('加载微应用:', { name: microAppName, entry: entryUrl })
-    }
+      // 开发环境：调试信息
+      if (process.env.NODE_ENV === 'development') {
+        console.log('加载微应用:', { name: microAppName, entry: entryUrl })
+      }
 
-    // 加载微应用
-    // 使用 ref 获取最新的 props，避免闭包问题
-    const latestProps = microAppPropsRef.current || microAppProps
-    microAppInstance = loadMicroApp({
-      name: microAppName,
-      entry: entryUrl,
-      container: containerRef.current,
-      props: { ...latestProps, container: containerRef.current },
-    })
+      // 加载微应用
+      // 使用 ref 获取最新的 props，避免闭包问题
+      const latestProps = microAppPropsRef.current || microAppProps
+      microAppInstance = loadMicroApp({
+        name: microAppName,
+        entry: entryUrl,
+        container: containerRef.current,
+        props: { ...latestProps, container: containerRef.current },
+      })
 
-    microAppRef.current = microAppInstance
+      microAppRef.current = microAppInstance
 
-    // 监听微应用加载状态
-    microAppInstance.mountPromise
-      .then(() => {
+      // 监听微应用加载状态
+      try {
+        await microAppInstance.mountPromise
         if (isMounted) {
           setLoading(false)
           if (process.env.NODE_ENV === 'development') {
             console.log('微应用加载成功:', microAppName)
           }
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         if (isMounted) {
           setLoading(false)
           if (process.env.NODE_ENV === 'development') {
@@ -263,6 +276,23 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
               entry: entryUrl,
               error: err,
             })
+          }
+
+          // 清理 qiankun wrapper，避免残留
+          try {
+            if (microAppInstance) {
+              await microAppInstance.unmount()
+            }
+          } catch (unmountErr) {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('清理失败微应用时出错:', unmountErr)
+            }
+          } finally {
+            // 无论卸载是否成功，都清空容器内容
+            clearContainer()
+            if (microAppRef.current === microAppInstance) {
+              microAppRef.current = null
+            }
           }
 
           // 记录失败状态
@@ -288,7 +318,11 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
             )
           }
         }
-      })
+      }
+    }
+
+    // 启动异步加载流程
+    loadMicroAppAsync()
 
     // 清理函数：只在组件真正卸载或 app 配置变化时执行
     return () => {
@@ -307,24 +341,31 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
       })
       appMenuRootRef.current.clear()
 
-      if (microAppInstance) {
+      // 使用 ref 获取当前实例，更安全
+      const currentInstance = microAppRef.current
+      if (currentInstance) {
         // 异步卸载微应用，避免阻塞
-        microAppInstance
+        currentInstance
           .unmount()
           .then(() => {
             // 只有当前实例才清空 ref
-            if (microAppRef.current === microAppInstance) {
+            if (microAppRef.current === currentInstance) {
               microAppRef.current = null
             }
+            clearContainer()
           })
           .catch((err) => {
             if (process.env.NODE_ENV === 'development') {
               console.log('微应用卸载时出错:', err)
             }
-            if (microAppRef.current === microAppInstance) {
+            if (microAppRef.current === currentInstance) {
               microAppRef.current = null
             }
+            clearContainer()
           })
+      } else {
+        // 如果没有实例但容器中有内容，也清空
+        clearContainer()
       }
     }
     // 只依赖应用配置和 props 的核心字段
@@ -346,6 +387,9 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
 
   // 如果加载失败，显示错误信息
   if (loadFailed && failureInfo) {
+    // 确保容器为空，清理可能残留的 qiankun wrapper
+    clearContainer()
+
     const errorMessage =
       failureInfo.error instanceof Error
         ? failureInfo.error.message
