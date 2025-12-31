@@ -32,7 +32,6 @@ const MicroAppHeader = () => {
   >([])
 
   const isMicroAppRoute = location.pathname.startsWith('/application/')
-  console.log('isMicroAppRoute', isMicroAppRoute)
 
   // 监听微应用的全局状态（面包屑）
   useEffect(() => {
