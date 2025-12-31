@@ -26,10 +26,6 @@ const LOCAL_DEV_STORAGE_KEY = 'DIP_HUB_LOCAL_DEV_MICRO_APPS'
  * @returns 本地调试配置对象，key 为微应用名称，value 为本地 entry URL
  */
 function getLocalDevConfig(): Record<string, string> {
-  if (process.env.NODE_ENV !== 'development') {
-    return {}
-  }
-
   try {
     const configStr = localStorage.getItem(LOCAL_DEV_STORAGE_KEY)
     if (!configStr) {
@@ -54,10 +50,6 @@ function getLocalDevConfig(): Record<string, string> {
  * @returns 实际使用的 entry URL
  */
 export function getMicroAppEntry(microAppName: string, defaultEntry: string): string {
-  // if (process.env.NODE_ENV !== 'development') {
-  //   return defaultEntry
-  // }
-
   const localDevConfig = getLocalDevConfig()
   const localEntry = localDevConfig[microAppName]
 
@@ -81,11 +73,6 @@ export function getMicroAppEntry(microAppName: string, defaultEntry: string): st
  * @param localEntry 本地 entry URL（如 'http://localhost:8081'）
  */
 export function setLocalDevEntry(microAppName: string, localEntry: string): void {
-  if (process.env.NODE_ENV !== 'development') {
-    console.warn('[本地调试] 仅在开发环境下可用')
-    return
-  }
-
   try {
     const config = getLocalDevConfig()
     config[microAppName] = localEntry
@@ -102,11 +89,6 @@ export function setLocalDevEntry(microAppName: string, localEntry: string): void
  * @param microAppName 微应用名称
  */
 export function removeLocalDevEntry(microAppName: string): void {
-  if (process.env.NODE_ENV !== 'development') {
-    console.warn('[本地调试] 仅在开发环境下可用')
-    return
-  }
-
   try {
     const config = getLocalDevConfig()
     delete config[microAppName]
@@ -122,11 +104,6 @@ export function removeLocalDevEntry(microAppName: string): void {
  * 清除所有本地调试配置
  */
 export function clearLocalDevConfig(): void {
-  if (process.env.NODE_ENV !== 'development') {
-    console.warn('[本地调试] 仅在开发环境下可用')
-    return
-  }
-
   try {
     localStorage.removeItem(LOCAL_DEV_STORAGE_KEY)
     console.log('[本地调试] 已清除所有本地调试配置')
