@@ -1,3 +1,4 @@
+import { BASE_PATH } from '@/utils/config'
 import { routeConfigs } from './routes'
 import type { RouteConfig } from './types'
 
@@ -58,4 +59,19 @@ export const getFirstVisibleSidebarRoute = (
   return routeConfigs.find(
     (r) => r.showInSidebar && r.key && isRouteVisibleForRoles(r, roleIds)
   )
+}
+
+/**
+ * 从路径中移除 BASE_PATH 前缀
+ * 用于处理包含 BASE_PATH 的完整路径，转换为 React Router navigate 可用的相对路径
+ * 因为 React Router 配置了 basename，navigate 会自动处理 basename
+ *
+ * @param path 包含 BASE_PATH 的完整路径（如 /dip-hub/application/123）
+ * @returns 移除 BASE_PATH 后的相对路径（如 /application/123）
+ */
+export const removeBasePath = (path: string): string => {
+  if (BASE_PATH === '/' || !path.startsWith(BASE_PATH)) {
+    return path
+  }
+  return path.slice(BASE_PATH.length) || '/'
 }

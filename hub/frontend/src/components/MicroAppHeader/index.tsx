@@ -1,6 +1,7 @@
 import { Layout } from 'antd'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { removeBasePath } from '@/routes/utils'
 import { useMicroAppStore } from '@/stores'
 import type { BreadcrumbItem } from '@/utils/micro-app/globalState'
 import {
@@ -66,7 +67,7 @@ const MicroAppHeader = () => {
       items.push({
         key: currentMicroApp.id.toString(),
         name: currentMicroApp.name,
-        path: currentMicroApp.routeBasename,
+        path: removeBasePath(currentMicroApp.routeBasename),
         icon: currentMicroApp.icon,
       })
     }
@@ -79,28 +80,34 @@ const MicroAppHeader = () => {
      * ]
      *
      * 这里的 path 视为「微应用内部路径」，需要统一挂载到 routeBasename 之下：
-     * - routeBasename: /application/:appId
+     * - routeBasename: /dip-hub/application/:appId (包含 BASE_PATH)
+     * - 去掉 BASE_PATH 后: /application/:appId
      * - '/alarm'           -> /application/:appId/alarm
      * - '/alarm/problem'   -> /application/:appId/alarm/problem
      * - 'alarm'            -> /application/:appId/alarm
      */
     if (microAppBreadcrumb.length > 0 && currentMicroApp?.routeBasename) {
-      const base = currentMicroApp.routeBasename.replace(/\/$/, '')
+      // 先去掉 BASE_PATH 前缀，得到相对于 basename 的路径
+      const baseWithoutPrefix = removeBasePath(
+        currentMicroApp.routeBasename.replace(/\/$/, '')
+      )
 
       const processedItems = microAppBreadcrumb.map((item, index) => {
         const itemPath = item.path
-        let fullPath = itemPath
+        let relativePath = itemPath
 
         if (itemPath) {
           // 去掉前导斜杠，统一按相对路径处理
           const cleaned = itemPath.replace(/^\/+/, '')
-          fullPath = cleaned ? `${base}/${cleaned}` : base
+          relativePath = cleaned
+            ? `${baseWithoutPrefix}/${cleaned}`
+            : baseWithoutPrefix
         }
 
         return {
           key: item.key || `micro-breadcrumb-${index}`,
           name: item.name,
-          path: fullPath,
+          path: relativePath,
         }
       })
 
