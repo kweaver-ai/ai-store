@@ -7,15 +7,20 @@ interface GradientContainerProps {
   className?: string
   style?: CSSProperties
 }
-const GradientContainer: React.FC<GradientContainerProps> = ({ children, className, style }) => {
+const GradientContainer: React.FC<GradientContainerProps> = ({
+  children,
+  className,
+  style,
+}) => {
   const wrapperStyle = useMemo(() => {
     const temp = {
       backgroundImage: `url(${bg})`,
+      background: 'transparent',
       ...style,
     }
-    if (process.env.NODE_ENV === 'development') {
-      temp.backgroundColor = 'rgb(243, 248, 254)'
-    }
+    // if (process.env.NODE_ENV === 'development') {
+    //   temp.backgroundColor = 'rgb(243, 248, 254)'
+    // }
     return temp
   }, [])
   return (

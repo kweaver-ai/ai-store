@@ -1,11 +1,10 @@
 import { ReloadOutlined } from '@ant-design/icons'
 import { Button, message, Spin } from 'antd'
-import { memo, useCallback, useEffect, useState } from 'react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import type { ApplicationInfo } from '@/apis/applications'
 import AppList from '@/components/AppList'
 import { ModeEnum } from '@/components/AppList/types'
 import Empty from '@/components/Empty'
-import GradientContainer from '@/components/GradientContainer'
 import SearchInput from '@/components/SearchInput'
 import { useApplicationsService } from '@/hooks/useApplicationsService'
 import { usePreferenceStore } from '@/stores'
@@ -17,13 +16,36 @@ const MyApp = () => {
     useApplicationsService()
   const { togglePin } = usePreferenceStore()
   const [hasLoadedData, setHasLoadedData] = useState(false) // 记录是否已经成功加载过数据（有数据的情况）
+  const hasEverHadDataRef = useRef(false) // 使用 ref 追踪是否曾经有过数据，避免循环依赖
+  const prevSearchValueRef = useRef('') // 追踪上一次的搜索值，用于判断是否是从搜索状态清空
 
-  // 当数据加载完成且有数据时，标记为已加载过数据
+  // 当数据加载完成且有数据时，标记为已加载过数据；数据清空后重置
   useEffect(() => {
-    if (!loading && apps.length > 0) {
-      setHasLoadedData(true)
+    // 在开始处理前，先保存上一次的搜索值用于判断
+    const wasSearching = prevSearchValueRef.current !== ''
+
+    if (!loading) {
+      if (apps.length > 0) {
+        // 有数据时，设置为 true 并记录
+        setHasLoadedData(true)
+        hasEverHadDataRef.current = true
+      } else if (!searchValue && hasEverHadDataRef.current) {
+        // 没有数据且没有搜索值且之前有过数据时，需要判断是否是从搜索状态清空
+        // 只有当上一次也没有搜索值（说明不是从搜索状态清空，而是真正的空状态）时，才重置
+        if (!wasSearching) {
+          // 不是从搜索状态清空，说明是真正的空状态，重置
+          setHasLoadedData(false)
+          hasEverHadDataRef.current = false
+        }
+        // 如果是从搜索状态清空（wasSearching === true），保持 hasLoadedData 不变
+        // 因为数据会重新加载，如果原来有数据，加载后 apps.length > 0，hasLoadedData 会保持 true
+      }
+      // 如果有搜索值但 apps.length === 0，保持 hasLoadedData 不变（显示搜索框）
     }
-  }, [loading, apps.length])
+
+    // 更新上一次的搜索值（在 useEffect 结束时更新，确保下次执行时能正确判断）
+    prevSearchValueRef.current = searchValue
+  }, [loading, apps.length, searchValue])
 
   /** 处理卡片菜单操作 */
   const handleMenuClick = useCallback(
@@ -48,7 +70,6 @@ const MyApp = () => {
         }
       } catch (err) {
         console.error('Failed to handle app action:', err)
-        message.error('操作失败')
       }
     },
     [handleRefresh, togglePin]
@@ -107,7 +128,7 @@ const MyApp = () => {
   }
 
   return (
-    <GradientContainer className="h-full p-6 flex flex-col overflow-auto">
+    <div className="h-full p-6 flex flex-col relative overflow-auto">
       <div className="flex justify-between mb-4 flex-shrink-0 z-20">
         <div className="flex flex-col gap-y-3">
           <span className="text-[32px] font-bold">探索企业级 AI 应用</span>
@@ -115,7 +136,7 @@ const MyApp = () => {
             查找具备专业能力的应用，帮你解决业务上的复杂问题
           </span>
         </div>
-        {hasLoadedData && (
+        {(hasLoadedData || searchValue) && (
           <div className="flex items-center gap-x-2">
             <SearchInput onSearch={handleSearch} placeholder="搜索应用" />
             <Button
@@ -127,7 +148,7 @@ const MyApp = () => {
         )}
       </div>
       {renderContent()}
-    </GradientContainer>
+    </div>
   )
 }
 

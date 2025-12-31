@@ -12,20 +12,29 @@ export interface BottomLinkItemProps {
 }
 
 /** 底部链接项 */
-export const BottomLinkItem = ({ item, collapsed, onClick }: BottomLinkItemProps) => {
+export const BottomLinkItem = ({
+  item,
+  collapsed,
+  onClick,
+}: BottomLinkItemProps) => {
   const content = (
-    <div
+    <button
+      type="button"
       className={clsx(
         'flex items-center h-10 rounded-md mx-1.5 hover:bg-[--dip-hover-bg-color] cursor-pointer',
-        collapsed ? 'justify-center' : 'gap-2 px-2.5',
+        collapsed ? 'justify-center' : 'gap-2 px-2.5'
       )}
       onClick={onClick}
     >
-      <span className="w-4 h-4 flex items-center justify-center">{item.icon}</span>
-      <span className={clsx('text-sm text-[#000] truncate', collapsed && 'hidden')}>
+      <span className="w-4 h-4 flex items-center justify-center">
+        {item.icon}
+      </span>
+      <span
+        className={clsx('text-sm text-[#000] truncate', collapsed && 'hidden')}
+      >
         {item.label}
       </span>
-    </div>
+    </button>
   )
   return collapsed ? (
     <Tooltip title={item.label} placement="right">

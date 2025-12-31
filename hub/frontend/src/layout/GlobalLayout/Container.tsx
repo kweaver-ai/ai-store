@@ -2,6 +2,7 @@ import { Layout } from 'antd'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { useMatches } from 'react-router-dom'
+import bg from '@/assets/images/gradient-container-bg.svg'
 import { useMicroAppStore } from '@/stores/microAppStore'
 import MicroAppHeader from '../../components/MicroAppHeader'
 import Sider from '../../components/Sider'
@@ -34,7 +35,8 @@ const Container = ({ children }: ContainerProps) => {
   // 只使用最后一个匹配的路由（当前路由）的布局配置
   // 主应用页面只依赖路由的静态布局配置
   const currentMatch = matches[matches.length - 1]
-  const routeLayoutConfig = (currentMatch?.handle as RouteHandle | undefined)?.layout
+  const routeLayoutConfig = (currentMatch?.handle as RouteHandle | undefined)
+    ?.layout
 
   // 布局决策：
   // - headless 微应用：强制 { hasHeader: false, hasSider: false }
@@ -52,7 +54,10 @@ const Container = ({ children }: ContainerProps) => {
     <Layout className="overflow-hidden">
       {/* 微应用壳 Header：当前项目仅微应用容器路由会开启 hasHeader */}
       {hasHeader && <MicroAppHeader />}
-      <Layout>
+      <Layout
+        style={{ backgroundImage: `url(${bg})` }}
+        className="bg-no-repeat bg-size-100"
+      >
         {hasSider && (
           <Sider
             collapsed={collapsed}
@@ -61,12 +66,14 @@ const Container = ({ children }: ContainerProps) => {
           />
         )}
         <Layout
-          className="transition-all duration-200 overflow-auto"
+          className="transition-all duration-200 overflow-auto bg-transparent"
           style={{
             height: hasHeader ? `calc(100vh - ${headerHeight}px)` : '100vh',
           }}
         >
-          <Content className="relative bg-white min-w-[1040px] m-0">{children}</Content>
+          <Content className="relative bg-transparent min-w-[1040px] m-0">
+            {children}
+          </Content>
         </Layout>
       </Layout>
     </Layout>

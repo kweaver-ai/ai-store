@@ -6,7 +6,6 @@ import AppConfigDrawer from '@/components/AppConfigDrawer'
 import AppList from '@/components/AppList'
 import { ModeEnum } from '@/components/AppList/types'
 import Empty from '@/components/Empty'
-import GradientContainer from '@/components/GradientContainer'
 import IconFont from '@/components/IconFont'
 import SearchInput from '@/components/SearchInput'
 import UploadAppModal from '@/components/UploadAppModal'
@@ -184,7 +183,7 @@ const AppStore = () => {
   }
 
   return (
-    <GradientContainer className="h-full p-6 flex flex-col">
+    <div className="h-full p-6 flex flex-col relative">
       <div className="flex justify-between mb-6 flex-shrink-0 z-20">
         <div className="flex flex-col gap-y-3">
           <span className="text-base font-bold text-[--dip-text-color]">
@@ -254,7 +253,7 @@ const AppStore = () => {
           })
         }}
       />
-    </GradientContainer>
+    </div>
   )
 }
 

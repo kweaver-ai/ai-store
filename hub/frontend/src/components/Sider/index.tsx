@@ -219,7 +219,7 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
       collapsible
       collapsed={collapsed}
       trigger={null}
-      className="bg-white/85 backdrop-blur-[6px] shadow-[inset_-1px_0_0_rgba(0,0,0,0.1)]"
+      className="bg-white backdrop-blur-[6px] shadow-[inset_-1px_0_0_rgba(0,0,0,0.1)]"
       style={{
         left: 0,
         width: siderWidth,

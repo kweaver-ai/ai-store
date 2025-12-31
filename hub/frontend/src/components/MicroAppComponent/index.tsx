@@ -1,4 +1,4 @@
-import { Button, message, Spin } from 'antd'
+import { Button, Spin } from 'antd'
 import { loadMicroApp, type MicroApp as QiankunMicroApp } from 'qiankun'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Root as ReactRoot } from 'react-dom/client'
@@ -180,7 +180,6 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
     if (!microAppEntry) {
       console.log('微应用入口不存在:', appBasicInfo)
       setLoading(false)
-      message.error('微应用配置错误：缺少入口地址')
       return
     }
 
