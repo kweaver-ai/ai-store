@@ -340,7 +340,7 @@ class OntologyManagerAdapter(OntologyManagerPort):
         异常:
             ValueError: 当业务知识网络不存在时抛出
         """
-        url = f"{self._base_url}/knowledge-networks/{kn_id}"
+        url = f"{self._base_url}/knowledge-networks/{kn_id}?include_details=true&include_statistics=true"
         
         headers = _build_headers(auth_token, business_domain)
 
@@ -384,7 +384,7 @@ class OntologyManagerAdapter(OntologyManagerPort):
         返回:
             str: 创建的业务知识网络 ID
         """
-        url = f"{self._base_url}/knowledge-networks"
+        url = f"{self._base_url}/knowledge-networks?import_networks=overwrite"
         
         headers = _build_headers(auth_token, business_domain)
 

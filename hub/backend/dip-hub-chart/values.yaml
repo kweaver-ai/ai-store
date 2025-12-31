@@ -94,15 +94,15 @@ depServices:
     port: 8155
   # Proton 部署服务配置
   proton:
-    url: http://deploy-installer
+    url: http://deploy-installer:9090
     timeout: 300
   # Ontology Manager 服务配置
   ontology-manager:
-    url: http://ontology-manager
+    url: http://ontology-manager:13014
     timeout: 60
   # Agent Factory 服务配置
   agent-factory:
-    url: http://agent-factory
+    url: http://agent-factory:13020
     timeout: 60
   # Deploy Manager 服务配置
   deploy-management:
