@@ -53,7 +53,7 @@ const Container = ({ children }: ContainerProps) => {
     <Layout className="overflow-hidden">
       {/* 微应用壳 Header：当前项目仅微应用容器路由会开启 hasHeader */}
       {hasHeader && <MicroAppHeader />}
-      <Layout style={{ backgroundImage: `url(${bg})` }} className="bg-no-repeat bg-size-100">
+      <Layout style={{ backgroundImage: `url(${bg})` }} className="bg-no-repeat bg-cover">
         {hasSider && (
           <Sider
             collapsed={collapsed}

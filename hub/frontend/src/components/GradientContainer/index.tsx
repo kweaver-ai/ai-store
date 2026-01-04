@@ -20,10 +20,7 @@ const GradientContainer: React.FC<GradientContainerProps> = ({ children, classNa
     return temp
   }, [])
   return (
-    <div
-      style={wrapperStyle}
-      className={classNames('bg-no-repeat bg-size-100 relative', className)}
-    >
+    <div style={wrapperStyle} className={classNames('bg-no-repeat bg-cover relative', className)}>
       {children}
     </div>
   )
