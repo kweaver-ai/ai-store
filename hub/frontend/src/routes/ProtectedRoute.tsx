@@ -4,6 +4,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { getFullPath } from '@/utils/config'
 import { getAccessToken } from '@/utils/http/token-config'
 import { useUserInfoStore } from '../stores'
+import GradientContainer from '@/components/GradientContainer'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -139,9 +140,9 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   if (shouldShowLoading) {
     return (
-      <div className="w-full h-full flex items-center justify-center">
+      <GradientContainer className="w-full h-full flex items-center justify-center">
         <Spin size="large" />
-      </div>
+      </GradientContainer>
     )
   }
 

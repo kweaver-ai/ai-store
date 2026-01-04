@@ -9,6 +9,7 @@ import { router } from './routes'
 import { useLanguageStore } from './stores/languageStore'
 import './App.css'
 import './styles/resetAntd.less'
+import GradientContainer from './components/GradientContainer'
 
 function getUILocale(lang: string): typeof enUS | typeof zhTW | typeof zhCN {
   return lang === 'en-US' ? enUS : lang === 'zh-TW' ? zhTW : zhCN
@@ -37,9 +38,9 @@ const App = () => {
     >
       <Suspense
         fallback={
-          <div className="w-full h-full flex items-center justify-center">
+          <GradientContainer className="w-full h-full flex items-center justify-center">
             <Spin size="large" />
-          </div>
+          </GradientContainer>
         }
       >
         <RouterProvider router={router} />

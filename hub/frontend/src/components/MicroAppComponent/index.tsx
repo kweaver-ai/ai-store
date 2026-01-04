@@ -360,7 +360,7 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
       failureInfo.error instanceof Error ? failureInfo.error.message : String(failureInfo.error)
 
     return (
-      <div className="h-full w-full flex items-center justify-center">
+      <div className="fixed inset-0 flex items-center justify-center">
         <Empty
           type="failed"
           // desc="微应用加载失败"
@@ -385,12 +385,7 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
         className="h-full w-full"
         id={`micro-app-container-${appBasicInfo.id}`}
       />
-      {loading && (
-        <Spin
-          size="large"
-          className="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center bg-white rounded-md z-10"
-        />
-      )}
+      {loading && <Spin size="large" className="fixed inset-0 flex items-center justify-center" />}
     </>
   )
 }

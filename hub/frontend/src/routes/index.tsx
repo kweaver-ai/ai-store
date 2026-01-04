@@ -9,7 +9,10 @@ import { getFirstVisibleSidebarRoute } from './utils'
 const Login = lazy(() => import('../pages/Login'))
 const LoginSuccess = lazy(() => import('../pages/Login/LoginSuccess'))
 const MicroAppContainer = lazy(() => import('../pages/MicroAppContainer'))
-const GlobalLayout = lazy(() => import('../layout/GlobalLayout'))
+
+// GlobalLayout 改为同步导入，避免 Suspense fallback 与 ProtectedRoute loading 同时显示
+import GlobalLayout from '../layout/GlobalLayout'
+
 const NotFound = lazy(() => import('../pages/ErrorPage/NotFound'))
 const NoAccess = lazy(() => import('../pages/ErrorPage/NoAccess'))
 const ServerError = lazy(() => import('../pages/ErrorPage/ServerError'))
