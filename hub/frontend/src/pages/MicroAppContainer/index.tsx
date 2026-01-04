@@ -6,16 +6,11 @@ import Empty from '@/components/Empty'
 import { getFullPath } from '@/utils/config'
 import { setMicroAppGlobalState } from '@/utils/micro-app/globalState'
 import MicroAppComponent from '../../components/MicroAppComponent'
-import {
-  type CurrentMicroAppInfo,
-  useMicroAppStore,
-} from '../../stores/microAppStore'
+import { type CurrentMicroAppInfo, useMicroAppStore } from '../../stores/microAppStore'
 
 const MicroAppContainer = () => {
   const { appId } = useParams<{ appId: string }>()
-  const [appBasicInfo, setAppBasicInfo] = useState<CurrentMicroAppInfo | null>(
-    null
-  )
+  const [appBasicInfo, setAppBasicInfo] = useState<CurrentMicroAppInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { setCurrentMicroApp, clearCurrentMicroApp } = useMicroAppStore()
@@ -69,7 +64,7 @@ const MicroAppContainer = () => {
         {
           breadcrumb: [],
         },
-        { allowAllFields: true }
+        { allowAllFields: true },
       )
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -94,9 +89,7 @@ const MicroAppContainer = () => {
   }
 
   return (
-    <div className="h-full w-full flex flex-col overflow-hidden relative">
-      {renderContent()}
-    </div>
+    <div className="h-full w-full flex flex-col overflow-hidden relative">{renderContent()}</div>
   )
 }
 

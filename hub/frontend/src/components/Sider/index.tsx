@@ -1,5 +1,5 @@
 import type { MenuProps } from 'antd'
-import { Avatar, Layout, message, Tooltip } from 'antd'
+import { Layout, message, Tooltip } from 'antd'
 import clsx from 'classnames'
 import { useCallback, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -8,15 +8,13 @@ import LogoIcon from '@/assets/images/brand/logo.svg?react'
 import SidebarAiDataPlatformIcon from '@/assets/images/sider/adp.svg?react'
 import SidebarSystemIcon from '@/assets/images/sider/proton.svg?react'
 import { routeConfigs } from '@/routes/routes'
-import {
-  getFirstVisibleSidebarRoute,
-  getRouteByPath,
-  isRouteVisibleForRoles,
-} from '@/routes/utils'
+import type { RouteConfig } from '@/routes/types'
+import { getFirstVisibleSidebarRoute, getRouteByPath, isRouteVisibleForRoles } from '@/routes/utils'
 import { usePreferenceStore } from '@/stores'
 import { useLanguageStore } from '@/stores/languageStore'
 import { useOEMConfigStore } from '@/stores/oemConfigStore'
 import { getFullPath } from '@/utils/config'
+import AppIcon from '../AppIcon'
 import IconFont from '../IconFont'
 import { BottomLinkItem } from './BottomLinkItem'
 import { SiderMenuItem } from './SiderMenuItem'
@@ -45,10 +43,7 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
   const [microApps] = useState<ApplicationInfo[]>([])
   // TODO: 角色信息需要从其他地方获取，暂时使用空数组
   const roleIds = useMemo(() => new Set<string>([]), [])
-  const firstVisibleRoute = useMemo(
-    () => getFirstVisibleSidebarRoute(roleIds),
-    [roleIds]
-  )
+  const firstVisibleRoute = useMemo(() => getFirstVisibleSidebarRoute(roleIds), [roleIds])
 
   // 根据当前路由确定选中的菜单项
   const getSelectedKey = () => {
@@ -104,7 +99,7 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
         message.error('取消钉住失败，请稍后重试')
       }
     },
-    [unpinMicroApp]
+    [unpinMicroApp],
   )
 
   const openExternal = useCallback((url: string) => {
@@ -113,25 +108,29 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
 
   // 构建侧边栏各区块数据
   const sidebarData = useMemo(() => {
+    // 类型守卫：确保 route 有 key
+    const hasKey = (route: RouteConfig): route is RouteConfig & { key: string } => {
+      return Boolean(route.key)
+    }
+
     const visibleSidebarRoutes = routeConfigs
       .filter((route) => route.showInSidebar && route.key)
       .filter((route) => isRouteVisibleForRoles(route, roleIds))
+      .filter(hasKey)
 
     const toRouteItem = (route: (typeof visibleSidebarRoutes)[number]) => ({
-      key: route.key!,
-      label: route.label || route.key!,
+      key: route.key,
+      label: route.label || route.key,
       iconUrl: route.iconUrl,
       disabled: route.disabled,
       type: 'route' as const,
     })
 
-    const myAppItem = visibleSidebarRoutes.find((r) => r.key === 'my-app')
-      ? toRouteItem(visibleSidebarRoutes.find((r) => r.key === 'my-app')!)
-      : null
+    const myAppRoute = visibleSidebarRoutes.find((r) => r.key === 'my-app')
+    const myAppItem = myAppRoute ? toRouteItem(myAppRoute) : null
 
-    const appStoreItem = visibleSidebarRoutes.find((r) => r.key === 'app-store')
-      ? toRouteItem(visibleSidebarRoutes.find((r) => r.key === 'app-store')!)
-      : null
+    const appStoreRoute = visibleSidebarRoutes.find((r) => r.key === 'app-store')
+    const appStoreItem = appStoreRoute ? toRouteItem(appStoreRoute) : null
 
     const pinnedItems = pinnedMicroApps
       .map((appId) => {
@@ -140,13 +139,7 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
         return {
           key: `micro-app-${app.id}`,
           label: app.name,
-          icon: (
-            <Avatar
-              shape="square"
-              size={16}
-              src={app.icon ? `data:image/png;base64,${app.icon}` : undefined}
-            />
-          ),
+          icon: <AppIcon icon={app.icon} name={app.name} size={16} shape="square" />,
           type: 'pinned' as const,
           onContextMenu: [
             {
@@ -185,14 +178,7 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
     ]
 
     return { myAppItem, pinnedItems, appStoreItem, externalItems }
-  }, [
-    pinnedMicroApps,
-    microApps,
-    handleOpenApp,
-    handleUnpin,
-    openExternal,
-    roleIds,
-  ])
+  }, [pinnedMicroApps, microApps, handleOpenApp, handleUnpin, openExternal, roleIds])
 
   const siderWidth = collapsed ? 60 : 240
   const selectedKey = getSelectedKey()
@@ -233,17 +219,11 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
         <div
           className={clsx(
             'flex items-center gap-2 pb-4',
-            collapsed
-              ? 'justify-center pl-1.5 pr-1.5'
-              : 'justify-between pl-3 pr-2'
+            collapsed ? 'justify-center pl-1.5 pr-1.5' : 'justify-between pl-3 pr-2',
           )}
         >
           {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt="logo"
-              className={clsx('h-6 w-auto', collapsed && 'hidden')}
-            />
+            <img src={logoUrl} alt="logo" className={clsx('h-6 w-auto', collapsed && 'hidden')} />
           ) : (
             <LogoIcon className={clsx('h-6 w-auto', collapsed && 'hidden')} />
           )}
@@ -251,7 +231,7 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
             <button
               type="button"
               className={clsx(
-                'text-sm cursor-pointer flex items-center justify-center w-8 h-8 rounded-md text-[--dip-text-color] hover:text-[--dip-primary-color]'
+                'text-sm cursor-pointer flex items-center justify-center w-8 h-8 rounded-md text-[--dip-text-color] hover:text-[--dip-primary-color]',
               )}
               onClick={() => onCollapse(!collapsed)}
             >

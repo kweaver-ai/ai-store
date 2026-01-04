@@ -17,7 +17,7 @@ function getCommonHttpHeaders() {
   const language = convertLangType(useLanguageStore.getState().language)
   return {
     Pragma: 'no-cache',
-    Authorization: 'Bearer ' + httpConfig.accessToken,
+    Authorization: `Bearer ${httpConfig.accessToken}`,
     Token: httpConfig.accessToken,
     'Cache-Control': 'no-cache',
     'X-Requested-With': 'XMLHttpRequest',
@@ -82,36 +82,39 @@ const createHttpRequest = curry((method: string, url: string, options: OptionsTy
     validateStatus: (status: number) => status < 400,
   }
 
-  const promise: any = new Promise(async (resolve, reject) => {
-    try {
-      let response
+  const promise: any = new Promise((resolve, reject) => {
+    let responsePromise: Promise<any>
 
-      switch (method.toLowerCase()) {
-        case 'get':
-        case 'post':
-        case 'put':
-        case 'patch':
-        case 'delete':
-          response = await axiosInstance.request(axiosConfig)
-          break
-        default:
-          throw new Error(`Unsupported HTTP method: ${method}`)
-      }
-
-      if (returnFullResponse) {
-        // 有些场景，除了data还需要其它返回信息
-        resolve(response)
-      } else {
-        resolve(response.data)
-      }
-    } catch (error) {
-      handleError({
-        error,
-        url,
-        reject,
-        isOffline: !navigator.onLine,
-      })
+    switch (method.toLowerCase()) {
+      case 'get':
+      case 'post':
+      case 'put':
+      case 'patch':
+      case 'delete':
+        responsePromise = axiosInstance.request(axiosConfig)
+        break
+      default:
+        reject(new Error(`Unsupported HTTP method: ${method}`))
+        return
     }
+
+    responsePromise
+      .then((response) => {
+        if (returnFullResponse) {
+          // 有些场景，除了data还需要其它返回信息
+          resolve(response)
+        } else {
+          resolve(response.data)
+        }
+      })
+      .catch((error) => {
+        handleError({
+          error,
+          url,
+          reject,
+          isOffline: !navigator.onLine,
+        })
+      })
   })
 
   promise.abort = () => cancel('CANCEL')

@@ -1,8 +1,4 @@
-import {
-  CheckCircleOutlined,
-  InfoCircleOutlined,
-  ShareAltOutlined,
-} from '@ant-design/icons'
+import { CheckCircleOutlined, InfoCircleOutlined, ShareAltOutlined } from '@ant-design/icons'
 import { Alert, Spin, Tag } from 'antd'
 import { memo, useEffect, useState } from 'react'
 import type { OntologyInfo } from '@/apis/applications'
@@ -47,16 +43,22 @@ const OntologyConfig = ({ appId }: OntologyConfigProps) => {
 
   return (
     <div className="flex flex-col gap-y-2">
-      <div className="text-sm font-medium text-[--dip-text-color]">
-        业务知识网络
-      </div>
+      <div className="text-sm font-medium text-[--dip-text-color]">业务知识网络</div>
 
       {/* 提示信息框 */}
       <Alert
         title="此应用依赖以下业务知识网络。请前往 ADP 平台完成数据视图映射，以确保应用能获取数据。"
         type="info"
         showIcon
-        className="rounded-lg border border-[#BAE0FF] bg-[#E6F4FF] text-sm text-[--dip-text-color-85]"
+        className="border-[#BAE0FF] bg-[#E6F4FF]"
+        styles={{
+          root: {
+            alignItems: 'flex-start',
+          },
+          icon: {
+            paddingTop: '4px',
+          },
+        }}
       />
 
       {/* 业务知识网络列表 */}
@@ -82,13 +84,7 @@ const OntologyConfig = ({ appId }: OntologyConfigProps) => {
                     {item.name || `业务知识网络 #${item.id}`}
                   </div>
                   <Tag
-                    icon={
-                      isConfigured ? (
-                        <CheckCircleOutlined />
-                      ) : (
-                        <InfoCircleOutlined />
-                      )
-                    }
+                    icon={isConfigured ? <CheckCircleOutlined /> : <InfoCircleOutlined />}
                     color={isConfigured ? 'success' : 'warning'}
                     className="m-0 rounded border flex-shrink-0"
                     style={{

@@ -149,6 +149,16 @@ interface MicroAppProps {
     get account(): string
   }
 
+  /** ========== 应用信息 ========== */
+  application: {
+    /** 应用 ID */
+    id: number
+    /** 应用名称 */
+    name: string
+    /** 应用图标 */
+    icon: string
+  }
+
   /** ========== UI 组件渲染函数 ========== */
   /** 渲染应用菜单组件（AppMenu）到指定容器，使用主应用的 React 上下文渲染 */
   renderAppMenu: (container: HTMLElement | string) => void
@@ -207,10 +217,15 @@ export async function mount(props) {
   // 访问路由信息
   const routeBasename = route.basename
 
-  // 访问用户信息（每次访问都会获取最新值）
+  // 访问用户信息
   const userId = user.id
-  const userName = user.vision_name // 使用 getter，每次访问都获取最新值（用户显示名称）
-  const userAccount = user.account // 使用 getter，每次访问都获取最新值（用户账号）
+  const userName = user.vision_name 
+  const userAccount = user.account 
+
+  // 访问应用信息（在微应用加载时确定，不会在运行时变化）
+  const appId = application.id
+  const appName = application.name
+  const appIcon = application.icon 
 
   // 退出登录
   // logout() // 调用后会清除用户信息并跳转到登出页面
@@ -460,6 +475,9 @@ const MicroAppHeader = () => {
 - **`user.account`**：每次访问时从 store 读取最新值（用户账号）
   - 用户账号变化后，下次访问 `user.account` 时会自动获取最新值
   - 微应用无需监听用户名称变化，直接访问即可获取最新值
+- **`application.id`**：应用 ID（在微应用加载时确定，不会在运行时变化）
+- **`application.name`**：应用名称（在微应用加载时确定，不会在运行时变化）
+- **`application.icon`**：应用图标（在微应用加载时确定，不会在运行时变化）
 
 ### 通过全局状态管理的字段（需要监听变化）
 
@@ -596,6 +614,7 @@ function MyComponent({ logout }) {
 6. **取消监听**：`onMicroAppStateChange` 返回取消监听的函数，组件卸载时应该调用以清理资源
 7. **Token 刷新**：Token 刷新后，微应用通过 `token.accessToken` 访问时会自动获取最新值，无需更新 props。如果提供了 `token.onTokenExpired`，可以在 token 过期时调用
 8. **用户信息**：`user.id` 通过 props 传递，`user.vision_name` 和 `user.account` 使用 getter 每次访问时从 store 读取最新值
+9. **应用信息**：`application.id`、`application.name` 和 `application.icon` 在微应用加载时确定，不会在运行时变化
 9. **退出登录**：通过 `logout()` 方法调用，会清除用户信息并跳转到登出页面
 10. **语言获取**：语言不再通过 props 传递，微应用必须在 `mount` 时通过 `onMicroAppStateChange(callback, true)` 获取初始值和监听变化
 11. **UI 组件渲染**：`renderAppMenu` 需要传入容器元素，使用 `useRef` 和 `useEffect` 在容器准备好后调用。主应用会自动管理渲染实例的生命周期

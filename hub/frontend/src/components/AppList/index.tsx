@@ -81,15 +81,11 @@ const AppList: React.FC<AppListProps> = ({ mode, apps, onMenuClick }) => {
     (app: ApplicationInfo, width: number) => {
       return (
         <Col key={app.id} style={{ width, minWidth: width }}>
-          <AppCard
-            app={app}
-            mode={mode}
-            onMenuClick={(key) => onMenuClick?.(key, app)}
-          />
+          <AppCard app={app} mode={mode} onMenuClick={(key) => onMenuClick?.(key, app)} />
         </Col>
       )
     },
-    [mode, onMenuClick]
+    [mode, onMenuClick],
   )
 
   return (
@@ -120,9 +116,7 @@ const AppList: React.FC<AppListProps> = ({ mode, apps, onMenuClick }) => {
 
             return (
               <Row gutter={[gap, gap]}>
-                {currentApps.map((app) =>
-                  renderAppCard(app, calculatedCardWidth)
-                )}
+                {currentApps.map((app) => renderAppCard(app, calculatedCardWidth))}
               </Row>
             )
           }}

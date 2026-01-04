@@ -1,5 +1,6 @@
-import { Avatar, Button } from 'antd'
+import { Button } from 'antd'
 import type { ReactNode } from 'react'
+import AppIcon from '@/components/AppIcon'
 import IconFont from '@/components/IconFont'
 import type { BreadcrumbItem } from '@/utils/micro-app/globalState'
 
@@ -11,18 +12,9 @@ interface BreadcrumbProps {
 /**
  * 渲染面包屑图标
  */
-const renderIcon = (icon: string | ReactNode) => {
-  if (!icon) return <Avatar size={24} className="shrink-0" />
-
-  if (typeof icon === 'string') {
-    return (
-      <img
-        src={`data:image/png;base64,${icon}`}
-        alt=""
-        className="w-4 h-4 rounded-full shrink-0"
-      />
-    )
-  }
+const renderIcon = (icon: string | ReactNode, name: string) => {
+  if (!icon || typeof icon === 'string')
+    return <AppIcon icon={icon as string} name={name} size={16} />
 
   return icon
 }
@@ -38,10 +30,7 @@ export const Breadcrumb = ({ items = [], onNavigate }: BreadcrumbProps) => {
   }
 
   // 所有面包屑项（包含首页）
-  const allItems: Array<BreadcrumbItem> = [
-    { key: 'main-home', name: '', path: '/' },
-    ...items,
-  ]
+  const allItems: Array<BreadcrumbItem> = [{ key: 'main-home', name: '', path: '/' }, ...items]
 
   return (
     <div className="h-6 flex items-center">
@@ -58,7 +47,7 @@ export const Breadcrumb = ({ items = [], onNavigate }: BreadcrumbProps) => {
             {isHome ? (
               <button
                 type="button"
-                className="cursor-pointer flex items-center justify-center w-7 h-7 rounded-md text-[--dip-text-color] hover:bg-[--dip-hover-bg-color]"
+                className="flex items-center justify-center w-7 h-7 rounded-md text-[--dip-text-color] hover:bg-[--dip-hover-bg-color]"
                 onClick={(e) => handleNavigate(item, e)}
               >
                 <IconFont type="icon-dip-back" className="!text-base" />
@@ -66,11 +55,7 @@ export const Breadcrumb = ({ items = [], onNavigate }: BreadcrumbProps) => {
             ) : (
               <>
                 {/* 分隔符 */}
-                {index > 0 && (
-                  <span className="text-sm font-medium text-black/25 mx-2">
-                    /
-                  </span>
-                )}
+                {index > 0 && <span className="text-sm font-medium text-black/25 mx-2">/</span>}
                 {/* 面包屑项 */}
                 {isLast ? (
                   <Button
@@ -78,7 +63,7 @@ export const Breadcrumb = ({ items = [], onNavigate }: BreadcrumbProps) => {
                     type="text"
                     className="h-7 font-medium hover:!bg-transparent hover:!cursor-default"
                   >
-                    {isRootItem && renderIcon(item.icon)}
+                    {isRootItem && renderIcon(item.icon, item.name)}
                     {item.name}
                   </Button>
                 ) : (
@@ -88,7 +73,7 @@ export const Breadcrumb = ({ items = [], onNavigate }: BreadcrumbProps) => {
                     type="text"
                     onClick={(e) => handleNavigate(item, e)}
                   >
-                    {isRootItem && renderIcon(item.icon)}
+                    {isRootItem && renderIcon(item.icon, item.name)}
                     {item.name}
                   </Button>
                 )}

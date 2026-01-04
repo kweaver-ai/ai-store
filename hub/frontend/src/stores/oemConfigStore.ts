@@ -50,7 +50,8 @@ export const useOEMConfigStore = create<OEMConfigState>((set, get) => ({
     const keys = Object.keys(oemConfigs)
     return keys.length > 0 ? oemConfigs[keys[0]] : null
   },
-  initialize: async (languages = ['zh-CN', 'zh-TW', 'en-US'], product = 'dip') => {
+  initialize: async (languages = ['zh-CN'], product = 'dip') => {
+    // 'zh-CN', 'zh-TW', 'en-US'
     const { initialized } = get()
     // 如果已经初始化过，跳过
     if (initialized) {

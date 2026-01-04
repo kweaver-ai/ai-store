@@ -15,32 +15,21 @@ import ScrollBarContainer from '../ScrollBarContainer'
 import styles from './index.module.less'
 import type { FileInfo } from './types'
 import { UploadStatus } from './types'
-import {
-  formatFileSize,
-  getFileInfo,
-  validateFileFormat,
-  validateFileSize,
-} from './utils'
+import { formatFileSize, getFileInfo, validateFileFormat, validateFileSize } from './utils'
 
 const { Dragger } = Upload
 
-export interface UploadAppModalProps extends Pick<
-  ModalProps,
-  'open' | 'onCancel'
-> {
+export interface UploadAppModalProps extends Pick<ModalProps, 'open' | 'onCancel'> {
   /** 上传成功的回调，传递应用信息 */
   onSuccess: (appInfo: ApplicationInfo) => void
 }
 
 /** 上传应用安装包弹窗 */
 const UploadAppModal = ({ open, onCancel, onSuccess }: UploadAppModalProps) => {
-  const [uploadStatus, setUploadStatus] = useState<UploadStatus>(
-    UploadStatus.INITIAL
-  )
+  const [uploadStatus, setUploadStatus] = useState<UploadStatus>(UploadStatus.INITIAL)
   const [fileInfo, setFileInfo] = useState<FileInfo | null>(null)
   const [errorMessage, setErrorMessage] = useState<string>('')
-  const [uploadedAppInfo, setUploadedAppInfo] =
-    useState<ApplicationInfo | null>(null)
+  const [uploadedAppInfo, setUploadedAppInfo] = useState<ApplicationInfo | null>(null)
   const uploadRequestRef = useRef<{ abort: () => void } | null>(null)
 
   // 重置状态
@@ -145,11 +134,7 @@ const UploadAppModal = ({ open, onCancel, onSuccess }: UploadAppModalProps) => {
       }
 
       // 请求被取消时，清除引用但不更新状态
-      if (
-        error?.name === 'AbortError' ||
-        error?.message === 'CANCEL' ||
-        error === 'CANCEL'
-      ) {
+      if (error?.name === 'AbortError' || error?.message === 'CANCEL' || error === 'CANCEL') {
         uploadRequestRef.current = null
         return
       }
@@ -165,7 +150,7 @@ const UploadAppModal = ({ open, onCancel, onSuccess }: UploadAppModalProps) => {
   }
 
   // 处理取消上传
-  const handleCancelUpload = () => {``
+  const handleCancelUpload = () => {
     if (uploadRequestRef.current) {
       uploadRequestRef.current.abort()
       uploadRequestRef.current = null
@@ -180,7 +165,7 @@ const UploadAppModal = ({ open, onCancel, onSuccess }: UploadAppModalProps) => {
 
   // 处理取消
   const handleCancel = (
-    e?: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLDivElement>
+    e?: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLDivElement>,
   ) => {
     if (uploadStatus === UploadStatus.UPLOADING) {
       // 上传中需要二次确认
@@ -217,9 +202,7 @@ const UploadAppModal = ({ open, onCancel, onSuccess }: UploadAppModalProps) => {
     beforeUpload: () => false, // 阻止自动上传
     onChange: handleFileChange,
     showUploadList: false,
-    disabled:
-      uploadStatus === UploadStatus.UPLOADING ||
-      uploadStatus === UploadStatus.SUCCESS,
+    disabled: uploadStatus === UploadStatus.UPLOADING || uploadStatus === UploadStatus.SUCCESS,
   }
 
   // 渲染上传区域
@@ -229,10 +212,7 @@ const UploadAppModal = ({ open, onCancel, onSuccess }: UploadAppModalProps) => {
     return (
       <Dragger {...draggerProps}>
         {isUploading ? (
-          <div
-            className="flex flex-col items-center justify-center"
-            style={{ height: '100%' }}
-          >
+          <div className="flex flex-col items-center justify-center" style={{ height: '100%' }}>
             <Spin />
             <p className="mt-4 text-sm text-[#1677FF]">正在验证应用包...</p>
           </div>
@@ -310,9 +290,7 @@ const UploadAppModal = ({ open, onCancel, onSuccess }: UploadAppModalProps) => {
   // 渲染操作按钮
   const renderActionButton = () => {
     const isUploading = uploadStatus === UploadStatus.UPLOADING
-    const canUpload =
-      uploadStatus === UploadStatus.READY ||
-      uploadStatus === UploadStatus.FAILED
+    const canUpload = uploadStatus === UploadStatus.READY || uploadStatus === UploadStatus.FAILED
 
     return (
       <div className="my-4">

@@ -1,7 +1,8 @@
 import type { MenuProps } from 'antd'
-import { Avatar, Button, Dropdown } from 'antd'
+import { Dropdown } from 'antd'
 import { useMemo } from 'react'
-import AppMenuIcon from '@/assets/images/header/menu.svg?react'
+import AppIcon from '@/components/AppIcon'
+import IconFont from '@/components/IconFont'
 import { useApplicationsService } from '@/hooks/useApplicationsService'
 import { getFullPath } from '@/utils/config'
 
@@ -33,21 +34,11 @@ export const AppMenu = () => {
       Array.isArray(apps)
         ? apps.map((app) => ({
             key: app.id,
-            icon: app.icon ? (
-              <img
-                src={`data:image/png;base64,${app.icon}`}
-                alt={app.name}
-                className="w-4 h-4 shrink-0 rounded-full"
-              />
-            ) : (
-              <Avatar size={24} className="shrink-0">
-                {app.name.charAt(0)}
-              </Avatar>
-            ),
+            icon: <AppIcon icon={app.icon} name={app.name} size={16} className="shrink-0" />,
             label: app.name,
           }))
         : [],
-    [apps]
+    [apps],
   )
 
   return (
@@ -56,7 +47,7 @@ export const AppMenu = () => {
         items: menuItems,
         onClick: handleMenuClick,
         style: {
-          maxHeight: '80vh',
+          maxHeight: 'calc(100vh - 80px)',
         },
       }}
       trigger={['click']}
@@ -64,22 +55,12 @@ export const AppMenu = () => {
       styles={{
         itemContent: {
           maxWidth: '400px',
-          minWidth: '240px',
-          // overflow: 'hidden',
-          // textOverflow: 'ellipsis',
-          // whiteSpace: 'nowrap',
         },
       }}
     >
-      <Button
-        type="text"
-        onClick={handleButtonClick}
-        icon={
-          <span>
-            <AppMenuIcon />
-          </span>
-        }
-      />
+      <div className="flex items-center justify-center cursor-pointer">
+        <IconFont type="icon-dip-a-quanbu11" className="!text-2xl" onClick={handleButtonClick} />
+      </div>
     </Dropdown>
   )
 }

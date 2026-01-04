@@ -28,6 +28,16 @@ export interface MicroAppProps {
     get account(): string
   }
 
+  /** ========== 应用信息 ========== */
+  application: {
+    /** 应用 ID */
+    id: number
+    /** 应用名称 */
+    name: string
+    /** 应用图标 */
+    icon: string
+  }
+
   /** ========== UI 组件渲染函数 ========== */
   /** 渲染应用菜单组件（AppMenu）到指定容器，使用主应用的 React 上下文渲染 */
   renderAppMenu: (container: HTMLElement | string) => void

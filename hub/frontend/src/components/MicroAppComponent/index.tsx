@@ -7,10 +7,7 @@ import Empty from '@/components/Empty'
 import { useUserInfoStore } from '@/stores'
 import type { CurrentMicroAppInfo } from '@/stores/microAppStore'
 import { getAccessToken, httpConfig } from '@/utils/http/token-config'
-import {
-  onMicroAppGlobalStateChange,
-  setMicroAppGlobalState,
-} from '@/utils/micro-app/globalState'
+import { onMicroAppGlobalStateChange, setMicroAppGlobalState } from '@/utils/micro-app/globalState'
 import { microAppLoadFailureManager } from '@/utils/micro-app/loadFailureManager'
 import { getMicroAppEntry } from '@/utils/micro-app/localDev'
 import type { MicroAppProps } from '@/utils/micro-app/types'
@@ -47,8 +44,7 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
         get accessToken() {
           return getAccessToken()
         },
-        refreshToken:
-          httpConfig.refreshToken || (async () => ({ accessToken: '' })),
+        refreshToken: httpConfig.refreshToken || (async () => ({ accessToken: '' })),
         onTokenExpired: httpConfig.onTokenExpired,
       },
 
@@ -69,6 +65,14 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
         },
       },
 
+      // ========== 应用信息 ==========
+      application: {
+        // 应用信息在微应用加载时确定，不会在运行时变化
+        id: appBasicInfo.id,
+        name: appBasicInfo.name,
+        icon: appBasicInfo.icon || '',
+      },
+
       // ========== UI 组件渲染函数 ==========
       // 通过 render props 模式传递组件，微应用可以调用这些函数来渲染组件
       // 注意：这些函数在主应用的 React 上下文中执行，使用 ReactDOM.createRoot 渲染到微应用指定的容器
@@ -76,9 +80,7 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
       renderAppMenu: (container: HTMLElement | string) => {
         // 支持传入元素或元素 ID
         const targetContainer =
-          typeof container === 'string'
-            ? document.getElementById(container)
-            : container
+          typeof container === 'string' ? document.getElementById(container) : container
 
         if (!targetContainer) {
           console.log('容器元素不存在:', container)
@@ -86,8 +88,7 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
         }
 
         // 清理旧的渲染实例
-        const containerKey =
-          typeof container === 'string' ? container : container.id || 'app-menu'
+        const containerKey = typeof container === 'string' ? container : container.id || 'app-menu'
         const oldRoot = appMenuRootRef.current.get(containerKey)
         if (oldRoot) {
           oldRoot.unmount()
@@ -112,12 +113,12 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
       },
       onMicroAppStateChange: (
         callback: (state: any, prev: any) => void,
-        fireImmediately?: boolean
+        fireImmediately?: boolean,
       ) => {
         return onMicroAppGlobalStateChange(callback, fireImmediately)
       },
     }),
-    [appBasicInfo.routeBasename, userInfo?.id]
+    [appBasicInfo.routeBasename, userInfo?.id],
   )
 
   // 更新 ref，确保 useEffect 能访问到最新的 props
@@ -160,7 +161,7 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
         clearContainer() // 确保容器为空
         console.log(
           `[微应用加载] 检测到之前的失败记录，跳过加载: ${failureInfo.appName} (${appBasicInfo.id})`,
-          isPageReload ? '(页面刷新后恢复)' : '(组件重新渲染)'
+          isPageReload ? '(页面刷新后恢复)' : '(组件重新渲染)',
         )
         return
       }
@@ -205,12 +206,7 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
     if (hashIndex !== -1) {
       const originalUrl = entryUrl
       entryUrl = entryUrl.substring(0, hashIndex)
-      console.log(
-        'entry 包含路由 hash，已自动移除:',
-        originalUrl,
-        '->',
-        entryUrl
-      )
+      console.log('entry 包含路由 hash，已自动移除:', originalUrl, '->', entryUrl)
     }
 
     // 异步加载流程
@@ -279,7 +275,7 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
             appIdStr,
             microAppName,
             entryUrl,
-            err instanceof Error ? err : String(err)
+            err instanceof Error ? err : String(err),
           )
 
           // 设置失败状态
@@ -290,10 +286,7 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
             entry: entryUrl,
           })
 
-          console.log(
-            '失败信息:',
-            microAppLoadFailureManager.getFailureInfo(appIdStr)?.error
-          )
+          console.log('失败信息:', microAppLoadFailureManager.getFailureInfo(appIdStr)?.error)
         }
       }
     }
@@ -364,9 +357,7 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
     clearContainer()
 
     const errorMessage =
-      failureInfo.error instanceof Error
-        ? failureInfo.error.message
-        : String(failureInfo.error)
+      failureInfo.error instanceof Error ? failureInfo.error.message : String(failureInfo.error)
 
     return (
       <div className="h-full w-full flex items-center justify-center">
@@ -375,12 +366,8 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
           // desc="微应用加载失败"
           subDesc={
             <div className="mt-4 text-center">
-              <div className="mb-2 text-sm text-gray-600">
-                应用名称: {failureInfo.appName}
-              </div>
-              <div className="mb-4 text-sm text-red-600">
-                错误信息: {errorMessage}
-              </div>
+              <div className="mb-2 text-sm text-gray-600">应用名称: {failureInfo.appName}</div>
+              <div className="mb-4 text-sm text-red-600">错误信息: {errorMessage}</div>
               <Button type="primary" onClick={handleRetry}>
                 重试
               </Button>

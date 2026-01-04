@@ -1,6 +1,7 @@
 import { Spin } from 'antd'
 import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import GradientContainer from '@/components/GradientContainer'
 import { getFirstVisibleSidebarRoute } from '@/routes/utils'
 import { useUserInfoStore } from '@/stores'
 
@@ -44,7 +45,7 @@ const LoginSuccess = () => {
             }
           })
         })
-        .catch((error: unknown) => {
+        .catch(() => {
           // 防止重复导航
           if (hasNavigatedRef.current) {
             return
@@ -57,9 +58,9 @@ const LoginSuccess = () => {
   }, [fetchUserInfo, navigate])
 
   return (
-    <div className="w-full h-full flex items-center justify-center">
+    <GradientContainer className="w-full h-full flex items-center justify-center">
       <Spin size="large" />
-    </div>
+    </GradientContainer>
   )
 }
 

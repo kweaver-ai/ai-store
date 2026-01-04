@@ -53,9 +53,7 @@ const BasicConfig = ({ appId }: BasicConfigProps) => {
 
   return (
     <div className="flex flex-col gap-y-2">
-      <div className="text-sm font-medium text-[--dip-text-color]">
-        基本信息
-      </div>
+      <div className="text-sm font-medium text-[--dip-text-color]">基本信息</div>
       <div className="flex flex-col rounded-xl border border-[#E3E8EF] p-3 text-sm text-[--dip-text-color] gap-2">
         {/* 应用名称：告警与故障分析 */}
         <div className="flex flex-1">
@@ -65,9 +63,7 @@ const BasicConfig = ({ appId }: BasicConfigProps) => {
 
         {/* 应用描述：... */}
         <div className="flex flex-1">
-          <span className="text-[--dip-text-color-45] mr-1 align-top">
-            应用描述：
-          </span>
+          <span className="text-[--dip-text-color-45] mr-1 align-top">应用描述：</span>
           <span className="inline-block flex-1 align-top break-words">
             {basicInfo?.description ?? '--'}
           </span>

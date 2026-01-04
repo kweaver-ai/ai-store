@@ -102,7 +102,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           hasTriedFetchRef.current = false
         }
       })
-      .catch((error: unknown) => {
+      .catch(() => {
         // 获取失败后，保持 hasTriedFetchRef.current = true，避免重复请求
         // 只有当 token 变化时才会重置，允许重新尝试
         // hasTriedFetchRef.current 保持为 true，这样条件2和条件3都不会满足，会走到 !userInfo 的判断，执行跳转

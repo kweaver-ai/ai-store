@@ -1,6 +1,0 @@
-# Ignore charts directory
-charts/
-charts/**
-**/charts/**
-
-*.css

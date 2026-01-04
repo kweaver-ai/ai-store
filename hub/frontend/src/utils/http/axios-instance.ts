@@ -20,7 +20,9 @@ axiosInstance.interceptors.response.use(
           const newToken = token ? token.accessToken : httpConfig.accessToken
 
           if (newToken) {
-            requests.forEach((cb) => cb(newToken))
+            for (const cb of requests) {
+              cb(newToken)
+            }
             requests = []
 
             return axiosInstance.request({
@@ -51,7 +53,7 @@ axiosInstance.interceptors.response.use(
               ),
           ]
         })
-      } catch (e) {
+      } catch {
         isRefreshing = false
         throw err
       } finally {

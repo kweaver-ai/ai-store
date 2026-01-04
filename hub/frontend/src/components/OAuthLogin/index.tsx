@@ -4,7 +4,6 @@ import { getIframeSizeApi } from '@/apis/config'
 import backgroundImage from '@/assets/images/logoBackground.png'
 import { useLanguageStore } from '@/stores/languageStore'
 import { useOEMConfigStore } from '@/stores/oemConfigStore'
-import About from './About'
 import Content from './Content'
 import Footer from './Footer'
 import Header from './Header'
@@ -26,7 +25,7 @@ function OAuthLogin() {
         if (!cancelled) {
           setIframeHeight(height)
         }
-      } catch (err) {
+      } catch {
         if (!cancelled) {
           // 如果获取失败，使用默认值
           setIframeHeight(410)

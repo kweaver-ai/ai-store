@@ -4,6 +4,7 @@ import zhCN from 'antd/locale/zh_CN'
 import zhTW from 'antd/locale/zh_TW'
 import { Suspense } from 'react'
 import { RouterProvider } from 'react-router-dom'
+import { useAppInit } from './hooks/useAppInit'
 import { router } from './routes'
 import { useLanguageStore } from './stores/languageStore'
 import './App.css'
@@ -14,6 +15,7 @@ function getUILocale(lang: string): typeof enUS | typeof zhTW | typeof zhCN {
 }
 
 const App = () => {
+  useAppInit()
   const { language } = useLanguageStore()
 
   return (

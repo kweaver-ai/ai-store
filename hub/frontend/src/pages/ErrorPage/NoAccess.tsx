@@ -1,9 +1,10 @@
 import { Result } from 'antd'
 import NoAccessIcon from '@/assets/images/abnormal/403.svg?react'
+import GradientContainer from '@/components/GradientContainer'
 
 const NoAccess = () => {
   return (
-    <div className="w-full h-full flex items-center justify-center">
+    <GradientContainer className="w-full h-full flex items-center justify-center">
       <Result
         subTitle={
           <span className="text-base text-[--dip-text-color-65]">
@@ -17,7 +18,7 @@ const NoAccess = () => {
         // }
         icon={<NoAccessIcon />}
       />
-    </div>
+    </GradientContainer>
   )
 }
 

@@ -9,7 +9,6 @@
     "preview": "rsbuild preview",
     "check": "yarn biome check --write src/",
     "check:dry": "yarn biome check src/",
-    "check:errors": "yarn biome check src/ 2>&1 | grep -v -i warning || true",
     "check:styles": "yarn format:styles && yarn lint:styles",
     "check:all": "yarn check && yarn check:styles",
     "format": "yarn biome format --write src/",

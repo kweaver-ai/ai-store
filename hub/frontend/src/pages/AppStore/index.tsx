@@ -62,8 +62,7 @@ const AppStore = () => {
             Modal.confirm({
               title: '确认卸载',
               icon: <ExclamationCircleFilled />,
-              content:
-                '卸载应用后，相关配置和数据将被清除，用户将无法使用应用。是否继续?',
+              content: '卸载应用后，相关配置和数据将被清除，用户将无法使用应用。是否继续?',
               okText: '确定',
               okType: 'primary',
               okButtonProps: { danger: true },
@@ -116,7 +115,7 @@ const AppStore = () => {
         console.error('Failed to handle app action:', err)
       }
     },
-    [handleRefresh]
+    [handleRefresh],
   )
 
   /** 渲染状态内容（loading/error/empty） */
@@ -166,29 +165,17 @@ const AppStore = () => {
     const stateContent = renderStateContent()
 
     if (stateContent) {
-      return (
-        <div className="absolute inset-0 flex items-center justify-center">
-          {stateContent}
-        </div>
-      )
+      return <div className="absolute inset-0 flex items-center justify-center">{stateContent}</div>
     }
 
-    return (
-      <AppList
-        mode={ModeEnum.AppStore}
-        apps={apps}
-        onMenuClick={handleMenuClick}
-      />
-    )
+    return <AppList mode={ModeEnum.AppStore} apps={apps} onMenuClick={handleMenuClick} />
   }
 
   return (
     <div className="h-full p-6 flex flex-col relative">
       <div className="flex justify-between mb-6 flex-shrink-0 z-20">
         <div className="flex flex-col gap-y-3">
-          <span className="text-base font-bold text-[--dip-text-color]">
-            应用商店
-          </span>
+          <span className="text-base font-bold text-[--dip-text-color]">应用商店</span>
           <span className="text-sm text-[--dip-text-color-65]">
             管理企业应用市场，安装或卸载应用
           </span>
@@ -196,11 +183,7 @@ const AppStore = () => {
         {(hasLoadedData || searchValue) && (
           <div className="flex items-center gap-x-2">
             <SearchInput onSearch={handleSearch} placeholder="搜索应用" />
-            <Button
-              type="text"
-              icon={<ReloadOutlined />}
-              onClick={handleRefresh}
-            />
+            <Button type="text" icon={<ReloadOutlined />} onClick={handleRefresh} />
             <Button
               type="primary"
               icon={<IconFont type="icon-dip-upload" />}

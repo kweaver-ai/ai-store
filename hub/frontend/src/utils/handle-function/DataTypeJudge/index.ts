@@ -4,7 +4,7 @@ export const isJSONString = (str: string) => {
       return true
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (error) {
+  } catch {
     // console.log(error);
     return false
   }

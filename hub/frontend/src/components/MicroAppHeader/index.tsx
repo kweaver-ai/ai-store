@@ -7,11 +7,11 @@ import type { BreadcrumbItem } from '@/utils/micro-app/globalState'
 import {
   type MicroAppGlobalState,
   onMicroAppGlobalStateChange,
-  setMicroAppGlobalState,
+  // setMicroAppGlobalState,
 } from '@/utils/micro-app/globalState'
 import { AppMenu } from './AppMenu'
 import { Breadcrumb } from './Breadcrumb'
-import { CopilotButton } from './CopilotButton'
+// import { CopilotButton } from './CopilotButton'
 import { UserInfo } from './UserInfo'
 
 const { Header: AntHeader } = Layout
@@ -28,9 +28,7 @@ const MicroAppHeader = () => {
 
   const { currentMicroApp } = useMicroAppStore()
 
-  const [microAppBreadcrumb, setMicroAppBreadcrumb] = useState<
-    BreadcrumbItem[]
-  >([])
+  const [microAppBreadcrumb, setMicroAppBreadcrumb] = useState<BreadcrumbItem[]>([])
 
   const isMicroAppRoute = location.pathname.startsWith('/application/')
 
@@ -41,14 +39,11 @@ const MicroAppHeader = () => {
       return
     }
 
-    const unsubscribe = onMicroAppGlobalStateChange(
-      (state: MicroAppGlobalState) => {
-        if (state.breadcrumb) {
-          setMicroAppBreadcrumb(state.breadcrumb)
-        }
-      },
-      true
-    )
+    const unsubscribe = onMicroAppGlobalStateChange((state: MicroAppGlobalState) => {
+      if (state.breadcrumb) {
+        setMicroAppBreadcrumb(state.breadcrumb)
+      }
+    }, true)
 
     return () => {
       unsubscribe()
@@ -88,9 +83,7 @@ const MicroAppHeader = () => {
      */
     if (microAppBreadcrumb.length > 0 && currentMicroApp?.routeBasename) {
       // 先去掉 BASE_PATH 前缀，得到相对于 basename 的路径
-      const baseWithoutPrefix = removeBasePath(
-        currentMicroApp.routeBasename.replace(/\/$/, '')
-      )
+      const baseWithoutPrefix = removeBasePath(currentMicroApp.routeBasename.replace(/\/$/, ''))
 
       const processedItems = microAppBreadcrumb.map((item, index) => {
         const itemPath = item.path
@@ -99,9 +92,7 @@ const MicroAppHeader = () => {
         if (itemPath) {
           // 去掉前导斜杠，统一按相对路径处理
           const cleaned = itemPath.replace(/^\/+/, '')
-          relativePath = cleaned
-            ? `${baseWithoutPrefix}/${cleaned}`
-            : baseWithoutPrefix
+          relativePath = cleaned ? `${baseWithoutPrefix}/${cleaned}` : baseWithoutPrefix
         }
 
         return {
@@ -123,11 +114,11 @@ const MicroAppHeader = () => {
       if (!item.path) return
       navigate(item.path)
     },
-    [navigate]
+    [navigate],
   )
 
   // Copilot 按钮点击：通过全局状态通知微应用
-  const handleCopilotClick = useCallback(() => {
+  /* const handleCopilotClick = useCallback(() => {
     // 主应用通过全局状态下发「Copilot 被点击」事件
     // 微应用在 props.onMicroAppStateChange 中监听 state.copilot 即可
     setMicroAppGlobalState(
@@ -137,19 +128,17 @@ const MicroAppHeader = () => {
           clickedAt: Date.now(),
         },
       },
-      { allowAllFields: true }
+      { allowAllFields: true },
     )
   }, [])
+*/
 
   return (
     <AntHeader className="h-[52px] bg-white border-b border-gray-200 flex items-center justify-between px-3">
       {/* 左侧：应用菜单和面包屑 */}
       <div className="flex items-center gap-x-4">
         <AppMenu />
-        <Breadcrumb
-          items={breadcrumbItems}
-          onNavigate={handleBreadcrumbNavigate}
-        />
+        <Breadcrumb items={breadcrumbItems} onNavigate={handleBreadcrumbNavigate} />
       </div>
 
       {/* 右侧：Copilot 按钮和用户信息 */}

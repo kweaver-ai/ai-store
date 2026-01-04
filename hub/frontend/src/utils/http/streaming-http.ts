@@ -21,7 +21,7 @@ function convertLangType(lang: string): string {
 
 const getStreamingOutHttpHeaders = () => {
   return {
-    Authorization: 'Bearer ' + httpConfig.accessToken,
+    Authorization: `Bearer ${httpConfig.accessToken}`,
     'Content-Type': 'application/json; charset=utf-8',
     Connection: 'keep-alive',
     responseType: 'text/event-stream',

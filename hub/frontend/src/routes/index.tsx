@@ -111,5 +111,5 @@ export const router = createBrowserRouter(
   ],
   {
     basename: BASE_PATH === '/' ? undefined : BASE_PATH,
-  }
+  },
 )

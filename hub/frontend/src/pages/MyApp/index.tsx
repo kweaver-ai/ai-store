@@ -72,7 +72,7 @@ const MyApp = () => {
         console.error('Failed to handle app action:', err)
       }
     },
-    [handleRefresh, togglePin]
+    [handleRefresh, togglePin],
   )
 
   /** 渲染状态内容（loading/error/empty） */
@@ -111,20 +111,10 @@ const MyApp = () => {
     const stateContent = renderStateContent()
 
     if (stateContent) {
-      return (
-        <div className="absolute inset-0 flex items-center justify-center">
-          {stateContent}
-        </div>
-      )
+      return <div className="absolute inset-0 flex items-center justify-center">{stateContent}</div>
     }
 
-    return (
-      <AppList
-        mode={ModeEnum.MyApp}
-        apps={apps}
-        onMenuClick={handleMenuClick}
-      />
-    )
+    return <AppList mode={ModeEnum.MyApp} apps={apps} onMenuClick={handleMenuClick} />
   }
 
   return (
@@ -132,18 +122,12 @@ const MyApp = () => {
       <div className="flex justify-between mb-4 flex-shrink-0 z-20">
         <div className="flex flex-col gap-y-3">
           <span className="text-[32px] font-bold">探索企业级 AI 应用</span>
-          <span className="text-base">
-            查找具备专业能力的应用，帮你解决业务上的复杂问题
-          </span>
+          <span className="text-base">查找具备专业能力的应用，帮你解决业务上的复杂问题</span>
         </div>
         {(hasLoadedData || searchValue) && (
           <div className="flex items-center gap-x-2">
             <SearchInput onSearch={handleSearch} placeholder="搜索应用" />
-            <Button
-              type="text"
-              icon={<ReloadOutlined />}
-              onClick={handleRefresh}
-            />
+            <Button type="text" icon={<ReloadOutlined />} onClick={handleRefresh} />
           </div>
         )}
       </div>

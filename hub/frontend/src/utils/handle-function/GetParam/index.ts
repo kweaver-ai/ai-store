@@ -21,7 +21,13 @@ function getParam(name?: string | string[]): any {
   if (!name) return paramsObj
   if (typeof name === 'string') return paramsObj[name] || ''
   if (Array.isArray(name)) {
-    return name.reduce((res, key) => ({ ...res, [key]: paramsObj[key] || '' }), {})
+    return name.reduce(
+      (res, key) => {
+        res[key] = paramsObj[key] || ''
+        return res
+      },
+      {} as Record<string, string>,
+    )
   }
 
   return paramsObj

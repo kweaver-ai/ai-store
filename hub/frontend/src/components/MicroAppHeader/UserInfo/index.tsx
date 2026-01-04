@@ -1,6 +1,6 @@
 import { DownOutlined } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
-import { Avatar, Dropdown } from 'antd'
+import { Dropdown } from 'antd'
 import AvatarIcon from '@/assets/images/sider/avatar.svg?react'
 import { useUserInfoStore } from '@/stores'
 
@@ -25,7 +25,7 @@ export const UserInfo = () => {
   return (
     <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
       <div className="flex items-center gap-x-2 cursor-pointer">
-        <Avatar icon={<AvatarIcon />} size={24} className="flex-shrink-0" />
+        <AvatarIcon className="w-6 h-6 shrink-0" />
         <span className="text-sm font-normal text-black">{userInfo?.vision_name}</span>
         <DownOutlined className="text-[10px]" />
       </div>

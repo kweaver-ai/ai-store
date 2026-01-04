@@ -42,7 +42,7 @@ export const SiderMenuItem = ({
         className={clsx(
           'absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-sm',
           'bg-[linear-gradient(180deg,#3FA9F5_0%,#126EE3_100%)]',
-          isSelected ? 'opacity-100' : 'opacity-0'
+          isSelected ? 'opacity-100' : 'opacity-0',
         )}
       />
       <div
@@ -53,7 +53,7 @@ export const SiderMenuItem = ({
             ? 'cursor-not-allowed text-[--dip-disabled-color]'
             : 'cursor-pointer text-[#000] hover:bg-[--dip-hover-bg-color]',
           isSelected &&
-            'bg-[rgba(209,230,255,0.2)] text-[--dip-primary-color] hover:!bg-[rgba(209,230,255,0.2)]'
+            'bg-[rgba(209,230,255,0.2)] text-[--dip-primary-color] hover:!bg-[rgba(209,230,255,0.2)]',
         )}
       >
         <span className="w-4 h-4 flex items-center justify-center">
@@ -64,9 +64,7 @@ export const SiderMenuItem = ({
               url={item.iconUrl}
               className="w-4 h-4"
               background={
-                isSelected
-                  ? 'linear-gradient(210deg, #1C4DFA 0%, #3FA9F5 100%)'
-                  : '#333333'
+                isSelected ? 'linear-gradient(210deg, #1C4DFA 0%, #3FA9F5 100%)' : '#333333'
               }
             />
           ) : item.icon ? (
@@ -78,10 +76,7 @@ export const SiderMenuItem = ({
           )}
         </span>
         <span
-          className={clsx(
-            'flex-1 truncate font-normal text-sm text-start',
-            collapsed && 'hidden'
-          )}
+          className={clsx('flex-1 truncate font-normal text-sm text-start', collapsed && 'hidden')}
         >
           {item.label}
         </span>
@@ -91,11 +86,7 @@ export const SiderMenuItem = ({
 
   if (item.onContextMenu && !item.disabled) {
     const node = (
-      <Dropdown
-        key={item.key}
-        menu={{ items: item.onContextMenu }}
-        trigger={['contextMenu']}
-      >
+      <Dropdown key={item.key} menu={{ items: item.onContextMenu }} trigger={['contextMenu']}>
         {content}
       </Dropdown>
     )
