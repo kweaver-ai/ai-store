@@ -77,6 +77,8 @@ export default defineConfig({
     rsbuildMiddlewarePlugin(),
   ],
   html: {
+    // 设置页面标题，覆盖 Rsbuild 默认的 "Rsbuild App"
+    title: 'DIP',
     // 使用 public/dip.svg 作为浏览器标签页图标
     // 这里路径相对于项目根目录（public/dip.svg）
     favicon: 'public/dip.svg',

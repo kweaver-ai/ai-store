@@ -69,9 +69,7 @@ const OntologyConfig = ({ appId }: OntologyConfigProps) => {
           </div>
         ) : (
           ontologies.map((item) => {
-            // 根据实际情况判断状态，这里假设有 isConfigured 字段，如果没有则默认显示"待配置"
-            // const isConfigured = (item as any).isConfigured !== false
-            const isConfigured = false
+            const isConfigured = item.is_config ?? false
 
             return (
               <div

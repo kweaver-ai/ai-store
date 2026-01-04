@@ -73,14 +73,14 @@ const MicroAppContainer = () => {
   const renderContent = () => {
     if (loading) {
       return (
-        <div className="flex justify-center items-center h-full">
+        <div className="fixed inset-0 flex justify-center items-center">
           <Spin size="large" />
         </div>
       )
     }
     if (error || !appBasicInfo) {
       return (
-        <div className="flex justify-center items-center h-full">
+        <div className="fixed inset-0 flex justify-center items-center">
           <Empty type="failed" desc="加载失败" subDesc={error ?? ''} />
         </div>
       )

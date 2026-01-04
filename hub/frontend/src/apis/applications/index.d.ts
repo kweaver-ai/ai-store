@@ -46,6 +46,7 @@ export interface OntologyInfo {
   id: number
   name?: string
   description?: string
+  is_config?: boolean
 }
 
 /** 业务知识网络列表 */
@@ -58,6 +59,10 @@ export interface AgentInfo {
   id: number
   name?: string
   description?: string
+  /** 提示词 */
+  prompt?: string
+  /** 技能列表 */
+  skills?: string[]
 }
 
 /** 智能体列表 */

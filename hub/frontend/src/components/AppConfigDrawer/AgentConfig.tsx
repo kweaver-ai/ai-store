@@ -66,28 +66,27 @@ const AgentConfig = ({ appId }: AgentConfigProps) => {
           <div className="text-center text-[--dip-text-color-secondary] py-8">暂无智能体配置</div>
         ) : (
           agents.map((item) => {
-            // 假设从接口获取的数据结构，如果没有则使用默认值
-            const prompt = (item as any).prompt || ''
-            const skills = (item as any).skills || []
+            const prompt = item.prompt || ''
+            const skills = item.skills || []
 
             return (
               <div
                 key={item.id}
-                className="flex flex-col gap-y-2 rounded-lg border border-[#E3E8EF] bg-white p-3"
+                className="flex flex-col rounded-lg border border-[#E3E8EF] bg-white p-3"
               >
                 {/* 标题 */}
-                <div className="text-xs font-medium text-[--dip-text-color]">
+                <div className="mb-2 text-xs font-medium text-[--dip-text-color]">
                   {item.name || `智能体 #${item.id}`}
                 </div>
 
                 {/* 描述 */}
                 {item.description && (
-                  <div className="text-xs text-[rgba(0,0,0,0.45)]">{item.description}</div>
+                  <div className="mb-3 text-xs text-[rgba(0,0,0,0.45)]">{item.description}</div>
                 )}
 
                 {/* 提示词 */}
                 {prompt && (
-                  <div className="flex flex-col gap-y-1">
+                  <div className="mb-3 flex flex-col gap-y-2">
                     <div className="text-xs text-[rgba(0,0,0,0.45)]">提示词</div>
                     <div className="rounded-lg bg-[#F9FAFC] p-3.5 text-xs text-[--dip-text-color] leading-relaxed">
                       {prompt}
@@ -97,9 +96,9 @@ const AgentConfig = ({ appId }: AgentConfigProps) => {
 
                 {/* 技能列表 */}
                 {skills.length > 0 && (
-                  <div className="flex flex-col gap-y-1">
+                  <div className="mb-3 flex flex-col gap-y-2">
                     <div className="text-xs text-[rgba(0,0,0,0.45)]">技能列表</div>
-                    <div className="flex flex-col gap-y-1.5 pl-5">
+                    <div className="flex flex-col gap-y-1.5 pl-2">
                       {skills.map((skill: string) => (
                         <div key={`${item.id}-${skill}`} className="flex items-start gap-3.5">
                           <div className="mt-2 h-1.5 w-1.5 rounded-full bg-[#D9D9D9] flex-shrink-0" />
