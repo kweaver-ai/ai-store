@@ -134,7 +134,7 @@ const MicroAppHeader = () => {
 */
 
   return (
-    <AntHeader className="h-[52px] bg-white border-b border-gray-200 flex items-center justify-between px-3">
+    <AntHeader className="h-[52px] bg-white border-b border-gray-200 flex items-center justify-between px-3 z-[100]">
       {/* 左侧：应用菜单和面包屑 */}
       <div className="flex items-center gap-x-4">
         <AppMenu />

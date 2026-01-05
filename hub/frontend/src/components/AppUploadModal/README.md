@@ -1,6 +1,6 @@
 # 组件介绍
 
-这是一个上传应用安装包的弹窗组件 UploadAppModal，用于上传和安装应用。组件支持点击上传和拖拽上传两种方式，包含完整的文件验证、上传进度、错误处理和成功提示功能。
+这是一个上传应用安装包的弹窗组件 AppUploadModal，用于上传和安装应用。组件支持点击上传和拖拽上传两种方式，包含完整的文件验证、上传进度、错误处理和成功提示功能。
 
 组件根据上传状态动态展示不同的 UI：
 
@@ -13,7 +13,7 @@
 ## 组件结构
 
 ```
-UploadAppModal/
+AppUploadModal/
 ├── types.ts              # 类型声明、枚举定义（UploadStatus、FileInfo）
 ├── index.tsx             # 主组件（弹窗容器、上传逻辑）
 ├── utils.ts              # 工具方法（文件验证、格式化等）
@@ -123,7 +123,7 @@ UploadAppModal/
 ## Props 接口
 
 ```typescript
-interface UploadAppModalProps extends Pick<ModalProps, 'open' | 'onCancel'> {
+interface AppUploadModalProps extends Pick<ModalProps, 'open' | 'onCancel'> {
   /** 上传成功的回调 */
   onSuccess: () => void
 }

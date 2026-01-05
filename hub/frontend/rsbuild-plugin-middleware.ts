@@ -386,4 +386,10 @@ function setupAuthRoutes(
   app.get('/v1/logout/callback', async (req, res) => {
     res.redirect('/dip-hub/')
   })
+
+   // 对于未匹配的路由，调用 next() 传递给下一个中间件（代理）
+  // 这样非登录相关的请求就能通过代理转发到 Mock 服务
+  app.use((req, res, next) => {
+    next()
+  })
 }

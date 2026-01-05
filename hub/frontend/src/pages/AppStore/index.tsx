@@ -5,10 +5,10 @@ import { type ApplicationInfo, deleteApplications } from '@/apis/applications'
 import AppConfigDrawer from '@/components/AppConfigDrawer'
 import AppList from '@/components/AppList'
 import { ModeEnum } from '@/components/AppList/types'
+import AppUploadModal from '@/components/AppUploadModal'
 import Empty from '@/components/Empty'
 import IconFont from '@/components/IconFont'
 import SearchInput from '@/components/SearchInput'
-import UploadAppModal from '@/components/UploadAppModal'
 import { useApplicationsService } from '@/hooks/useApplicationsService'
 import { getFullPath } from '@/utils/config'
 import styles from './index.module.less'
@@ -200,7 +200,7 @@ const AppStore = () => {
         open={configModalVisible}
         onClose={() => setConfigModalVisible(false)}
       />
-      <UploadAppModal
+      <AppUploadModal
         open={installModalVisible}
         onCancel={() => setInstallModalVisible(false)}
         onSuccess={(appInfo) => {

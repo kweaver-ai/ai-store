@@ -19,13 +19,13 @@ import { formatFileSize, getFileInfo, validateFileFormat, validateFileSize } fro
 
 const { Dragger } = Upload
 
-export interface UploadAppModalProps extends Pick<ModalProps, 'open' | 'onCancel'> {
+export interface AppUploadModalProps extends Pick<ModalProps, 'open' | 'onCancel'> {
   /** 上传成功的回调，传递应用信息 */
   onSuccess: (appInfo: ApplicationInfo) => void
 }
 
 /** 上传应用安装包弹窗 */
-const UploadAppModal = ({ open, onCancel, onSuccess }: UploadAppModalProps) => {
+const AppUploadModal = ({ open, onCancel, onSuccess }: AppUploadModalProps) => {
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>(UploadStatus.INITIAL)
   const [fileInfo, setFileInfo] = useState<FileInfo | null>(null)
   const [errorMessage, setErrorMessage] = useState<string>('')
@@ -385,4 +385,4 @@ const UploadAppModal = ({ open, onCancel, onSuccess }: UploadAppModalProps) => {
   )
 }
 
-export default UploadAppModal
+export default AppUploadModal
