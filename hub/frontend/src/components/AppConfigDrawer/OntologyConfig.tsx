@@ -99,7 +99,10 @@ const OntologyConfig = ({ appId }: OntologyConfigProps) => {
 
                 {/* 描述 */}
                 {item.description && (
-                  <div className="text-xs text-[rgba(0,0,0,0.45)] line-clamp-2 flex-1">
+                  <div
+                    className="text-xs text-[rgba(0,0,0,0.45)] line-clamp-2 flex-1 leading-5"
+                    title={item.description}
+                  >
                     {item.description}
                   </div>
                 )}

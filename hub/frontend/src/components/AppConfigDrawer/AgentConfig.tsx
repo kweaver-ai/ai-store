@@ -75,20 +75,22 @@ const AgentConfig = ({ appId }: AgentConfigProps) => {
                 className="flex flex-col rounded-lg border border-[#E3E8EF] bg-white p-3"
               >
                 {/* 标题 */}
-                <div className="mb-2 text-xs font-medium text-[--dip-text-color]">
+                <div className="mb-2 text-xs leading-5 font-medium text-[--dip-text-color]">
                   {item.name || `智能体 #${item.id}`}
                 </div>
 
                 {/* 描述 */}
                 {item.description && (
-                  <div className="mb-3 text-xs text-[rgba(0,0,0,0.45)]">{item.description}</div>
+                  <div className="mb-3 text-xs leading-5 text-[--dip-text-color-45]">
+                    {item.description}
+                  </div>
                 )}
 
                 {/* 提示词 */}
                 {prompt && (
                   <div className="mb-3 flex flex-col gap-y-2">
-                    <div className="text-xs text-[rgba(0,0,0,0.45)]">提示词</div>
-                    <div className="rounded-lg bg-[#F9FAFC] p-3.5 text-xs text-[--dip-text-color] leading-relaxed">
+                    <div className="text-xs leading-5 text-[--dip-text-color-65]">提示词</div>
+                    <div className="rounded-lg bg-[#F9FAFC] p-3.5 text-xs text-[--dip-text-color] leading-5">
                       {prompt}
                     </div>
                   </div>
@@ -97,14 +99,12 @@ const AgentConfig = ({ appId }: AgentConfigProps) => {
                 {/* 技能列表 */}
                 {skills.length > 0 && (
                   <div className="mb-3 flex flex-col gap-y-2">
-                    <div className="text-xs text-[rgba(0,0,0,0.45)]">技能列表</div>
+                    <div className="text-xs leading-5 text-[--dip-text-color-65]">技能列表</div>
                     <div className="flex flex-col gap-y-1.5 pl-2">
                       {skills.map((skill: string) => (
                         <div key={`${item.id}-${skill}`} className="flex items-start gap-3.5">
                           <div className="mt-2 h-1.5 w-1.5 rounded-full bg-[#D9D9D9] flex-shrink-0" />
-                          <div className="text-xs text-[--dip-text-color] leading-relaxed">
-                            {skill}
-                          </div>
+                          <div className="text-xs text-[--dip-text-color] leading-5">{skill}</div>
                         </div>
                       ))}
                     </div>

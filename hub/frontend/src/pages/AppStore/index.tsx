@@ -1,5 +1,5 @@
 import { ExclamationCircleFilled, ReloadOutlined } from '@ant-design/icons'
-import { Button, Modal, message, Spin } from 'antd'
+import { Button, Modal, message, Spin, Tooltip } from 'antd'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { type ApplicationInfo, deleteApplications } from '@/apis/applications'
 import AppConfigDrawer from '@/components/AppConfigDrawer'
@@ -183,7 +183,9 @@ const AppStore = () => {
         {(hasLoadedData || searchValue) && (
           <div className="flex items-center gap-x-2">
             <SearchInput onSearch={handleSearch} placeholder="搜索应用" />
-            <Button type="text" icon={<ReloadOutlined />} onClick={handleRefresh} />
+            <Tooltip title="刷新">
+              <Button type="text" icon={<ReloadOutlined />} onClick={handleRefresh} />
+            </Tooltip>
             <Button
               type="primary"
               icon={<IconFont type="icon-dip-upload" />}

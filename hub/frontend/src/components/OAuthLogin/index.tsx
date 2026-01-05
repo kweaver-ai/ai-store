@@ -1,7 +1,7 @@
 import classNames from 'classnames'
 import { useEffect, useState } from 'react'
 import { getIframeSizeApi } from '@/apis/config'
-import backgroundImage from '@/assets/images/logoBackground.png'
+import backgroundImage from '@/assets/images/brand/background.png'
 import { useLanguageStore } from '@/stores/languageStore'
 import { useOEMConfigStore } from '@/stores/oemConfigStore'
 import Content from './Content'
@@ -21,9 +21,9 @@ function OAuthLogin() {
 
     async function fetchIframeHeight() {
       try {
-        const height = await getIframeSizeApi()
+        const size = await getIframeSizeApi()
         if (!cancelled) {
-          setIframeHeight(height)
+          setIframeHeight(size.height)
         }
       } catch {
         if (!cancelled) {

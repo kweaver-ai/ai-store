@@ -32,7 +32,7 @@ const AppCard: React.FC<AppCardProps> = ({ app, mode, onMenuClick }) => {
 
   return (
     <Card
-      className="group rounded-xl border border-[var(--dip-border-color)] transition-all w-full"
+      className="group rounded-[10px] border border-[var(--dip-border-color)] transition-all w-full"
       style={{ height: cardHeight }}
       styles={{
         body: {
@@ -59,7 +59,7 @@ const AppCard: React.FC<AppCardProps> = ({ app, mode, onMenuClick }) => {
                 <Button
                   color="default"
                   variant="filled"
-                  className="bg-[#F9FAFC] text-[--dip-text-color-65] hover:!bg-[--dip-primary-color] hover:!text-[--dip-white]"
+                  className="px-3 bg-[#F9FAFC] text-[--dip-text-color-65] hover:!bg-[--dip-primary-color] hover:!text-[--dip-white]"
                   onClick={() => {
                     onMenuClick?.('use', app)
                   }}
@@ -74,7 +74,10 @@ const AppCard: React.FC<AppCardProps> = ({ app, mode, onMenuClick }) => {
                 {app.version}
               </div>
             )}
-            <p className="text-xs line-clamp-2 text-[--dip-text-color]" title={app.description}>
+            <p
+              className="text-xs line-clamp-2 text-[--dip-text-color] leading-5"
+              title={app.description}
+            >
               {app.description || '[暂无描述]'}
             </p>
           </div>

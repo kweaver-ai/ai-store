@@ -3,9 +3,9 @@ import { getAppStoreMenuItems } from '@/pages/AppStore/utils'
 import { ModeEnum } from './types'
 
 // 卡片的最小宽度
-export const minCardWidth = 380
+export const minCardWidth = 348
 // 卡片的最大宽度
-export const maxCardWidth = 500
+export const maxCardWidth = 480
 // 卡片的高度
 export const cardHeight = 171
 // 卡片的间距

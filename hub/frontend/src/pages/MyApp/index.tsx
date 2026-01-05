@@ -1,5 +1,5 @@
 import { ReloadOutlined } from '@ant-design/icons'
-import { Button, message, Spin } from 'antd'
+import { Button, message, Spin, Tooltip } from 'antd'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import type { ApplicationInfo } from '@/apis/applications'
 import AppList from '@/components/AppList'
@@ -121,13 +121,17 @@ const MyApp = () => {
     <div className="h-full p-6 flex flex-col relative overflow-auto">
       <div className="flex justify-between mb-4 flex-shrink-0 z-20">
         <div className="flex flex-col gap-y-3">
-          <span className="text-[32px] font-bold">探索企业级 AI 应用</span>
-          <span className="text-base">查找具备专业能力的应用，帮你解决业务上的复杂问题</span>
+          <span className="text-2xl font-bold text-[--dip-text-color-75]">探索企业级 AI 应用</span>
+          <span className="text-[--dip-text-color-65]">
+            查找具备专业能力的应用，帮你解决业务上的复杂问题
+          </span>
         </div>
         {(hasLoadedData || searchValue) && (
           <div className="flex items-center gap-x-2">
             <SearchInput onSearch={handleSearch} placeholder="搜索应用" />
-            <Button type="text" icon={<ReloadOutlined />} onClick={handleRefresh} />
+            <Tooltip title="刷新">
+              <Button type="text" icon={<ReloadOutlined />} onClick={handleRefresh} />
+            </Tooltip>
           </div>
         )}
       </div>

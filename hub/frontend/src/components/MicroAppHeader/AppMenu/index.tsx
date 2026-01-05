@@ -59,7 +59,11 @@ export const AppMenu = () => {
       }}
     >
       <div className="flex items-center justify-center cursor-pointer">
-        <IconFont type="icon-dip-a-quanbu11" className="!text-2xl" onClick={handleButtonClick} />
+        <IconFont
+          type="icon-dip-a-quanbu1"
+          className="!text-xl hover:!text-[--dip-primary-color]"
+          onClick={handleButtonClick}
+        />
       </div>
     </Dropdown>
   )
