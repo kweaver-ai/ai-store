@@ -317,33 +317,44 @@ class ApplicationService:
                 logger.error(f"[install_application] 解压 ZIP 文件失败: {e}", exc_info=True)
                 raise ValueError(f"解压 ZIP 文件失败: {str(e)}")
             
-            # 查找 manifest.yaml 文件
-            logger.info(f"[install_application] 开始查找 manifest.yaml 文件")
+            # 查找 manifest.yaml 和 application.key 文件
+            logger.info(f"[install_application] 开始查找 manifest.yaml 和 application.key 文件")
+            manifest_path = None
+            app_key_path = None
+            
             # 1. 先在根目录查找
             manifest_path = os.path.join(extract_dir, "manifest.yaml")
             if not os.path.exists(manifest_path):
                 manifest_path = os.path.join(extract_dir, "manifest.yml")
                 logger.debug(f"[install_application] 根目录未找到 manifest.yaml，尝试 manifest.yml")
             
-            # 2. 如果根目录没有，查找 application.key 文件所在的目录
-            if not os.path.exists(manifest_path):
-                logger.debug(f"[install_application] 根目录未找到 manifest，开始查找 application.key")
-                # 查找 application.key 文件
+            # 同时查找 application.key
+            app_key_path = os.path.join(extract_dir, "application.key")
+            if not os.path.exists(app_key_path):
                 app_key_path = None
+            
+            # 2. 如果根目录没有，查找 application.key 文件所在的目录
+            if not os.path.exists(manifest_path) or not app_key_path:
+                logger.debug(f"[install_application] 根目录未找到完整文件，开始查找 application.key")
+                # 查找 application.key 文件
+                found_app_key_path = None
                 for root, dirs, files in os.walk(extract_dir):
                     if "application.key" in files:
-                        app_key_path = root
-                        logger.debug(f"[install_application] 找到 application.key 在: {app_key_path}")
+                        found_app_key_path = os.path.join(root, "application.key")
+                        logger.debug(f"[install_application] 找到 application.key 在: {found_app_key_path}")
+                        if not app_key_path:
+                            app_key_path = found_app_key_path
                         break
                 
-                if app_key_path:
+                if found_app_key_path and not os.path.exists(manifest_path):
                     # 在 application.key 所在目录查找 manifest.yaml
-                    manifest_path = os.path.join(app_key_path, "manifest.yaml")
+                    app_key_dir = os.path.dirname(found_app_key_path)
+                    manifest_path = os.path.join(app_key_dir, "manifest.yaml")
                     if not os.path.exists(manifest_path):
-                        manifest_path = os.path.join(app_key_path, "manifest.yml")
+                        manifest_path = os.path.join(app_key_dir, "manifest.yml")
                     logger.debug(f"[install_application] 在 application.key 所在目录查找 manifest: {manifest_path}")
             
-            # 3. 如果还是没找到，递归查找所有 manifest.yaml 文件
+            # 3. 如果还是没找到 manifest.yaml，递归查找所有 manifest.yaml 文件
             if not os.path.exists(manifest_path):
                 logger.debug(f"[install_application] 开始递归查找 manifest.yaml")
                 for root, dirs, files in os.walk(extract_dir):
@@ -366,6 +377,37 @@ class ApplicationService:
             manifest_dir = os.path.dirname(manifest_path)
             logger.info(f"[install_application] 应用包根目录: {manifest_dir}")
             
+            # 读取 application.key 文件获取应用唯一标识
+            logger.info(f"[install_application] 开始查找并读取 application.key 文件")
+            
+            # 如果之前没找到，在 manifest.yaml 所在目录查找
+            if not app_key_path or not os.path.exists(app_key_path):
+                app_key_path = os.path.join(manifest_dir, "application.key")
+            
+            # 如果还是不存在，递归查找
+            if not os.path.exists(app_key_path):
+                logger.debug(f"[install_application] manifest 目录未找到 application.key，开始递归查找")
+                for root, dirs, files in os.walk(extract_dir):
+                    if "application.key" in files:
+                        app_key_path = os.path.join(root, "application.key")
+                        logger.debug(f"[install_application] 递归找到 application.key: {app_key_path}")
+                        break
+            
+            if not app_key_path or not os.path.exists(app_key_path):
+                logger.error(f"[install_application] 未找到 application.key 文件")
+                raise ValueError("安装包缺少 application.key 文件")
+            
+            logger.info(f"[install_application] 找到 application.key: {app_key_path}")
+            try:
+                with open(app_key_path, "r", encoding="utf-8") as f:
+                    app_key = f.read().strip()
+                    if not app_key:
+                        raise ValueError("application.key 文件为空")
+                    logger.info(f"[install_application] 读取 application.key 成功: {app_key}")
+            except Exception as e:
+                logger.error(f"[install_application] 读取 application.key 失败: {e}", exc_info=True)
+                raise ValueError(f"读取 application.key 失败: {str(e)}")
+            
             # 读取并解析 manifest.yaml
             logger.info(f"[install_application] 开始读取 manifest.yaml")
             try:
@@ -384,7 +426,7 @@ class ApplicationService:
             
             logger.info(f"[install_application] manifest.yaml 解析成功，开始解析 manifest 数据")
             try:
-                manifest = self._parse_manifest(manifest_data)
+                manifest = self._parse_manifest(manifest_data, app_key=app_key)
                 logger.info(f"[install_application] manifest 解析成功: key={manifest.key}, name={manifest.name}, version={manifest.version}")
             except Exception as e:
                 logger.error(f"[install_application] manifest 解析失败: {e}", exc_info=True)
@@ -730,12 +772,13 @@ class ApplicationService:
         """
         return await self._application_port.delete_application(key)
 
-    def _parse_manifest(self, data: dict) -> ManifestInfo:
+    def _parse_manifest(self, data: dict, app_key: str) -> ManifestInfo:
         """
         解析 manifest 数据。
 
         参数:
             data: manifest 字典数据
+            app_key: 从 application.key 文件读取的应用唯一标识
 
         返回:
             ManifestInfo: 解析后的 manifest 信息
@@ -743,13 +786,13 @@ class ApplicationService:
         异常:
             ValueError: 当必填字段缺失时抛出
         """
-        key = data.get("key")
+        if not app_key:
+            raise ValueError("application.key 不能为空")
+        
         name = data.get("name")
         version = data.get("version")
         manifest_version = data.get("manifest_version", 1)
         
-        if not key:
-            raise ValueError("manifest.yaml 缺少 key 字段")
         if not name:
             raise ValueError("manifest.yaml 缺少 name 字段")
         if not version:
@@ -772,7 +815,7 @@ class ApplicationService:
             )
         
         return ManifestInfo(
-            key=key,
+            key=app_key,  # 使用从 application.key 文件读取的值
             name=name,
             version=version,
             manifest_version=manifest_version,
