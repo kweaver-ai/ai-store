@@ -4,7 +4,7 @@ import AutoSizer from 'react-virtualized-auto-sizer'
 import type { ApplicationInfo } from '@/apis/applications'
 import AppCard from './AppCard'
 import styles from './index.module.less'
-import { ALL_TAB_KEY, ModeEnum } from './types'
+import { ALL_TAB_KEY, type ModeEnum } from './types'
 import { computeColumnCount, gap } from './utils'
 
 interface AppListProps {
@@ -96,17 +96,17 @@ const AppList: React.FC<AppListProps> = ({ mode, apps, onMenuClick }) => {
         onChange={setActiveTab}
         className={`flex-shrink-0 mr-3 ${styles.tabs}`}
         size="small"
-        tabBarExtraContent={
-          mode === ModeEnum.AppStore
-            ? {
-                right: (
-                  <span className="text-sm text-[--dip-text-color-65]">
-                    已安装（{apps.length}）
-                  </span>
-                ),
-              }
-            : undefined
-        }
+        // tabBarExtraContent={
+        //   mode === ModeEnum.AppStore
+        //     ? {
+        //         right: (
+        //           <span className="text-sm text-[--dip-text-color-65]">
+        //             已安装（{apps.length}）
+        //           </span>
+        //         ),
+        //       }
+        //     : undefined
+        // }
       />
       <div className={styles.hideScrollbar}>
         <AutoSizer style={{ width: 'calc(100% - 8px)' }} disableHeight>

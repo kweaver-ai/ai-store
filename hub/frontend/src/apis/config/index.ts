@@ -75,6 +75,6 @@ export function getOEMConfigApi(
  * 获取 iframe 高度
  * @returns iframe 高度（像素）
  */
-export function getIframeSizeApi(): Promise<number> {
+export function getIframeSizeApi(): Promise<{ height: number }> {
   return get('/oauth2/iframe-size')
 }

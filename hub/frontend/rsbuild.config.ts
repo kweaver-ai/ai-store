@@ -49,7 +49,7 @@ export default defineConfig({
       // 开发环境：将 API 请求代理到远程服务器
       // 登录相关路由由中间件插件处理，不走代理
       '/api/dip-hub': {
-        target: process.env.DEBUG_ORIGIN || 'https://10.4.111.24',
+        target: process.env.DEBUG_ORIGIN,
         changeOrigin: true,
         secure: false,
         // 排除登录相关路由，这些由中间件插件处理
@@ -66,6 +66,22 @@ export default defineConfig({
           }
           return undefined // 其他路由继续使用代理
         },
+      },
+      '/api/deploy-web-service': {
+        target: process.env.DEBUG_ORIGIN,
+        changeOrigin: true,
+        secure: false,
+      },
+      // 剩余所有 API 请求代理到 DEBUG_ORIGIN
+      '/api/*': {
+        target: process.env.DEBUG_ORIGIN,
+        changeOrigin: true,
+        secure: false,
+      },
+      '/oauth2/*': {
+        target: process.env.DEBUG_ORIGIN,
+        changeOrigin: true,
+        secure: false,
       },
     },
   },
