@@ -1,10 +1,10 @@
 import { Spin } from 'antd'
 import { useEffect, useRef } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
+import GradientContainer from '@/components/GradientContainer'
 import { getFullPath } from '@/utils/config'
 import { getAccessToken } from '@/utils/http/token-config'
 import { useUserInfoStore } from '../stores'
-import GradientContainer from '@/components/GradientContainer'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -24,15 +24,9 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   // 注意：虽然 useEffect 依赖 token，但 ref 不会自动重置，需要手动检测变化
   const lastTokenRef = useRef<string | null>(null)
 
-  // 本地开发环境跳过登录验证
-  // const isLocalDev =
-  //   typeof window !== 'undefined' &&
-  //   window.location.hostname === 'localhost' &&
-  //   window.location.port === '3001'
-
-  // if (isLocalDev) {
-  //   return <>{children}</>
-  // }
+  // 通过环境变量控制是否跳过登录认证
+  // 在 .env.local 中设置 PUBLIC_SKIP_AUTH=true 即可跳过登录认证
+  const skipAuth = import.meta.env.PUBLIC_SKIP_AUTH === 'true'
 
   // 1) token 校验：无 token 或未登录 -> 登录页
   const token = getAccessToken()
@@ -54,6 +48,10 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   // 初始化时检查并获取用户信息（不在登录页面时才获取）
   useEffect(() => {
+    // 如果跳过认证，不需要获取用户信息
+    if (skipAuth) {
+      return
+    }
     // 使用 getState() 获取最新状态，避免依赖不同步的问题
     const currentState = useUserInfoStore.getState()
     const currentUserInfo = currentState.userInfo
@@ -111,7 +109,12 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     // 注意：不依赖 userInfo 和 isLoading，而是在 effect 内部使用 getState() 获取最新状态
     // 这样可以避免状态更新导致的无限循环
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, isLoginPage, fetchUserInfo])
+  }, [token, isLoginPage, fetchUserInfo, skipAuth])
+
+  // 如果跳过认证，直接返回子组件
+  if (skipAuth) {
+    return <>{children}</>
+  }
 
   // 如果没有 token，需要重定向到登录页
   if (!token) {

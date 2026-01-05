@@ -94,7 +94,7 @@ const AppList: React.FC<AppListProps> = ({ mode, apps, onMenuClick }) => {
         activeKey={activeTab}
         items={tabItems}
         onChange={setActiveTab}
-        className={`flex-shrink-0 ${styles.tabs}`}
+        className={`flex-shrink-0 mr-3 ${styles.tabs}`}
         size="small"
         tabBarExtraContent={
           mode === ModeEnum.AppStore

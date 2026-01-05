@@ -40,7 +40,7 @@ export const SiderMenuItem = ({
     >
       <span
         className={clsx(
-          'absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-sm',
+          'absolute left-px top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-sm',
           'bg-[linear-gradient(180deg,#3FA9F5_0%,#126EE3_100%)]',
           isSelected ? 'opacity-100' : 'opacity-0',
         )}
