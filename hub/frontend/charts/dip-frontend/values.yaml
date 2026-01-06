@@ -7,7 +7,7 @@ namespace: anyshare
 image:
   registry: 'acr.aishu.cn'
   repository: '/dip/dip-frontend'
-  tag: 1.0.0
+  tag: "1.0.0-develop"
   pullPolicy: IfNotPresent
 
 service:

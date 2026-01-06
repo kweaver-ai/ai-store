@@ -14,7 +14,7 @@ labels:
 image:
   registry: acr.aishu.cn
   repository: dip/dip-hub
-  tag: "1.0.0"
+  tag: "1.0.0-develop"
   pullPolicy: IfNotPresent
 
 #3 修改容器副本数量
