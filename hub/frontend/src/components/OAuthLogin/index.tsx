@@ -1,18 +1,20 @@
-import classNames from 'classnames'
 import { useEffect, useState } from 'react'
-import { getIframeSizeApi } from '@/apis/config'
+import { getIframeSizeApi, TemplateType } from '@/apis/config'
 import backgroundImage from '@/assets/images/brand/background.png'
 import { useLanguageStore } from '@/stores/languageStore'
 import { useOEMConfigStore } from '@/stores/oemConfigStore'
+// import About from './About'
 import Content from './Content'
+import DefaultTemplate from './DefaultTemplate'
 import Footer from './Footer'
 import Header from './Header'
-import styles from './index.module.less'
+import RegularTemplate from './RegularTemplate'
 
 function OAuthLogin() {
   const { language } = useLanguageStore()
-  const { getOEMConfig } = useOEMConfigStore()
-  const oemConfig = getOEMConfig(language)
+  const { getOEMResourceConfig, getOEMBasicConfig } = useOEMConfigStore()
+  const oemResourceConfig = getOEMResourceConfig(language)
+  const oemBasicConfig = getOEMBasicConfig()
   const [iframeHeight, setIframeHeight] = useState<number>(410) // 默认高度
 
   // 获取 iframe 高度
@@ -40,57 +42,65 @@ function OAuthLogin() {
     }
   }, [])
 
-  // 从 OEM 配置中获取背景图片（base64 值）
+  // 获取模板类型，默认为 'default'
+  const template = (oemBasicConfig?.webTemplate as TemplateType) || TemplateType.Default
+
+  // 从 OEM 资源配置中获取背景图片（base64 值）
   // 如果 API 返回的是纯 base64 字符串，需要添加 data URL 前缀
   const getBackgroundImageUrl = () => {
-    const base64Image = oemConfig?.['defaultBackground.png']
-    if (!base64Image) {
-      return backgroundImage
+    if (template === TemplateType.Regular) {
+      // regular 模式使用 regularBackground.png
+      const base64Image = oemResourceConfig?.['regularBackground.png']
+      if (base64Image) {
+        if (base64Image.startsWith('data:image/')) {
+          return base64Image
+        }
+        return `data:image/png;base64,${base64Image}`
+      }
+    } else {
+      // default 模式使用 defaultBackground.png
+      const base64Image = oemResourceConfig?.['defaultBackground.png']
+      if (base64Image) {
+        if (base64Image.startsWith('data:image/')) {
+          return base64Image
+        }
+        return `data:image/png;base64,${base64Image}`
+      }
     }
-    // 如果已经是 data URL 格式，直接使用
-    if (base64Image.startsWith('data:image/')) {
-      return base64Image
-    }
-    // 否则添加 base64 前缀
-    return `data:image/png;base64,${base64Image}`
+    return backgroundImage
   }
   const backgroundImageUrl = getBackgroundImageUrl()
 
   // 计算登录框高度，如果 iframe 高度大于 435，则调整容器高度
-  const loginHeight = iframeHeight > 435 ? `${560 + iframeHeight - 435}px` : '560px'
+  const loginHeight = iframeHeight > 435 ? iframeHeight : 410
 
-  return (
-    <div className={classNames(styles.container)}>
-      <div
-        className={styles['background-container']}
-        style={{ backgroundImage: `url(${backgroundImageUrl})` }}
+  // 根据模板类型渲染不同的模板
+  if (template === TemplateType.Regular) {
+    return (
+      <RegularTemplate
+        header={<Header />}
+        content={<Content iframeHeight={iframeHeight} width={420} />}
+        footer={<Footer />}
+        // about={<About />}
+        background={backgroundImageUrl}
+        fontStyle={oemBasicConfig?.regularFont as 'dark' | 'light' | undefined}
+        loginBoxLocation={oemBasicConfig?.loginBoxLocation}
+        loginBoxStyle={oemBasicConfig?.loginBoxStyle}
+        iframeHeight={iframeHeight}
       />
-      <div className={styles.wrapper} style={{ height: loginHeight }}>
-        <div className={styles.oem} style={{ height: loginHeight }}>
-          <div
-            className={styles['oem-img']}
-            style={{
-              backgroundImage: `url(${backgroundImageUrl})`,
-              height: loginHeight,
-              backgroundSize: `440px ${loginHeight}`,
-            }}
-          />
-        </div>
-        <div className={styles.index} style={{ height: loginHeight }}>
-          <div className={styles['wrap-header-bar']}>
-            <Header />
-          </div>
-          <div className={styles['wrap-login']}>
-            <Content iframeHeight={iframeHeight} />
-          </div>
-          <div className={styles['wrap-footer']}>
-            <Footer />
-            <div className={styles.split} />
-            {/* <About /> */}
-          </div>
-        </div>
-      </div>
-    </div>
+    )
+  }
+
+  // default 模板
+  return (
+    <DefaultTemplate
+      header={<Header />}
+      content={<Content iframeHeight={iframeHeight} />}
+      footer={<Footer />}
+      // about={<About />}
+      background={backgroundImageUrl}
+      loginHeight={loginHeight}
+    />
   )
 }
 

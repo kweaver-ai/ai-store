@@ -16,9 +16,19 @@ import { useLanguage } from './useLanguage'
 export const useAppInit = () => {
   const { initLanguage } = useLanguage()
   const { initialize: initOEMConfig } = useOEMConfigStore()
+  const productTitle = useOEMConfigStore((state) => {
+    const configs = state.oemResourceConfig
+    const keys = Object.keys(configs)
+    console.log('keys', keys, configs)
+    if (keys.length === 0) {
+      return 'DIP'
+    }
+    const firstConfig = configs[keys[0]]
+    return firstConfig?.product || 'DIP'
+  })
 
   useEffect(() => {
-    const TITLE = 'DIP'
+    const TITLE = productTitle || 'DIP'
     document.title = TITLE
 
     // 预加载背景图片，提升加载速度
@@ -72,7 +82,6 @@ export const useAppInit = () => {
     } catch {
       // 如果拦截失败，静默处理
     }
-    // 这些初始化操作只需要在组件挂载时执行一次
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 }

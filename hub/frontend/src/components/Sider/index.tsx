@@ -36,8 +36,8 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
   const location = useLocation()
   const { pinnedMicroApps, unpinMicroApp } = usePreferenceStore()
   const { language } = useLanguageStore()
-  const { getOEMConfig } = useOEMConfigStore()
-  const oemConfig = getOEMConfig(language)
+  const { getOEMResourceConfig } = useOEMConfigStore()
+  const oemResourceConfig = getOEMResourceConfig(language)
 
   // TODO: 微应用列表获取待实现
   const [microApps] = useState<ApplicationInfo[]>([])
@@ -185,7 +185,7 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0 }: SiderProps) => {
 
   // 获取 OEM logo，如果获取不到则使用默认 logo
   const getLogoUrl = () => {
-    const base64Image = oemConfig?.['logo.png']
+    const base64Image = oemResourceConfig?.['logo.png']
     if (!base64Image) {
       return null
     }

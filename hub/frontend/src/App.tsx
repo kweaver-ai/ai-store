@@ -5,6 +5,7 @@ import zhTW from 'antd/locale/zh_TW'
 import { Suspense } from 'react'
 import { RouterProvider } from 'react-router-dom'
 import { useAppInit } from './hooks/useAppInit'
+import { useOEMBranding } from './hooks/useOEMBranding'
 import { router } from './routes'
 import { useLanguageStore } from './stores/languageStore'
 import './App.css'
@@ -18,6 +19,8 @@ function getUILocale(lang: string): typeof enUS | typeof zhTW | typeof zhCN {
 const App = () => {
   useAppInit()
   const { language } = useLanguageStore()
+  // OEM 相关的主题色 & favicon 由 useOEMBranding 统一处理
+  const { primaryColor } = useOEMBranding()
 
   return (
     <ConfigProvider
@@ -26,7 +29,7 @@ const App = () => {
       locale={getUILocale(language)}
       theme={{
         token: {
-          colorPrimary: '#126ee3',
+          colorPrimary: primaryColor,
           colorSuccess: '#52c41a',
           colorWarning: '#faad14',
           colorError: '#f5222d',

@@ -23,6 +23,7 @@ const AppStore = () => {
   const [hasLoadedData, setHasLoadedData] = useState(false) // 记录是否已经成功加载过数据（有数据的情况）
   const hasEverHadDataRef = useRef(false) // 使用 ref 追踪是否曾经有过数据，避免循环依赖
   const prevSearchValueRef = useRef('') // 追踪上一次的搜索值，用于判断是否是从搜索状态清空
+  const [modal, contextHolder] = Modal.useModal()
 
   // 当数据加载完成且有数据时，标记为已加载过数据；所有应用卸载后重置
   useEffect(() => {
@@ -59,7 +60,7 @@ const AppStore = () => {
         switch (action) {
           /** 卸载应用 */
           case AppStoreActionEnum.Uninstall:
-            Modal.confirm({
+            modal.confirm({
               title: '确认卸载',
               icon: <ExclamationCircleFilled />,
               content: '卸载应用后，相关配置和数据将被清除，用户将无法使用应用。是否继续?',
@@ -173,6 +174,7 @@ const AppStore = () => {
 
   return (
     <div className="h-full p-6 flex flex-col relative">
+      {contextHolder}
       <div className="flex justify-between mb-6 flex-shrink-0 z-20">
         <div className="flex flex-col gap-y-3">
           <span className="text-base font-bold text-[--dip-text-color]">应用商店</span>
