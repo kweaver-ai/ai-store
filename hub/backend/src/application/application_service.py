@@ -452,10 +452,26 @@ class ApplicationService:
                 logger.info(f"[install_application] 应用不存在，将创建新应用: key={manifest.key}")
             
             # 读取图标（路径相对于 manifest.yaml 所在目录）
-            logger.info(f"[install_application] 开始读取图标，icon_path: {manifest.icon_path}")
+            logger.info(f"[install_application] 开始读取图标")
             icon_base64 = None
-            if manifest.icon_path:
-                icon_full_path = os.path.join(manifest_dir, manifest.icon_path)
+            icon_path = manifest.icon_path
+            
+            # 如果 manifest.yaml 中没有指定图标路径，尝试自动查找
+            if not icon_path:
+                logger.debug(f"[install_application] manifest.yaml 中未指定图标路径，尝试自动查找")
+                # 查找 assets/icons/ 目录下的图标文件
+                icons_dir = os.path.join(manifest_dir, "assets", "icons")
+                if os.path.exists(icons_dir) and os.path.isdir(icons_dir):
+                    icon_files = [f for f in os.listdir(icons_dir) 
+                                 if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico'))]
+                    if icon_files:
+                        # 使用第一个找到的图标文件
+                        icon_path = os.path.join("assets", "icons", icon_files[0])
+                        logger.info(f"[install_application] 自动找到图标: {icon_path}")
+            
+            if icon_path:
+                icon_full_path = os.path.join(manifest_dir, icon_path)
+                logger.info(f"[install_application] 图标路径: {icon_path}")
                 logger.debug(f"[install_application] 图标完整路径: {icon_full_path}")
                 if os.path.exists(icon_full_path):
                     try:
@@ -467,14 +483,30 @@ class ApplicationService:
                         logger.warning(f"[install_application] 读取图标失败: {e}", exc_info=True)
                 else:
                     logger.warning(f"[install_application] 图标文件不存在: {icon_full_path}")
+            else:
+                logger.info(f"[install_application] 未找到图标文件，跳过图标读取")
             
             # 上传镜像（路径相对于 manifest.yaml 所在目录）
-            logger.info(f"[install_application] 开始处理镜像，镜像数量: {len(manifest.images)}")
             release_configs = []
             if self._deploy_installer_port:
-                for idx, image_path in enumerate(manifest.images, 1):
+                # 获取镜像列表：优先使用 manifest.yaml 中指定的，否则自动查找
+                image_paths = manifest.images if manifest.images else []
+                
+                # 如果 manifest.yaml 中没有指定镜像，尝试自动查找
+                if not image_paths:
+                    logger.debug(f"[install_application] manifest.yaml 中未指定镜像路径，尝试自动查找")
+                    images_dir = os.path.join(manifest_dir, "packages", "images")
+                    if os.path.exists(images_dir) and os.path.isdir(images_dir):
+                        image_files = [f for f in os.listdir(images_dir) 
+                                      if f.lower().endswith(('.tar', '.tar.gz', '.tgz', '.tar.bz2', '.tar.xz'))]
+                        # 构建相对路径
+                        image_paths = [os.path.join("packages", "images", f) for f in image_files]
+                        logger.info(f"[install_application] 自动找到 {len(image_paths)} 个镜像文件: {image_paths}")
+                
+                logger.info(f"[install_application] 开始处理镜像，镜像数量: {len(image_paths)}")
+                for idx, image_path in enumerate(image_paths, 1):
                     image_full_path = os.path.join(manifest_dir, image_path)
-                    logger.info(f"[install_application] 处理镜像 [{idx}/{len(manifest.images)}]: {image_path}")
+                    logger.info(f"[install_application] 处理镜像 [{idx}/{len(image_paths)}]: {image_path}")
                     logger.debug(f"[install_application] 镜像完整路径: {image_full_path}")
                     if os.path.exists(image_full_path):
                         try:
@@ -491,10 +523,28 @@ class ApplicationService:
                         raise ValueError(f"镜像文件不存在: {image_path}")
                 
                 # 上传 Chart 并安装（路径相对于 manifest.yaml 所在目录）
-                logger.info(f"[install_application] 开始处理 Chart，Chart 数量: {len(manifest.charts)}")
-                for idx, chart_config in enumerate(manifest.charts, 1):
+                # 获取 Chart 列表：优先使用 manifest.yaml 中指定的，否则自动查找
+                chart_configs = manifest.charts if manifest.charts else []
+                
+                # 如果 manifest.yaml 中没有指定 Chart，尝试自动查找
+                if not chart_configs:
+                    logger.debug(f"[install_application] manifest.yaml 中未指定 Chart 路径，尝试自动查找")
+                    charts_dir = os.path.join(manifest_dir, "packages", "charts")
+                    if os.path.exists(charts_dir) and os.path.isdir(charts_dir):
+                        chart_files = [f for f in os.listdir(charts_dir) 
+                                      if f.lower().endswith(('.tgz', '.tar.gz'))]
+                        # 为每个 Chart 创建配置对象
+                        chart_configs = [{"path": os.path.join("packages", "charts", f)} for f in chart_files]
+                        logger.info(f"[install_application] 自动找到 {len(chart_configs)} 个 Chart 文件: {[c['path'] for c in chart_configs]}")
+                
+                logger.info(f"[install_application] 开始处理 Chart，Chart 数量: {len(chart_configs)}")
+                for idx, chart_config in enumerate(chart_configs, 1):
                     chart_path = chart_config.get("path", "")
-                    logger.info(f"[install_application] 处理 Chart [{idx}/{len(manifest.charts)}]: {chart_path}")
+                    if not chart_path:
+                        logger.warning(f"[install_application] Chart 配置缺少 path 字段，跳过: {chart_config}")
+                        continue
+                    
+                    logger.info(f"[install_application] 处理 Chart [{idx}/{len(chart_configs)}]: {chart_path}")
                     chart_full_path = os.path.join(manifest_dir, chart_path)
                     logger.debug(f"[install_application] Chart 完整路径: {chart_full_path}")
                     if os.path.exists(chart_full_path):
