@@ -43,7 +43,7 @@ function OAuthLogin() {
   // 从 OEM 配置中获取背景图片（base64 值）
   // 如果 API 返回的是纯 base64 字符串，需要添加 data URL 前缀
   const getBackgroundImageUrl = () => {
-    const base64Image = oemConfig?.['background.png']
+    const base64Image = oemConfig?.['defaultBackground.png']
     if (!base64Image) {
       return backgroundImage
     }
