@@ -1,7 +1,15 @@
 import { get } from '@/utils/http'
-import type { AppConfigResponse, OEMConfig } from './index.d'
+import type { AppConfigResponse, OemBasicConfig, OemResourceConfig } from './index.d'
+import {
+  FontStyle,
+  LoginBackgroundType,
+  LoginBoxLocationType,
+  LoginBoxStyleType,
+  TemplateType,
+} from './index.d'
 
-export type { OEMConfig } from './index.d'
+export type { OemBasicConfig, OemResourceConfig } from './index.d'
+export { TemplateType, LoginBoxLocationType, LoginBoxStyleType, LoginBackgroundType, FontStyle }
 
 /**
  * 获取应用配置接口
@@ -57,17 +65,26 @@ function getSectionByLanguage(language: string): string {
 }
 
 /**
- * 获取 OEM 配置
+ * 获取 OEM 资源配置
  * @param language 语言代码，如 'zh-CN', 'zh-TW', 'en-US'
  * @param product product 参数，默认为 'dip'
  */
-export function getOEMConfigApi(
+export function getOEMResourceConfigApi(
   language: string = 'zh-CN',
   product: string = 'dip',
-): Promise<OEMConfig> {
+): Promise<OemResourceConfig> {
   const section = getSectionByLanguage(language)
   return get('/api/deploy-web-service/v1/oemconfig', {
     params: { section, product },
+  })
+}
+
+/**
+ * 获取 OEM 基本配置
+ */
+export function getOEMBasicConfigApi(): Promise<OemBasicConfig> {
+  return get('/api/deploy-web-service/v1/oemconfig', {
+    params: { section: 'anyshare', product: 'dip' },
   })
 }
 

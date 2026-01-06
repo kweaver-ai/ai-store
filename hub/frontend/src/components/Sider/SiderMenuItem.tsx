@@ -28,7 +28,7 @@ export const SiderMenuItem = ({
   const content = (
     <button
       type="button"
-      className="group relative flex items-center h-10 select-none"
+      className="px-1.5 group relative flex items-center h-10 select-none"
       onClick={() => {
         if (item.disabled) return
         if (item.onClick) {
@@ -47,13 +47,12 @@ export const SiderMenuItem = ({
       />
       <div
         className={clsx(
-          'flex flex-1 h-full items-center rounded mx-1.5',
+          'w-full flex flex-1 h-full items-center rounded',
           collapsed ? 'justify-center' : 'gap-2 px-2.5',
           item.disabled
             ? 'cursor-not-allowed text-[--dip-disabled-color]'
             : 'cursor-pointer text-[#000] hover:bg-[--dip-hover-bg-color]',
-          isSelected &&
-            'bg-[rgba(209,230,255,0.2)] text-[--dip-primary-color] hover:!bg-[rgba(209,230,255,0.2)]',
+          isSelected && 'bg-[#f1f7fe] text-[--dip-primary-color] hover:!bg-[#f1f7fe]',
         )}
       >
         <span className="w-4 h-4 flex items-center justify-center">

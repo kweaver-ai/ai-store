@@ -17,7 +17,7 @@ export const BottomLinkItem = ({ item, collapsed, onClick }: BottomLinkItemProps
     <button
       type="button"
       className={clsx(
-        'flex items-center h-10 rounded-md mx-1.5 hover:bg-[--dip-hover-bg-color] cursor-pointer',
+        'flex items-center h-10 rounded mx-1.5 hover:bg-[--dip-hover-bg-color] cursor-pointer',
         collapsed ? 'justify-center' : 'gap-2 px-2.5',
       )}
       onClick={onClick}

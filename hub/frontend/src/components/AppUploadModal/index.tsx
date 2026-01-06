@@ -330,6 +330,8 @@ const AppUploadModal = ({ open, onCancel, onSuccess }: AppUploadModalProps) => {
       open={open}
       onCancel={handleCancel}
       closable
+      maskClosable={false}
+      destroyOnHidden
       width={620}
       styles={{
         container: {

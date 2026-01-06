@@ -1,8 +1,8 @@
 /* Primary 按钮禁用状态颜色设置为主题色的 25% 透明度 */
 .dip-btn-primary[disabled],
 .dip-btn-color-primary[disabled] {
-  background: rgb(18 110 227 / 25%) !important;
-  background-color: rgb(18 110 227 / 25%) !important;
+  background: rgb(var(--dip-primary-color-rgb-space) / 25%) !important;
+  background-color: rgb(var(--dip-primary-color-rgb-space) / 25%) !important;
   border-color: transparent !important;
   color: white !important;
   opacity: 1 !important;
@@ -14,17 +14,8 @@
 .dip-btn-color-primary[disabled]:hover,
 .dip-btn-color-primary[disabled]:focus,
 .dip-btn-color-primary[disabled]:active {
-  background: rgb(18 110 227 / 25%) !important;
-  background-color: rgb(18 110 227 / 25%) !important;
+  background: rgb(var(--dip-primary-color-rgb-space) / 25%) !important;
+  background-color: rgb(var(--dip-primary-color-rgb-space) / 25%) !important;
   border-color: transparent !important;
   color: white !important;
-}
-
-/* 弹窗标题和内容颜色设置为主题色的 85% 透明度 */
-.ant-modal-confirm-title {
-  color: var(--dip-text-color-85) !important;
-}
-
-.ant-modal-confirm-content {
-  color: var(--dip-text-color-85) !important;
 }

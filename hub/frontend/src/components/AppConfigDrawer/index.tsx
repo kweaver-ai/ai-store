@@ -62,7 +62,7 @@ export const AppConfigDrawer = ({ appData, open, onClose }: AppConfigDrawerProps
                   className={clsx(
                     'h-10 px-3 flex items-center text-start text-sm rounded transition-colors relative text-[--dip-text-color] hover:bg-[--dip-hover-bg-color]',
                     selectedMenu === item.key &&
-                      'bg-[rgba(var(--dip-primary-color-rgb),0.05)] hover:bg-[rgba(var(--dip-primary-color-rgb),0.05)]',
+                      '!text-[--dip-primary-color] bg-[#f1f7fe] hover:bg-[#f1f7fe]',
                   )}
                   onClick={() => handleMenuClick(item.key)}
                 >

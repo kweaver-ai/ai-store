@@ -13,10 +13,11 @@ import { cardHeight, getAppCardMenuItems } from './utils'
 interface AppCardProps {
   app: ApplicationInfo
   mode: ModeEnum.MyApp | ModeEnum.AppStore
+  width: number
   onMenuClick?: (key: string, app: ApplicationInfo) => void
 }
 
-const AppCard: React.FC<AppCardProps> = ({ app, mode, onMenuClick }) => {
+const AppCard: React.FC<AppCardProps> = ({ app, mode, width, onMenuClick }) => {
   const [menuOpen, setMenuOpen] = useState(false)
 
   const menuItems = useMemo(() => {
@@ -92,7 +93,11 @@ const AppCard: React.FC<AppCardProps> = ({ app, mode, onMenuClick }) => {
             <Avatar size={24} className="flex-shrink-0 mr-2">
               {userName.charAt(0)}
             </Avatar>
-            <span className="truncate max-w-20 mr-4" title={userName}>
+            <span
+              className="truncate mr-4"
+              style={{ maxWidth: `${Math.floor(width * 0.22)}px` }}
+              title={userName}
+            >
               {userName}
             </span>
             <span>更新：{updateTime}</span>

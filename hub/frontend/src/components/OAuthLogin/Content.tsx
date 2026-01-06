@@ -4,9 +4,10 @@ import { getLoginUrl } from '@/apis/login'
 
 interface ContentProps {
   iframeHeight: number
+  width?: number | string
 }
 
-function Content({ iframeHeight }: ContentProps) {
+function Content({ iframeHeight, width = 560 }: ContentProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [searchParams] = useSearchParams()
 
@@ -23,12 +24,15 @@ function Content({ iframeHeight }: ContentProps) {
     }
   }, [loginUrl])
 
+  const widthStyle =
+    typeof width === 'number' ? `${width}px` : typeof width === 'string' ? width : '560px'
+
   return (
     <iframe
       src={loginUrl}
       ref={iframeRef}
-      className="w-[560px] border-none bg-white"
-      style={{ height: `${iframeHeight}px` }}
+      className="border-none bg-white"
+      style={{ height: `${iframeHeight}px`, width: widthStyle }}
       title="登录"
     />
   )
