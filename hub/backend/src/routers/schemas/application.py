@@ -39,6 +39,14 @@ class AgentConfigItemResponse(BaseModel):
     is_config: bool = Field(False, description="是否已配置")
 
 
+class ReleaseConfigItemResponse(BaseModel):
+    """
+    Release 配置项响应模型。
+    """
+    name: str = Field(..., description="Release 名称")
+    namespace: str = Field(..., description="Release 所在命名空间")
+
+
 # ============ 应用信息响应 ============
 
 class ApplicationResponse(BaseModel):
@@ -55,7 +63,7 @@ class ApplicationResponse(BaseModel):
     category: Optional[str] = Field(None, description="应用所属分组", max_length=128)
     version: Optional[str] = Field(None, description="应用版本号", max_length=128)
     micro_app: Optional[MicroAppResponse] = Field(None, description="微应用配置")
-    release_config: List[str] = Field(default_factory=list, description="应用安装配置（helm release 列表）")
+    release_config: List[ReleaseConfigItemResponse] = Field(default_factory=list, description="应用安装配置（helm release 配置列表，包含 name 和 namespace）")
     ontology_config: List[OntologyConfigItemResponse] = Field(default_factory=list, description="业务知识网络配置列表")
     agent_config: List[AgentConfigItemResponse] = Field(default_factory=list, description="智能体配置列表")
     is_config: bool = Field(False, description="是否完成配置")

@@ -12,7 +12,7 @@ from datetime import datetime
 
 import aiomysql
 
-from src.domains.application import Application, MicroAppInfo, OntologyConfigItem, AgentConfigItem
+from src.domains.application import Application, MicroAppInfo, OntologyConfigItem, AgentConfigItem, ReleaseConfigItem
 from src.ports.application_port import ApplicationPort
 from src.infrastructure.config.settings import Settings
 
@@ -112,6 +112,39 @@ class ApplicationAdapter(ApplicationPort):
             logger.warning(f"微应用配置 JSON 解析失败: {json_str}, 错误: {e}")
             return None
 
+    def _parse_release_config_list(self, json_str: Optional[str]) -> List[ReleaseConfigItem]:
+        """
+        解析 release_config JSON 字符串。
+
+        参数:
+            json_str: JSON 字符串
+
+        返回:
+            list: 解析后的 ReleaseConfigItem 列表
+        """
+        if not json_str:
+            return []
+        try:
+            data = json.loads(json_str)
+            if not isinstance(data, list):
+                return []
+            
+            result = []
+            for item in data:
+                if isinstance(item, dict):
+                    # 新格式：{name, namespace}
+                    result.append(ReleaseConfigItem(
+                        name=item.get("name", ""),
+                        namespace=item.get("namespace", "default"),
+                    ))
+                elif isinstance(item, str):
+                    # 兼容旧格式：仅 release name，namespace 使用默认值
+                    result.append(ReleaseConfigItem(name=item, namespace="default"))
+            return result
+        except (json.JSONDecodeError, TypeError) as e:
+            logger.warning(f"release_config JSON 解析失败: {json_str}, 错误: {e}")
+            return []
+
     def _parse_config_list(self, json_str: Optional[str], config_type: str) -> list:
         """
         解析配置列表 JSON 字符串。
@@ -178,7 +211,7 @@ class ApplicationAdapter(ApplicationPort):
 
         # 解析 JSON 字段
         micro_app = self._parse_micro_app(row[7])
-        release_config = self._parse_json_list(row[8])
+        release_config = self._parse_release_config_list(row[8])
         # 兼容旧格式：如果字段名还是 ontology_ids/agent_ids，先尝试解析为配置项
         ontology_config = self._parse_config_list(row[9], 'ontology')
         agent_config = self._parse_config_list(row[10], 'agent')
@@ -352,7 +385,10 @@ class ApplicationAdapter(ApplicationPort):
                         "entry": application.micro_app.entry,
                         "headless": application.micro_app.headless,
                     })
-                release_config_json = json.dumps(application.release_config) if application.release_config else "[]"
+                release_config_json = json.dumps([
+                    {"name": item.name, "namespace": item.namespace}
+                    for item in (application.release_config or [])
+                ])
                 ontology_config_json = json.dumps([
                     {"id": item.id, "is_config": item.is_config}
                     for item in (application.ontology_config or [])
@@ -424,7 +460,10 @@ class ApplicationAdapter(ApplicationPort):
                         "entry": application.micro_app.entry,
                         "headless": application.micro_app.headless,
                     })
-                release_config_json = json.dumps(application.release_config) if application.release_config else "[]"
+                release_config_json = json.dumps([
+                    {"name": item.name, "namespace": item.namespace}
+                    for item in (application.release_config or [])
+                ])
                 ontology_config_json = json.dumps([
                     {"id": item.id, "is_config": item.is_config}
                     for item in (application.ontology_config or [])

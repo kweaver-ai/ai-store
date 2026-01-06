@@ -50,6 +50,19 @@ class AgentConfigItem:
 
 
 @dataclass
+class ReleaseConfigItem:
+    """
+    Release 配置项。
+
+    属性:
+        name: Release 名称
+        namespace: Release 所在命名空间
+    """
+    name: str
+    namespace: str
+
+
+@dataclass
 class Application:
     """
     应用领域模型。
@@ -64,7 +77,7 @@ class Application:
         category: 应用所属分类
         business_domain: 业务域，默认为 db_public
         micro_app: 微应用配置信息
-        release_config: 应用安装配置（helm release 名称列表）
+        release_config: 应用安装配置（helm release 配置列表，包含 name 和 namespace）
         ontology_config: 业务知识网络配置列表（每个配置项包含 id 和 is_config）
         agent_config: 智能体配置列表（每个配置项包含 id 和 is_config）
         is_config: 是否完成配置
@@ -80,7 +93,7 @@ class Application:
     category: Optional[str] = None
     business_domain: str = "db_public"
     micro_app: Optional[MicroAppInfo] = None
-    release_config: List[str] = field(default_factory=list)
+    release_config: List[ReleaseConfigItem] = field(default_factory=list)
     ontology_config: List[OntologyConfigItem] = field(default_factory=list)
     agent_config: List[AgentConfigItem] = field(default_factory=list)
     is_config: bool = False
@@ -159,31 +172,33 @@ class ManifestInfo:
     """
     应用安装包 manifest 信息。
 
-    属性:
-        manifest_version: manifest 版本号，固定为 1
-        key: 应用唯一标识
+    严格遵循 manifest.yaml 结构：
+        manifest_version: manifest 版本号
         name: 应用名称
-        description: 应用描述
+        micro-app: 微应用配置 (name, entry, headless)
         version: 应用版本号
+        category: 应用分类
+        description: 应用描述
+        business-domain: 业务域，默认为 db_public
+        release-config: release 配置 (namespace)
+
+    属性:
+        key: 应用唯一标识（从 application.key 文件读取）
+        name: 应用名称
+        version: 应用版本号
+        manifest_version: manifest 版本号
+        description: 应用描述
         category: 应用分类
         business_domain: 业务域，默认为 db_public
         micro_app: 微应用配置
-        icon_path: 图标路径（相对于安装包根目录）
-        charts: helm chart 列表
-        images: 镜像列表
-        ontologies: 业务知识网络导入配置
-        agents: 智能体导入配置
+        release_config: release 配置（包含 namespace）
     """
     key: str
     name: str
     version: str
-    manifest_version: int = 1
+    manifest_version: str = "1.0.0"
     description: Optional[str] = None
     category: Optional[str] = None
     business_domain: str = "db_public"
     micro_app: Optional[MicroAppInfo] = None
-    icon_path: Optional[str] = None
-    charts: List[dict] = field(default_factory=list)
-    images: List[str] = field(default_factory=list)
-    ontologies: List[dict] = field(default_factory=list)
-    agents: List[dict] = field(default_factory=list)
+    release_config: dict = field(default_factory=dict)

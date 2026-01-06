@@ -18,6 +18,7 @@ from src.routers.schemas.application import (
     MicroAppResponse,
     OntologyConfigItemResponse,
     AgentConfigItemResponse,
+    ReleaseConfigItemResponse,
     ErrorResponse,
 )
 
@@ -57,7 +58,10 @@ def create_application_router(application_service: ApplicationService) -> APIRou
             category=app.category,
             version=app.version,
             micro_app=_micro_app_to_response(app.micro_app),
-            release_config=app.release_config or [],
+            release_config=[
+                ReleaseConfigItemResponse(name=item.name, namespace=item.namespace)
+                for item in (app.release_config or [])
+            ],
             ontology_config=[
                 OntologyConfigItemResponse(id=item.id, is_config=item.is_config)
                 for item in (app.ontology_config or [])

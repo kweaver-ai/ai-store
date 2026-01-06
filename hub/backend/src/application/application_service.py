@@ -20,7 +20,7 @@ import yaml
 
 from src.domains.application import (
     Application, ManifestInfo, MicroAppInfo,
-    OntologyConfigItem, AgentConfigItem
+    OntologyConfigItem, AgentConfigItem, ReleaseConfigItem
 )
 from src.ports.application_port import ApplicationPort
 from src.ports.external_service_port import (
@@ -451,23 +451,20 @@ class ApplicationService:
             else:
                 logger.info(f"[install_application] 应用不存在，将创建新应用: key={manifest.key}")
             
-            # 读取图标（路径相对于 manifest.yaml 所在目录）
+            # 读取图标（从 assets/icons/ 目录自动发现）
             logger.info(f"[install_application] 开始读取图标")
             icon_base64 = None
-            icon_path = manifest.icon_path
+            icon_path = None
             
-            # 如果 manifest.yaml 中没有指定图标路径，尝试自动查找
-            if not icon_path:
-                logger.debug(f"[install_application] manifest.yaml 中未指定图标路径，尝试自动查找")
-                # 查找 assets/icons/ 目录下的图标文件
-                icons_dir = os.path.join(manifest_dir, "assets", "icons")
-                if os.path.exists(icons_dir) and os.path.isdir(icons_dir):
-                    icon_files = [f for f in os.listdir(icons_dir) 
-                                 if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico'))]
-                    if icon_files:
-                        # 使用第一个找到的图标文件
-                        icon_path = os.path.join("assets", "icons", icon_files[0])
-                        logger.info(f"[install_application] 自动找到图标: {icon_path}")
+            # 查找 assets/icons/ 目录下的图标文件
+            icons_dir = os.path.join(manifest_dir, "assets", "icons")
+            if os.path.exists(icons_dir) and os.path.isdir(icons_dir):
+                icon_files = [f for f in os.listdir(icons_dir) 
+                             if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico'))]
+                if icon_files:
+                    # 使用第一个找到的图标文件
+                    icon_path = os.path.join("assets", "icons", icon_files[0])
+                    logger.info(f"[install_application] 自动找到图标: {icon_path}")
             
             if icon_path:
                 icon_full_path = os.path.join(manifest_dir, icon_path)
@@ -486,22 +483,18 @@ class ApplicationService:
             else:
                 logger.info(f"[install_application] 未找到图标文件，跳过图标读取")
             
-            # 上传镜像（路径相对于 manifest.yaml 所在目录）
+            # 上传镜像（从 packages/images/ 目录自动发现）
             release_configs = []
             if self._deploy_installer_port:
-                # 获取镜像列表：优先使用 manifest.yaml 中指定的，否则自动查找
-                image_paths = manifest.images if manifest.images else []
-                
-                # 如果 manifest.yaml 中没有指定镜像，尝试自动查找
-                if not image_paths:
-                    logger.debug(f"[install_application] manifest.yaml 中未指定镜像路径，尝试自动查找")
-                    images_dir = os.path.join(manifest_dir, "packages", "images")
-                    if os.path.exists(images_dir) and os.path.isdir(images_dir):
-                        image_files = [f for f in os.listdir(images_dir) 
-                                      if f.lower().endswith(('.tar', '.tar.gz', '.tgz', '.tar.bz2', '.tar.xz'))]
-                        # 构建相对路径
-                        image_paths = [os.path.join("packages", "images", f) for f in image_files]
-                        logger.info(f"[install_application] 自动找到 {len(image_paths)} 个镜像文件: {image_paths}")
+                # 自动查找 packages/images/ 目录下的镜像文件
+                image_paths = []
+                images_dir = os.path.join(manifest_dir, "packages", "images")
+                if os.path.exists(images_dir) and os.path.isdir(images_dir):
+                    image_files = [f for f in os.listdir(images_dir) 
+                                  if f.lower().endswith(('.tar', '.tar.gz', '.tgz', '.tar.bz2', '.tar.xz'))]
+                    # 构建相对路径
+                    image_paths = [os.path.join("packages", "images", f) for f in image_files]
+                    logger.info(f"[install_application] 自动找到 {len(image_paths)} 个镜像文件: {image_paths}")
                 
                 logger.info(f"[install_application] 开始处理镜像，镜像数量: {len(image_paths)}")
                 for idx, image_path in enumerate(image_paths, 1):
@@ -522,20 +515,16 @@ class ApplicationService:
                         logger.error(f"[install_application] 镜像文件不存在: {image_full_path}")
                         raise ValueError(f"镜像文件不存在: {image_path}")
                 
-                # 上传 Chart 并安装（路径相对于 manifest.yaml 所在目录）
-                # 获取 Chart 列表：优先使用 manifest.yaml 中指定的，否则自动查找
-                chart_configs = manifest.charts if manifest.charts else []
-                
-                # 如果 manifest.yaml 中没有指定 Chart，尝试自动查找
-                if not chart_configs:
-                    logger.debug(f"[install_application] manifest.yaml 中未指定 Chart 路径，尝试自动查找")
-                    charts_dir = os.path.join(manifest_dir, "packages", "charts")
-                    if os.path.exists(charts_dir) and os.path.isdir(charts_dir):
-                        chart_files = [f for f in os.listdir(charts_dir) 
-                                      if f.lower().endswith(('.tgz', '.tar.gz'))]
-                        # 为每个 Chart 创建配置对象
-                        chart_configs = [{"path": os.path.join("packages", "charts", f)} for f in chart_files]
-                        logger.info(f"[install_application] 自动找到 {len(chart_configs)} 个 Chart 文件: {[c['path'] for c in chart_configs]}")
+                # 上传 Chart 并安装（从 packages/charts/ 目录自动发现）
+                # 自动查找 packages/charts/ 目录下的 Chart 文件
+                chart_configs = []
+                charts_dir = os.path.join(manifest_dir, "packages", "charts")
+                if os.path.exists(charts_dir) and os.path.isdir(charts_dir):
+                    chart_files = [f for f in os.listdir(charts_dir) 
+                                  if f.lower().endswith(('.tgz', '.tar.gz'))]
+                    # 为每个 Chart 创建配置对象
+                    chart_configs = [{"path": os.path.join("packages", "charts", f)} for f in chart_files]
+                    logger.info(f"[install_application] 自动找到 {len(chart_configs)} 个 Chart 文件: {[c['path'] for c in chart_configs]}")
                 
                 logger.info(f"[install_application] 开始处理 Chart，Chart 数量: {len(chart_configs)}")
                 for idx, chart_config in enumerate(chart_configs, 1):
@@ -557,7 +546,8 @@ class ApplicationService:
                             
                             # 安装 release
                             release_name = chart_config.get("release_name", chart_result.chart.name)
-                            namespace = chart_config.get("namespace", "anyshare")
+                            # namespace 优先级：chart 配置 > manifest.release-config.namespace > 默认值
+                            namespace = chart_config.get("namespace") or manifest.release_config.get("namespace")
                             values = chart_result.values
                             logger.info(f"[install_application] 开始安装 Release: name={release_name}, namespace={namespace}, chart={chart_result.chart.name} v{chart_result.chart.version}")
                             
@@ -569,8 +559,8 @@ class ApplicationService:
                                 values=values,
                                 auth_token=auth_token,
                             )
-                            release_configs.append(release_name)
-                            logger.info(f"[install_application] Release 安装成功: {release_name}")
+                            release_configs.append(ReleaseConfigItem(name=release_name, namespace=namespace))
+                            logger.info(f"[install_application] Release 安装成功: {release_name}, namespace: {namespace}")
                         except Exception as e:
                             logger.error(f"[install_application] Chart 处理失败 ({chart_path}): {e}", exc_info=True)
                             raise ValueError(f"Chart 处理失败 ({chart_path}): {str(e)}")
@@ -764,15 +754,17 @@ class ApplicationService:
         
         # 删除 Release
         if self._deploy_installer_port and application.release_config:
-            for release_name in application.release_config:
+            for release_item in application.release_config:
                 try:
+                    logger.info(f"[uninstall_application] 删除 Release: name={release_item.name}, namespace={release_item.namespace}")
                     await self._deploy_installer_port.delete_release(
-                        release_name=release_name,
-                        namespace="default",  # TODO: 从配置中获取
+                        release_name=release_item.name,
+                        namespace=release_item.namespace,
                         auth_token=auth_token,
                     )
+                    logger.info(f"[uninstall_application] Release 删除成功: {release_item.name}")
                 except Exception as e:
-                    logger.warning(f"删除 Release 失败 ({release_name}): {e}")
+                    logger.warning(f"[uninstall_application] 删除 Release 失败 ({release_item.name}): {e}")
         
         # 删除数据库记录
         return await self._application_port.delete_application_by_id(app_id)
@@ -864,6 +856,11 @@ class ApplicationService:
                 headless=micro_app_data.get("headless", False),
             )
         
+        # 解析 release-config 配置（namespace 为必填字段）
+        release_config = data.get("release-config") or {}
+        if not release_config.get("namespace"):
+            raise ValueError("manifest.yaml 缺少 release-config.namespace 字段")
+        
         return ManifestInfo(
             key=app_key,  # 使用从 application.key 文件读取的值
             name=name,
@@ -873,11 +870,7 @@ class ApplicationService:
             category=data.get("category"),
             business_domain=data.get("business-domain", "db_public"),
             micro_app=micro_app,
-            icon_path=data.get("icon"),
-            charts=data.get("charts", []),
-            images=data.get("images", []),
-            ontologies=data.get("ontologies", []),
-            agents=data.get("agents", []),
+            release_config=release_config,
         )
 
     def _is_version_greater(self, new_version: str, old_version: Optional[str]) -> bool:
