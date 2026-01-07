@@ -33,12 +33,12 @@ function getLocalDevConfig(): Record<string, string> {
     }
     const config = JSON.parse(configStr)
     if (typeof config !== 'object' || config === null) {
-      console.warn('[本地调试] 配置格式错误，应为对象格式')
+      console.log('[本地调试] 配置格式错误，应为对象格式')
       return {}
     }
     return config
   } catch (err) {
-    console.warn('[本地调试] 读取配置失败:', err)
+    console.log('[本地调试] 读取配置失败:', err)
     return {}
   }
 }
@@ -77,10 +77,13 @@ export function setLocalDevEntry(microAppName: string, localEntry: string): void
     const config = getLocalDevConfig()
     config[microAppName] = localEntry
     localStorage.setItem(LOCAL_DEV_STORAGE_KEY, JSON.stringify(config))
-    console.log(`[本地调试] 已设置微应用 "${microAppName}" 的本地入口:`, localEntry)
-    console.log('[本地调试] 请刷新页面使配置生效')
+    console.log(
+      `[本地调试] 已设置微应用 "${microAppName}" 的本地入口:`,
+      localEntry,
+      '请刷新页面使配置生效',
+    )
   } catch (err) {
-    console.error('[本地调试] 设置配置失败:', err)
+    console.log('[本地调试] 设置配置失败:', err)
   }
 }
 
@@ -93,10 +96,9 @@ export function removeLocalDevEntry(microAppName: string): void {
     const config = getLocalDevConfig()
     delete config[microAppName]
     localStorage.setItem(LOCAL_DEV_STORAGE_KEY, JSON.stringify(config))
-    console.log(`[本地调试] 已移除微应用 "${microAppName}" 的本地入口配置`)
-    console.log('[本地调试] 请刷新页面使配置生效')
+    console.log(`[本地调试] 已移除微应用 "${microAppName}" 的本地入口配置，请刷新页面使配置生效`)
   } catch (err) {
-    console.error('[本地调试] 移除配置失败:', err)
+    console.log('[本地调试] 移除配置失败:', err)
   }
 }
 
@@ -106,10 +108,9 @@ export function removeLocalDevEntry(microAppName: string): void {
 export function clearLocalDevConfig(): void {
   try {
     localStorage.removeItem(LOCAL_DEV_STORAGE_KEY)
-    console.log('[本地调试] 已清除所有本地调试配置')
-    console.log('[本地调试] 请刷新页面使配置生效')
+    console.log('[本地调试] 已清除所有本地调试配置，请刷新页面使配置生效')
   } catch (err) {
-    console.error('[本地调试] 清除配置失败:', err)
+    console.log('[本地调试] 清除配置失败:', err)
   }
 }
 

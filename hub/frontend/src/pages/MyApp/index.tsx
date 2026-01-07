@@ -69,7 +69,9 @@ const MyApp = () => {
             break
         }
       } catch (err) {
-        console.error('Failed to handle app action:', err)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Failed to handle app action:', err)
+        }
       }
     },
     [handleRefresh, togglePin],

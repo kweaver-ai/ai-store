@@ -1,7 +1,8 @@
-import { Spin } from 'antd'
+import { message, Spin } from 'antd'
 import { memo, useEffect, useState } from 'react'
 import type { ApplicationBasicInfo } from '@/apis/applications'
 import { getApplicationsBasicInfo } from '@/apis/applications'
+import ScrollBarContainer from '../ScrollBarContainer'
 
 interface BasicConfigProps {
   /** 应用 ID */
@@ -23,9 +24,10 @@ const BasicConfig = ({ appId }: BasicConfigProps) => {
         if (mounted) {
           setBasicInfo(data)
         }
-      } catch (error) {
-        // 这里简单打印错误即可，具体错误交由外层处理
-        console.error('获取基本信息失败:', error)
+      } catch (error: any) {
+        if (error?.description) {
+          message.error(error?.description)
+        }
       } finally {
         if (mounted) {
           setLoading(false)
@@ -52,29 +54,31 @@ const BasicConfig = ({ appId }: BasicConfigProps) => {
   }
 
   return (
-    <div className="flex flex-col gap-y-3">
-      <div className="text-sm font-medium text-[--dip-text-color]">基本信息</div>
-      <div className="flex flex-col rounded-xl border border-[#E3E8EF] leading-8 p-3 text-sm text-[--dip-text-color] gap-2">
-        {/* 应用名称：告警与故障分析 */}
-        <div className="flex flex-1">
-          <span className="text-[--dip-text-color-45] mr-1 break-keep">应用名称：</span>
-          <span>{basicInfo?.name ?? '--'}</span>
-        </div>
+    <div className="h-full flex flex-col gap-y-3">
+      <div className="px-4 text-sm font-medium text-[--dip-text-color]">基本信息</div>
+      <ScrollBarContainer className="px-4">
+        <div className="flex flex-col rounded-xl border border-[#E3E8EF] leading-8 p-3 text-sm text-[--dip-text-color] gap-2">
+          {/* 应用名称：告警与故障分析 */}
+          <div className="flex flex-1">
+            <span className="text-[--dip-text-color-45] mr-1 break-keep">应用名称：</span>
+            <span>{basicInfo?.name ?? '--'}</span>
+          </div>
 
-        {/* 应用描述：... */}
-        <div className="flex flex-1">
-          <span className="text-[--dip-text-color-45] mr-1 align-top break-keep">应用描述：</span>
-          <span className="inline-block flex-1 align-top break-words">
-            {basicInfo?.description ?? '--'}
-          </span>
-        </div>
+          {/* 应用描述：... */}
+          <div className="flex flex-1">
+            <span className="text-[--dip-text-color-45] mr-1 align-top break-keep">应用描述：</span>
+            <span className="inline-block flex-1 align-top break-words">
+              {basicInfo?.description ?? '--'}
+            </span>
+          </div>
 
-        {/* 版本号：v1.0.0.0.0 */}
-        <div className="flex flex-1">
-          <span className="text-[--dip-text-color-45] mr-1 break-keep">版本号：</span>
-          <span>{basicInfo?.version ?? '--'}</span>
+          {/* 版本号：v1.0.0.0.0 */}
+          <div className="flex flex-1">
+            <span className="text-[--dip-text-color-45] mr-1 break-keep">版本号：</span>
+            <span>{basicInfo?.version ?? '--'}</span>
+          </div>
         </div>
-      </div>
+      </ScrollBarContainer>
     </div>
   )
 }

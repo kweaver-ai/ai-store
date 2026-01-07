@@ -141,12 +141,12 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
     const hasFailed = microAppLoadFailureManager.hasFailed(appIdStr)
     const isPageReload = microAppLoadFailureManager.isPageReload()
 
-    console.log(`[微应用加载] 检查失败状态:`, {
-      appId: appIdStr,
-      hasFailed,
-      isPageReload,
-      pageLoadTime: microAppLoadFailureManager.getPageLoadTime(),
-    })
+    // console.log(`[微应用加载] 检查失败状态:`, {
+    //   appId: appIdStr,
+    //   hasFailed,
+    //   isPageReload,
+    //   pageLoadTime: microAppLoadFailureManager.getPageLoadTime(),
+    // })
 
     if (hasFailed) {
       const failureInfo = microAppLoadFailureManager.getFailureInfo(appIdStr)
@@ -260,8 +260,8 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
             if (microAppInstance) {
               await microAppInstance.unmount()
             }
-          } catch (unmountErr) {
-            console.log('清理失败微应用时出错:', unmountErr)
+          } catch {
+            // console.log('清理失败微应用时出错:', unmountErr)
           } finally {
             // 无论卸载是否成功，都清空容器内容
             clearContainer()
@@ -285,8 +285,6 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
             appName: microAppName,
             entry: entryUrl,
           })
-
-          console.log('失败信息:', microAppLoadFailureManager.getFailureInfo(appIdStr)?.error)
         }
       }
     }

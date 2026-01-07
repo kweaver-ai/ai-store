@@ -111,7 +111,7 @@ class MicroAppStateManager {
 
       // 开发环境：警告被拒绝的字段
       if (rejectedFields.length > 0 && this.debug) {
-        console.warn(
+        console.log(
           '[微应用全局状态] 以下字段被过滤（微应用无权修改）:',
           rejectedFields,
           '\n允许的字段:',
@@ -122,7 +122,7 @@ class MicroAppStateManager {
       // 如果过滤后没有有效字段，直接返回，不更新状态
       if (Object.keys(filteredPatch).length === 0) {
         if (this.debug) {
-          console.warn('[微应用全局状态] 没有有效字段可更新，更新被忽略')
+          console.log('[微应用全局状态] 没有有效字段可更新，更新被忽略')
         }
         return false
       }
@@ -161,10 +161,10 @@ class MicroAppStateManager {
     // 检查监听器数量限制
     if (this.listeners.size >= MicroAppStateManager.MAX_LISTENERS) {
       const errorMsg = `[微应用全局状态] 监听器数量已达上限（${MicroAppStateManager.MAX_LISTENERS}），请检查是否有内存泄漏`
-      console.error(errorMsg)
+      console.log(errorMsg)
       if (this.debug) {
-        console.error('当前监听器数量:', this.listeners.size)
-        console.error('监听器列表:', Array.from(this.listeners))
+        console.log('当前监听器数量:', this.listeners.size)
+        console.log('监听器列表:', Array.from(this.listeners))
       }
       // 返回空函数，避免报错
       return () => {}
@@ -220,12 +220,7 @@ class MicroAppStateManager {
       try {
         listener(state, prev)
       } catch (error) {
-        console.error(
-          `[微应用全局状态] 监听器 ${index} 执行出错:`,
-          error,
-          '\n监听器函数:',
-          listener,
-        )
+        console.log(`[微应用全局状态] 监听器 ${index} 执行出错:`, error, '\n监听器函数:', listener)
       }
     })
   }
@@ -248,7 +243,7 @@ function getInitialState(): MicroAppGlobalState {
     }
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn('[微应用全局状态] 无法从 languageStore 获取语言，使用默认值 zh-CN:', error)
+      console.log('[微应用全局状态] 无法从 languageStore 获取语言，使用默认值 zh-CN:', error)
     }
   }
 

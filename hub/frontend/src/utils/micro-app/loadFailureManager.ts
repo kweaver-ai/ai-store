@@ -94,7 +94,7 @@ class MicroAppLoadFailureManager {
         }
       }
     } catch (err) {
-      console.warn('[微应用加载失败管理器] 从 sessionStorage 加载失败记录失败:', err)
+      console.log('[微应用加载失败管理器] 从 sessionStorage 加载失败记录失败:', err)
     }
   }
 
@@ -109,7 +109,7 @@ class MicroAppLoadFailureManager {
       })
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data))
     } catch (err) {
-      console.warn('[微应用加载失败管理器] 保存失败记录到 sessionStorage 失败:', err)
+      console.log('[微应用加载失败管理器] 保存失败记录到 sessionStorage 失败:', err)
     }
   }
 
@@ -131,7 +131,7 @@ class MicroAppLoadFailureManager {
     this.saveToStorage()
 
     if (process.env.NODE_ENV === 'development') {
-      console.warn(`[微应用加载失败] 已记录失败状态: ${appName} (${appId})`, error)
+      console.log(`[微应用加载失败] 已记录失败状态: ${appName} (${appId})`, error)
     }
   }
 

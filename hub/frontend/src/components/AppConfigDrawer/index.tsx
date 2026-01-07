@@ -2,7 +2,6 @@ import { Drawer, type DrawerProps } from 'antd'
 import clsx from 'classnames'
 import { useEffect, useState } from 'react'
 import type { ApplicationBasicInfo } from '@/apis/applications'
-import ScrollBarContainer from '../ScrollBarContainer'
 import AgentConfig from './AgentConfig'
 import BasicConfig from './BasicConfig'
 import OntologyConfig from './OntologyConfig'
@@ -53,7 +52,7 @@ export const AppConfigDrawer = ({ appData, open, onClose }: AppConfigDrawerProps
       <div className="flex flex-col h-full">
         <div className="flex flex-1 overflow-hidden">
           {/* 左侧菜单栏 */}
-          <div className="w-40 pl-2 pr-1.5 py-3 bg-[#F9FAFC]">
+          <div className="w-40 pl-2 pr-1.5 py-3 bg-[#F9FAFC] shrink-0">
             <div className="flex flex-col gap-2">
               {menuItems.map((item) => (
                 <button
@@ -80,7 +79,7 @@ export const AppConfigDrawer = ({ appData, open, onClose }: AppConfigDrawerProps
           </div>
 
           {/* 右侧配置区域 */}
-          <ScrollBarContainer className="flex-1 p-4">
+          <div className="flex-1 py-4">
             {selectedMenu === ConfigMenuType.BASIC && (
               <BasicConfig key={`basic-${appData?.id}`} appId={appData?.id} />
             )}
@@ -90,7 +89,7 @@ export const AppConfigDrawer = ({ appData, open, onClose }: AppConfigDrawerProps
             {selectedMenu === ConfigMenuType.AGENT && (
               <AgentConfig key={`agent-${appData?.id}`} appId={appData?.id} />
             )}
-          </ScrollBarContainer>
+          </div>
         </div>
       </div>
     </Drawer>

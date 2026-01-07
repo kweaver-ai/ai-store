@@ -111,7 +111,7 @@ export const useLanguage = () => {
         { allowAllFields: true },
       )
     } catch (error) {
-      console.warn('Failed to set language config on server:', error)
+      console.log('Failed to set language config on server:', error)
     }
   }
 

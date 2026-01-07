@@ -109,11 +109,9 @@ const AppStore = () => {
             break
         }
       } catch (err: any) {
-        if (err?.description) {
-          message.error(err.description)
-          return
+        if (process.env.NODE_ENV === 'development') {
+          console.log('Failed to handle app action:', err)
         }
-        console.error('Failed to handle app action:', err)
       }
     },
     [handleRefresh],

@@ -220,7 +220,7 @@ function setupAuthRoutes(
         config.REDIRECT_URI
       )}&state=${encodeURIComponent(state)}&nonce=${encodeURIComponent(
         nonce
-      )}&lang=zh-cn`
+      )}&lang=zh-cn&product=dip`
 
       console.log('🔗 重定向到 OAuth 服务器:', authUrl)
       res.redirect(authUrl)

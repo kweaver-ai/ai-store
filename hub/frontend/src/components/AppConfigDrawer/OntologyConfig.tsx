@@ -1,8 +1,9 @@
 import { CheckCircleOutlined, InfoCircleOutlined, ShareAltOutlined } from '@ant-design/icons'
-import { Alert, Spin, Tag } from 'antd'
+import { Alert, message, Spin, Tag } from 'antd'
 import { memo, useEffect, useState } from 'react'
 import type { OntologyInfo } from '@/apis/applications'
 import { getApplicationsOntologies } from '@/apis/applications'
+import ScrollBarContainer from '../ScrollBarContainer'
 
 interface OntologyConfigProps {
   appId?: number
@@ -26,8 +27,10 @@ const OntologyConfig = ({ appId }: OntologyConfigProps) => {
     try {
       const data = await getApplicationsOntologies(appId)
       setOntologies(data.ontologies || [])
-    } catch (error) {
-      console.error('获取业务知识网络配置失败:', error)
+    } catch (error: any) {
+      if (error?.description) {
+        message.error(error?.description)
+      }
     } finally {
       setLoading(false)
     }
@@ -42,15 +45,15 @@ const OntologyConfig = ({ appId }: OntologyConfigProps) => {
   }
 
   return (
-    <div className="flex flex-col gap-y-2">
-      <div className="text-sm font-medium text-[--dip-text-color]">业务知识网络</div>
+    <div className="h-full flex flex-col gap-y-2">
+      <div className="px-4 text-sm font-medium text-[--dip-text-color]">业务知识网络</div>
 
       {/* 提示信息框 */}
       <Alert
         title="此应用依赖以下业务知识网络。请前往 ADP 平台完成数据视图映射，以确保应用能获取数据。"
         type="info"
         showIcon
-        className="border-[#BAE0FF] bg-[#E6F4FF]"
+        className="mx-4 border-[#BAE0FF] bg-[#E6F4FF]"
         styles={{
           root: {
             alignItems: 'flex-start',
@@ -62,66 +65,71 @@ const OntologyConfig = ({ appId }: OntologyConfigProps) => {
       />
 
       {/* 业务知识网络列表 */}
-      <div className="flex flex-col gap-3">
-        {ontologies.length === 0 ? (
-          <div className="text-center text-[--dip-text-color-secondary] py-8">
-            暂无业务知识网络配置
-          </div>
-        ) : (
-          ontologies.map((item) => {
-            const isConfigured = item.is_config ?? false
+      <ScrollBarContainer className="px-4">
+        <div className="flex flex-col gap-y-3">
+          {ontologies.length === 0 ? (
+            <div className="text-center text-[--dip-text-color-secondary] py-8">
+              暂无业务知识网络配置
+            </div>
+          ) : (
+            ontologies.map((item) => {
+              const isConfigured = item.is_config ?? false
 
-            return (
-              <div
-                key={item.id}
-                className="flex flex-col gap-y-2 rounded-lg border border-[#E3E8EF] bg-white p-3"
-              >
-                {/* 标题和状态标签 */}
-                <div className="flex items-center justify-between">
-                  <div className="text-xs font-medium text-[--dip-text-color] truncate flex-1">
-                    {item.name || `业务知识网络 #${item.id}`}
-                  </div>
-                  <Tag
-                    icon={isConfigured ? <CheckCircleOutlined /> : <InfoCircleOutlined />}
-                    color={isConfigured ? 'success' : 'warning'}
-                    className="m-0 rounded border flex-shrink-0"
-                    style={{
-                      fontSize: '12px',
-                      lineHeight: '20px',
-                      backgroundColor: isConfigured ? '#F6FFED' : '#FFFBE6',
-                      borderColor: isConfigured ? '#D9F7BE' : '#FFF1B8',
-                      color: isConfigured ? '#52C41A' : '#FAAD14',
-                    }}
-                  >
-                    {isConfigured ? '已配置' : '待配置'}
-                  </Tag>
-                </div>
-
-                {/* 描述 */}
-                {item.description && (
-                  <div
-                    className="text-xs text-[rgba(0,0,0,0.45)] line-clamp-2 flex-1 leading-5"
-                    title={item.description}
-                  >
-                    {item.description}
-                  </div>
-                )}
-
-                {/* 链接 */}
-                <a
-                  href={`${window.location.origin}/studio/ontology/ontology-manage/main/overview?id=${item.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 mt-2 text-xs text-[--dip-primary-color] hover:text-[var(--dip-primary-color)] hover:underline"
+              return (
+                <div
+                  key={item.id}
+                  className="flex flex-col gap-y-2 rounded-lg border border-[#E3E8EF] bg-white p-3"
                 >
-                  <ShareAltOutlined />
-                  前往ADP平台配置数据视图映射
-                </a>
-              </div>
-            )
-          })
-        )}
-      </div>
+                  {/* 标题和状态标签 */}
+                  <div className="flex items-center justify-between">
+                    <div
+                      className="text-xs font-medium text-[--dip-text-color] truncate flex-1"
+                      title={item.name}
+                    >
+                      {item.name || `业务知识网络 #${item.id}`}
+                    </div>
+                    <Tag
+                      icon={isConfigured ? <CheckCircleOutlined /> : <InfoCircleOutlined />}
+                      color={isConfigured ? 'success' : 'warning'}
+                      className="m-0 rounded border flex-shrink-0"
+                      style={{
+                        fontSize: '12px',
+                        lineHeight: '20px',
+                        backgroundColor: isConfigured ? '#F6FFED' : '#FFFBE6',
+                        borderColor: isConfigured ? '#D9F7BE' : '#FFF1B8',
+                        color: isConfigured ? '#52C41A' : '#FAAD14',
+                      }}
+                    >
+                      {isConfigured ? '已配置' : '待配置'}
+                    </Tag>
+                  </div>
+
+                  {/* 描述 */}
+                  {item.description && (
+                    <div
+                      className="text-xs text-[rgba(0,0,0,0.45)] flex-1 leading-5"
+                      title={item.description}
+                    >
+                      {item.description}
+                    </div>
+                  )}
+
+                  {/* 链接 */}
+                  <a
+                    href={`${window.location.origin}/studio/ontology/ontology-manage/main/overview?id=${item.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 mt-2 text-xs text-[--dip-primary-color] hover:text-[var(--dip-primary-color)] hover:underline"
+                  >
+                    <ShareAltOutlined />
+                    前往ADP平台配置数据视图映射
+                  </a>
+                </div>
+              )
+            })
+          )}
+        </div>
+      </ScrollBarContainer>
     </div>
   )
 }

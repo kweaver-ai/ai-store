@@ -22,6 +22,7 @@ export const postApplications = (file: Blob | ArrayBuffer): Promise<ApplicationI
   return post(`/api/dip-hub/v1/applications`, {
     body: file,
     headers: { 'Content-Type': 'application/octet-stream' },
+    timeout: 600000 * 5, // 5分钟
   })
 }
 

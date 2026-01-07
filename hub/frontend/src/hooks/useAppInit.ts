@@ -19,7 +19,6 @@ export const useAppInit = () => {
   const productTitle = useOEMConfigStore((state) => {
     const configs = state.oemResourceConfig
     const keys = Object.keys(configs)
-    console.log('keys', keys, configs)
     if (keys.length === 0) {
       return 'DIP'
     }

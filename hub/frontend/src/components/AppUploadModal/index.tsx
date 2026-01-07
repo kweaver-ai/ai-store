@@ -243,7 +243,9 @@ const AppUploadModal = ({ open, onCancel, onSuccess }: AppUploadModalProps) => {
         <div className="flex items-center gap-3">
           <FileZipOutlined className="text-xl flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <div className="text-sm truncate">{fileInfo.name}</div>
+            <div className="text-sm truncate" title={fileInfo.name}>
+              {fileInfo.name}
+            </div>
             <div className="text-xs text-[rgba(0,0,0,0.45)] mt-1">
               {formatFileSize(fileInfo.size)}
             </div>
@@ -278,12 +280,12 @@ const AppUploadModal = ({ open, onCancel, onSuccess }: AppUploadModalProps) => {
     }
 
     return (
-      <div className="mt-4 px-3 py-2 bg-[#FFF1F0] border border-[#FFCCC7] rounded-lg flex gap-2">
-        <CloseCircleFilled className="text-[--dip-error-color] text-base flex-shrink-0" />
-        <div className="flex-1 text-sm line-clamp-4" title={errorMessage}>
-          {errorMessage}
+      <ScrollBarContainer className="mt-4 px-3 py-2 bg-[#FFF1F0] border border-[#FFCCC7] rounded-lg">
+        <div className="flex gap-2 items-start">
+          <CloseCircleFilled className="text-[--dip-error-color] text-base flex-shrink-0 mt-0.5" />
+          <div className="flex-1 text-sm">{errorMessage}</div>
         </div>
-      </div>
+      </ScrollBarContainer>
     )
   }
 
@@ -367,8 +369,7 @@ const AppUploadModal = ({ open, onCancel, onSuccess }: AppUploadModalProps) => {
         <>{uploadStatus === UploadStatus.SUCCESS ? <OkBtn /> : <CancelBtn />}</>
       )}
     >
-      <ScrollBarContainer
-        suppressScrollX={false}
+      <div
         className={clsx(styles.uploadContainer, 'flex flex-col h-full')}
         style={{ overflow: 'hidden auto' }}
       >
@@ -382,7 +383,7 @@ const AppUploadModal = ({ open, onCancel, onSuccess }: AppUploadModalProps) => {
             {renderActionButton()}
           </>
         )}
-      </ScrollBarContainer>
+      </div>
     </Modal>
   )
 }
