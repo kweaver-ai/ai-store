@@ -490,6 +490,7 @@ class ApplicationService:
                             # namespace 优先级：chart 配置 > manifest.release-config.namespace > 默认值
                             namespace = chart_config.get("namespace") or manifest.release_config.get("namespace")
                             values = chart_result.values
+                            values["namespace"] = namespace
                             logger.info(f"[install_application] 开始安装 Release: name={release_name}, namespace={namespace}, chart={chart_result.chart.name} v{chart_result.chart.version}")
                             
                             await self._deploy_installer_port.install_release(
