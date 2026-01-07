@@ -768,14 +768,28 @@ class ApplicationService:
         """
         from collections import deque
         
+        logger.info(f"[_find_file_bfs] 开始查找文件: {filenames}, 起始目录: {root_dir}")
+        
+        if not os.path.exists(root_dir):
+            logger.error(f"[_find_file_bfs] 起始目录不存在: {root_dir}")
+            return None
+        
+        if not os.path.isdir(root_dir):
+            logger.error(f"[_find_file_bfs] 起始路径不是目录: {root_dir}")
+            return None
+        
         queue = deque([root_dir])
+        searched_dirs = []
         
         while queue:
             current_dir = queue.popleft()
+            searched_dirs.append(current_dir)
             
             try:
                 entries = os.listdir(current_dir)
-            except PermissionError:
+                logger.debug(f"[_find_file_bfs] 搜索目录: {current_dir}, 内容: {entries}")
+            except (PermissionError, OSError) as e:
+                logger.warning(f"[_find_file_bfs] 无法读取目录 {current_dir}: {e}")
                 continue
             
             # 在当前目录查找目标文件
@@ -783,15 +797,18 @@ class ApplicationService:
                 if filename in entries:
                     file_path = os.path.join(current_dir, filename)
                     if os.path.isfile(file_path):
-                        logger.debug(f"[_find_file_bfs] 在 {current_dir} 找到文件: {filename}")
+                        logger.info(f"[_find_file_bfs] 找到文件: {file_path}")
                         return file_path
+                    else:
+                        logger.debug(f"[_find_file_bfs] {filename} 存在但不是文件: {file_path}")
             
-            # 将子目录加入队列
-            for entry in entries:
+            # 将子目录加入队列（排序以保证一致性）
+            subdirs = sorted([e for e in entries if os.path.isdir(os.path.join(current_dir, e))])
+            for entry in subdirs:
                 entry_path = os.path.join(current_dir, entry)
-                if os.path.isdir(entry_path):
-                    queue.append(entry_path)
+                queue.append(entry_path)
         
+        logger.warning(f"[_find_file_bfs] 未找到文件 {filenames}，已搜索 {len(searched_dirs)} 个目录")
         return None
 
     def _parse_manifest(self, data: dict, app_key: str) -> ManifestInfo:
