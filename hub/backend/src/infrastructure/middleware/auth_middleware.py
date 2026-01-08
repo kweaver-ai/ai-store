@@ -21,6 +21,7 @@ PUBLIC_PATHS = [
     "/healthz",
     "/readyz",
     "/login",
+    "/login/callback",
     "/logout",
     "/refresh-token",
     "/docs",
