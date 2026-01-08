@@ -110,7 +110,8 @@ class ApplicationPort(ABC):
         key: str,
         ontology_config: List[OntologyConfigItem],
         agent_config: List[AgentConfigItem],
-        updated_by: str
+        updated_by: str,
+        updated_by_id: str = ""
     ) -> Application:
         """
         更新应用配置（业务知识网络和智能体）。
@@ -119,7 +120,8 @@ class ApplicationPort(ABC):
             key: 应用唯一标识
             ontology_config: 业务知识网络配置列表
             agent_config: 智能体配置列表
-            updated_by: 更新者用户 ID
+            updated_by: 更新者用户显示名称
+            updated_by_id: 更新者用户ID
 
         返回:
             Application: 更新后的应用实体

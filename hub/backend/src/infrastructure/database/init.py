@@ -99,7 +99,8 @@ async def ensure_tables_exist(settings: Settings) -> None:
                     `ontology_ids` TEXT NULL COMMENT '业务知识网络配置（JSON数组，每个元素包含id和is_config字段）',
                     `agent_ids` TEXT NULL COMMENT '智能体配置（JSON数组，每个元素包含id和is_config字段）',
                     `is_config` BOOLEAN NOT NULL DEFAULT FALSE COMMENT '是否完成配置',
-                    `updated_by` CHAR(36) NOT NULL COMMENT '更新者ID',
+                    `updated_by` VARCHAR(128) NOT NULL COMMENT '更新者用户显示名称',
+                    `updated_by_id` CHAR(36) NULL COMMENT '更新者用户ID',
                     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
                     PRIMARY KEY (`id`),
                     UNIQUE INDEX `idx_key` (`key`),
@@ -117,6 +118,24 @@ async def ensure_tables_exist(settings: Settings) -> None:
                 "t_application",
                 "business_domain",
                 "ALTER TABLE `t_application` ADD COLUMN `business_domain` VARCHAR(128) NULL DEFAULT 'db_public' COMMENT '业务域' AFTER `category`"
+            )
+            
+            # 检查并添加 updated_by_id 字段（如果表已存在但字段不存在）
+            await _ensure_column_exists(
+                cursor,
+                settings.db_name,
+                "t_application",
+                "updated_by_id",
+                "ALTER TABLE `t_application` ADD COLUMN `updated_by_id` CHAR(36) NULL COMMENT '更新者用户ID' AFTER `updated_by`"
+            )
+            
+            # 修改 updated_by 字段类型（如果表已存在且字段类型为 CHAR(36)）
+            await _ensure_column_type_updated(
+                cursor,
+                settings.db_name,
+                "t_application",
+                "updated_by",
+                "ALTER TABLE `t_application` MODIFY COLUMN `updated_by` VARCHAR(128) NOT NULL COMMENT '更新者用户显示名称'"
             )
         
         await connection.commit()
@@ -215,5 +234,52 @@ async def _ensure_column_exists(
             logger.debug(f"○ 表 '{table_name}' 的列 '{column_name}' 已存在")
     except Exception as e:
         logger.warning(f"检查/添加列 '{table_name}.{column_name}' 失败: {e}")
+        # 不抛出异常，因为列可能已经存在或表结构不同
+
+
+async def _ensure_column_type_updated(
+    cursor: aiomysql.Cursor,
+    db_name: str,
+    table_name: str,
+    column_name: str,
+    alter_sql: str,
+) -> None:
+    """
+    确保列的类型已更新。
+    
+    参数:
+        cursor: 数据库游标
+        db_name: 数据库名称
+        table_name: 表名
+        column_name: 列名
+        alter_sql: 修改列的 SQL 语句
+    """
+    try:
+        # 检查列是否存在
+        await cursor.execute(
+            """
+            SELECT COLUMN_TYPE 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = %s 
+            AND TABLE_NAME = %s 
+            AND COLUMN_NAME = %s
+            """,
+            (db_name, table_name, column_name)
+        )
+        result = await cursor.fetchone()
+        
+        if result:
+            # 列存在，检查类型是否需要更新
+            current_type = result[0].upper()
+            # 如果当前类型是 CHAR(36)，则更新为 VARCHAR(128)
+            if 'CHAR(36)' in current_type:
+                await cursor.execute(alter_sql)
+                logger.info(f"✓ 表 '{table_name}' 的列 '{column_name}' 类型已更新")
+            else:
+                logger.debug(f"○ 表 '{table_name}' 的列 '{column_name}' 类型已正确")
+        else:
+            logger.debug(f"○ 表 '{table_name}' 的列 '{column_name}' 不存在，跳过类型更新")
+    except Exception as e:
+        logger.warning(f"检查/更新列类型 '{table_name}.{column_name}' 失败: {e}")
         # 不抛出异常，因为列可能已经存在或表结构不同
 

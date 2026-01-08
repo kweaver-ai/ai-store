@@ -81,7 +81,8 @@ class Application:
         ontology_config: 业务知识网络配置列表（每个配置项包含 id 和 is_config）
         agent_config: 智能体配置列表（每个配置项包含 id 和 is_config）
         is_config: 是否完成配置
-        updated_by: 更新者用户 ID
+        updated_by: 更新者用户显示名称
+        updated_by_id: 更新者用户ID
         updated_at: 更新时间
     """
     id: int
@@ -98,6 +99,7 @@ class Application:
     agent_config: List[AgentConfigItem] = field(default_factory=list)
     is_config: bool = False
     updated_by: str = ""
+    updated_by_id: str = ""
     updated_at: Optional[datetime] = None
 
     def has_icon(self) -> bool:

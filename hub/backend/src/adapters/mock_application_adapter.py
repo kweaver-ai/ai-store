@@ -180,7 +180,8 @@ class MockApplicationAdapter(ApplicationPort):
         key: str,
         ontology_config: List[OntologyConfigItem],
         agent_config: List[AgentConfigItem],
-        updated_by: str
+        updated_by: str,
+        updated_by_id: str = ""
     ) -> Application:
         """
         更新应用配置（业务知识网络和智能体）。
@@ -189,7 +190,8 @@ class MockApplicationAdapter(ApplicationPort):
             key: 应用唯一标识
             ontology_config: 业务知识网络配置列表
             agent_config: 智能体配置列表
-            updated_by: 更新者用户 ID
+            updated_by: 更新者用户显示名称
+            updated_by_id: 更新者用户ID
 
         返回:
             Application: 更新后的应用实体
@@ -205,6 +207,7 @@ class MockApplicationAdapter(ApplicationPort):
         app.agent_config = agent_config
         app.is_config = True
         app.updated_by = updated_by
+        app.updated_by_id = updated_by_id
         app.updated_at = datetime.now()
         
         logger.info(f"[Mock] 更新应用配置: {key}, ontologies={[item.id for item in ontology_config]}, agents={[item.id for item in agent_config]}")

@@ -194,7 +194,7 @@ class ApplicationAdapter(ApplicationPort):
         参数:
             row: 数据库查询结果行
                 (id, key, name, description, icon, version, category, micro_app,
-                 release_config, ontology_ids, agent_ids, is_config, updated_by, updated_at)
+                 release_config, ontology_ids, agent_ids, is_config, updated_by, updated_by_id, updated_at)
                 或包含 business_domain 的扩展版本
 
         返回:
@@ -216,10 +216,23 @@ class ApplicationAdapter(ApplicationPort):
         ontology_config = self._parse_config_list(row[9], 'ontology')
         agent_config = self._parse_config_list(row[10], 'agent')
         
+        # 处理 updated_by_id 字段（如果存在，兼容旧数据）
+        updated_by_id = ""
+        if len(row) > 13 and row[13] is not None:
+            updated_by_id = row[13] or ""
+        
+        # 处理 updated_at 字段
+        updated_at = None
+        if len(row) > 14:
+            updated_at = row[14]
+        elif len(row) > 13:
+            # 兼容旧格式：如果没有 updated_by_id，updated_at 在 row[13]
+            updated_at = row[13]
+        
         # 处理 business_domain 字段（如果存在）
         business_domain = "db_public"  # 默认值
-        if len(row) > 14 and row[14] is not None:
-            business_domain = row[14]
+        if len(row) > 15 and row[15] is not None:
+            business_domain = row[15]
 
         return Application(
             id=row[0],
@@ -236,7 +249,8 @@ class ApplicationAdapter(ApplicationPort):
             agent_config=agent_config,
             is_config=bool(row[11]) if row[11] is not None else False,
             updated_by=row[12] or "",
-            updated_at=row[13],
+            updated_by_id=updated_by_id,
+            updated_at=updated_at,
         )
 
     async def get_all_applications(self) -> List[Application]:
@@ -252,7 +266,7 @@ class ApplicationAdapter(ApplicationPort):
                 await cursor.execute(
                     """SELECT id, `key`, name, description, icon, version, category, micro_app,
                               release_config, ontology_ids, agent_ids, is_config, 
-                              updated_by, updated_at, COALESCE(business_domain, 'db_public') as business_domain
+                              updated_by, updated_by_id, updated_at, COALESCE(business_domain, 'db_public') as business_domain
                        FROM t_application 
                        ORDER BY updated_at DESC"""
                 )
@@ -333,7 +347,7 @@ class ApplicationAdapter(ApplicationPort):
                 await cursor.execute(
                     """SELECT id, `key`, name, description, icon, version, category, micro_app,
                               release_config, ontology_ids, agent_ids, is_config,
-                              updated_by, updated_at, COALESCE(business_domain, 'db_public') as business_domain
+                              updated_by, updated_by_id, updated_at, COALESCE(business_domain, 'db_public') as business_domain
                        FROM t_application 
                        WHERE id = %s""",
                     (app_id,)
@@ -403,8 +417,8 @@ class ApplicationAdapter(ApplicationPort):
                     """INSERT INTO t_application 
                        (`key`, name, description, icon, version, category, micro_app,
                         release_config, ontology_ids, agent_ids, is_config,
-                        updated_by, updated_at, business_domain) 
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                        updated_by, updated_by_id, updated_at, business_domain) 
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                     (
                         application.key,
                         application.name,
@@ -418,6 +432,7 @@ class ApplicationAdapter(ApplicationPort):
                         agent_config_json,
                         application.is_config,
                         application.updated_by,
+                        application.updated_by_id,
                         application.updated_at or datetime.now(),
                         application.business_domain,
                     )
@@ -477,7 +492,7 @@ class ApplicationAdapter(ApplicationPort):
                     """UPDATE t_application 
                        SET name = %s, description = %s, icon = %s, version = %s, category = %s, micro_app = %s,
                            release_config = %s, ontology_ids = %s, agent_ids = %s, is_config = %s,
-                           updated_by = %s, updated_at = %s, business_domain = %s
+                           updated_by = %s, updated_by_id = %s, updated_at = %s, business_domain = %s
                        WHERE `key` = %s""",
                     (
                         application.name,
@@ -491,6 +506,7 @@ class ApplicationAdapter(ApplicationPort):
                         agent_config_json,
                         application.is_config,
                         application.updated_by,
+                        application.updated_by_id,
                         application.updated_at or datetime.now(),
                         application.business_domain,
                         application.key,
@@ -507,7 +523,8 @@ class ApplicationAdapter(ApplicationPort):
         key: str,
         ontology_config: List[OntologyConfigItem],
         agent_config: List[AgentConfigItem],
-        updated_by: str
+        updated_by: str,
+        updated_by_id: str = ""
     ) -> Application:
         """
         更新应用配置（业务知识网络和智能体）。
@@ -516,7 +533,8 @@ class ApplicationAdapter(ApplicationPort):
             key: 应用唯一标识
             ontology_config: 业务知识网络配置列表
             agent_config: 智能体配置列表
-            updated_by: 更新者用户 ID
+            updated_by: 更新者用户显示名称
+            updated_by_id: 更新者用户ID
 
         返回:
             Application: 更新后的应用实体
@@ -540,13 +558,14 @@ class ApplicationAdapter(ApplicationPort):
                 await cursor.execute(
                     """UPDATE t_application 
                        SET ontology_ids = %s, agent_ids = %s, is_config = %s,
-                           updated_by = %s, updated_at = %s 
+                           updated_by = %s, updated_by_id = %s, updated_at = %s 
                        WHERE `key` = %s""",
                     (
                         ontology_config_json,
                         agent_config_json,
                         is_config,
                         updated_by,
+                        updated_by_id,
                         datetime.now(),
                         key,
                     )

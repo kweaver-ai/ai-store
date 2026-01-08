@@ -218,6 +218,7 @@ class ApplicationService:
         self,
         app_id: int,
         updated_by: str = "",
+        updated_by_id: str = "",
     ) -> Application:
         """
         配置应用的业务知识网络和智能体。
@@ -227,7 +228,8 @@ class ApplicationService:
 
         参数:
             app_id: 应用主键 ID
-            updated_by: 更新者用户 ID
+            updated_by: 更新者用户显示名称
+            updated_by_id: 更新者用户ID
 
         返回:
             Application: 更新后的应用
@@ -250,16 +252,18 @@ class ApplicationService:
 
         # 更新配置
         return await self._application_port.update_application_config(
-            key=app_id,
+            key=application.key,
             ontology_config=new_ontology_config,
             agent_config=new_agent_config,
             updated_by=updated_by,
+            updated_by_id=updated_by_id,
         )
 
     async def install_application(
         self,
         zip_data: BinaryIO,
         updated_by: str = "",
+        updated_by_id: str = "",
         auth_token: Optional[str] = None,
     ) -> Application:
         """
@@ -276,7 +280,8 @@ class ApplicationService:
 
         参数:
             zip_data: ZIP 格式应用安装包数据
-            updated_by: 更新者用户 ID
+            updated_by: 更新者用户显示名称
+            updated_by_id: 更新者用户ID
 
         返回:
             Application: 安装后的应用
@@ -630,6 +635,7 @@ class ApplicationService:
                 agent_config=agent_config,
                 is_config=False,  # 安装后需要手动配置
                 updated_by=updated_by,
+                updated_by_id=updated_by_id,
                 updated_at=datetime.now(),
             )
             

@@ -13,7 +13,7 @@ from typing import List
 from src.application.application_service import ApplicationService
 from src.infrastructure.context.token_context import get_user_info
 from src.infrastructure.exceptions import (
-    ValidationError, NotFoundError, ConflictError, InternalError
+    ValidationError, NotFoundError, ConflictError, InternalError, UnauthorizedError
 )
 from src.routers.schemas.application import (
     ApplicationResponse,
@@ -75,6 +75,7 @@ def create_application_router(application_service: ApplicationService) -> APIRou
             ],
             is_config=app.is_config,
             updated_by=app.updated_by,
+            updated_by_id=app.updated_by_id,
             updated_at=app.updated_at,
         )
 
@@ -125,8 +126,15 @@ def create_application_router(application_service: ApplicationService) -> APIRou
             
             # 从上下文获取用户信息（由中间件通过token内省获取）
             user_info = get_user_info()
-            updated_by = user_info.id if user_info else request.headers.get("X-User-Id", "system")
-            logger.info(f"[install_application] 更新者: {updated_by}")
+            if not user_info:
+                logger.error("[install_application] 无法获取用户信息")
+                raise UnauthorizedError(
+                    description="无法获取用户信息",
+                    solution="请使用有效的token重新登录",
+                )
+            updated_by = user_info.vision_name
+            updated_by_id = user_info.id
+            logger.info(f"[install_application] 更新者: {updated_by} (ID: {updated_by_id})")
             # 认证 Token 已由中间件统一提取并存储到 request.state 和 TokenContext
             # 适配器层会从 TokenContext 统一获取，这里可以不再传递
             auth_token = getattr(request.state, "auth_token", None)
@@ -138,6 +146,7 @@ def create_application_router(application_service: ApplicationService) -> APIRou
             application = await application_service.install_application(
                 zip_data=zip_data,
                 updated_by=updated_by,
+                updated_by_id=updated_by_id,
                 auth_token=auth_token,  # 保留参数以保持兼容性
             )
             
@@ -228,13 +237,21 @@ def create_application_router(application_service: ApplicationService) -> APIRou
         try:
             # 从上下文获取用户信息（由中间件通过token内省获取）
             user_info = get_user_info()
-            updated_by = user_info.id if user_info else request.headers.get("X-User-Id", "system")
+            if not user_info:
+                logger.error("[configure_application] 无法获取用户信息")
+                raise UnauthorizedError(
+                    description="无法获取用户信息",
+                    solution="请使用有效的token重新登录",
+                )
+            updated_by = user_info.vision_name
+            updated_by_id = user_info.id
 
             # 应用配置不再从请求体中传入，而是直接基于数据库中已有的配置，
             # 将业务知识网络配置和智能体配置的 is_config 统一设置为 True。
             application = await application_service.configure_application(
                 app_id=id,
                 updated_by=updated_by,
+                updated_by_id=updated_by_id,
             )
             
             return _application_to_response(application)
@@ -284,6 +301,7 @@ def create_application_router(application_service: ApplicationService) -> APIRou
                 micro_app=_micro_app_to_response(application.micro_app),
                 is_config=application.is_config,
                 updated_by=application.updated_by,
+                updated_by_id=application.updated_by_id,
                 updated_at=application.updated_at,
             )
         
