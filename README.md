@@ -1,5 +1,7 @@
 # DIP 企业级 AI 应用平台 / DIP Enterprise AI Application Platform
 
+DIP 是 KWeaver 生态的一部分。如果您喜欢这个项目，欢迎也给 **[KWeaver](https://github.com/kweaver-ai/kweaver)** 项目点个 ⭐！
+
 ## 产品架构 / Product Architecture
 
 DIP 是企业级 AI 应用平台。DIP 由应用开发、应用发现和应用消费三大核心能力组成。
