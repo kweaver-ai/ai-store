@@ -128,10 +128,16 @@ class DeployInstallerAdapter(DeployInstallerPort):
 
         try:
             logger.info(f"[upload_image] 开始上传镜像到: {url}, timeout={self._timeout}s")
+            # 确保文件指针在开头
+            image_data.seek(0)
+            # 读取文件内容
+            content = image_data.read()
+            logger.debug(f"[upload_image] 镜像大小: {len(content)} bytes")
+            
             async with httpx.AsyncClient(timeout=self._timeout) as client:
                 response = await client.put(
                     url,
-                    content=image_data.read(),
+                    content=content,
                     headers=headers,
                 )
                 response.raise_for_status()
@@ -175,10 +181,16 @@ class DeployInstallerAdapter(DeployInstallerPort):
 
         try:
             logger.info(f"[upload_chart] 开始上传 Chart 到: {url}, timeout={self._timeout}s")
+            # 确保文件指针在开头
+            chart_data.seek(0)
+            # 读取文件内容
+            content = chart_data.read()
+            logger.debug(f"[upload_chart] Chart 大小: {len(content)} bytes")
+            
             async with httpx.AsyncClient(timeout=self._timeout) as client:
                 response = await client.put(
                     url,
-                    content=chart_data.read(),
+                    content=content,
                     headers=headers,
                 )
                 response.raise_for_status()
