@@ -11,10 +11,10 @@ export const initQiankun = () => {
   }
 
   start({
-    sandbox: {
-      strictStyleIsolation: false, // 使用 experimentalStyleIsolation 代替
-      experimentalStyleIsolation: true, // 更好的样式隔离
-    },
+    // sandbox: {
+    //   strictStyleIsolation: false, // 使用 experimentalStyleIsolation 代替
+    //   experimentalStyleIsolation: true, // 更好的样式隔离
+    // },
     singular: false, // 允许多个微应用实例同时运行
   })
 

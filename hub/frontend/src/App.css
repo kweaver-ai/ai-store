@@ -1,3 +1,17 @@
+/* 主应用根容器样式 */
+#root {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
+  line-height: 1;
+  color: rgb(0 0 0 / 85%);
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei',
+    sans-serif;
+}
+
+/* 全局 html/body 样式（仅影响主应用，子应用会继承但可以通过自己的样式覆盖） */
 html,
 body {
   margin: 0;
@@ -6,34 +20,22 @@ body {
   overflow: hidden;
 }
 
-body {
-  line-height: 1;
-  color: rgb(0 0 0 / 85%);
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei',
-    sans-serif;
-}
-
-#root {
-  width: 100vw;
-  height: 100vh;
-}
-
-::-webkit-scrollbar {
+/* 主应用容器内的滚动条样式（限制作用域，避免影响子应用） */
+#root ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-::-webkit-scrollbar-thumb {
+#root ::-webkit-scrollbar-thumb {
   background: rgb(178 181 189 / 50%);
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-corner {
+#root ::-webkit-scrollbar-corner {
   overflow: hidden;
 }
 
-::-webkit-scrollbar-thumb:hover,
-::-webkit-scrollbar-thumb:active {
+#root ::-webkit-scrollbar-thumb:hover,
+#root ::-webkit-scrollbar-thumb:active {
   background: rgb(178 181 189);
 }
