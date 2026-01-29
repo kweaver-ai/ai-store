@@ -8,7 +8,7 @@ import io
 import logging
 from fastapi import APIRouter, Query, Path, Request, status
 from fastapi.responses import Response
-from typing import List
+from typing import List, Optional
 
 from src.application.application_service import ApplicationService
 from src.infrastructure.context.token_context import get_user_info
@@ -22,6 +22,7 @@ from src.routers.schemas.application import (
     OntologyConfigItemResponse,
     AgentConfigItemResponse,
     ReleaseConfigItemResponse,
+    SetPinnedRequest,
     ErrorResponse,
 )
 
@@ -74,6 +75,7 @@ def create_application_router(application_service: ApplicationService) -> APIRou
                 for item in (app.agent_config or [])
             ],
             is_config=app.is_config,
+            pinned=getattr(app, 'pinned', False),
             updated_by=app.updated_by,
             updated_by_id=app.updated_by_id,
             updated_at=app.updated_at,
@@ -187,17 +189,19 @@ def create_application_router(application_service: ApplicationService) -> APIRou
             500: {"description": "服务器内部错误", "model": ErrorResponse},
         }
     )
-    async def get_applications() -> List[ApplicationResponse]:
+    async def get_applications(
+        pinned: Optional[bool] = Query(None, description="按被钉状态过滤：true=仅被钉，false=仅未被钉，不传=不过滤"),
+    ) -> List[ApplicationResponse]:
         """
         获取已安装应用列表。
 
-        返回所有已安装的应用信息，按更新时间倒序排列。
+        返回所有已安装的应用信息，按更新时间倒序排列。可通过 pinned 参数过滤被钉状态。
 
         返回:
             List[ApplicationResponse]: 应用列表
         """
         try:
-            applications = await application_service.get_all_applications()
+            applications = await application_service.get_all_applications(pinned=pinned)
             return [_application_to_response(app) for app in applications]
 
         except Exception as e:
@@ -300,6 +304,7 @@ def create_application_router(application_service: ApplicationService) -> APIRou
                 category=application.category,
                 micro_app=_micro_app_to_response(application.micro_app),
                 is_config=application.is_config,
+                pinned=getattr(application, 'pinned', False),
                 updated_by=application.updated_by,
                 updated_by_id=application.updated_by_id,
                 updated_at=application.updated_at,
@@ -310,6 +315,42 @@ def create_application_router(application_service: ApplicationService) -> APIRou
         except Exception as e:
             logger.exception(f"获取应用基础信息失败: {e}")
             raise InternalError(description=f"获取应用基础信息失败: {str(e)}")
+
+    # ============ 设置应用被钉状态 ============
+    @router.put(
+        "/applications/{id}/pinned",
+        summary="设置应用被钉状态",
+        description="设置指定应用是否被钉（置顶）",
+        response_model=ApplicationResponse,
+        responses={
+            200: {"description": "设置成功"},
+            400: {"description": "请求参数错误", "model": ErrorResponse},
+            404: {"description": "应用不存在", "model": ErrorResponse},
+            500: {"description": "服务器内部错误", "model": ErrorResponse},
+        }
+    )
+    async def set_application_pinned(
+        id: int = Path(..., description="应用主键 ID", ge=1),
+        body: SetPinnedRequest = ...,
+    ) -> ApplicationResponse:
+        """
+        设置应用是否被钉状态。
+
+        参数:
+            id: 应用主键 ID
+            body.pinned: 是否被钉
+
+        返回:
+            ApplicationResponse: 更新后的应用信息
+        """
+        try:
+            application = await application_service.set_application_pinned(app_id=id, pinned=body.pinned)
+            return _application_to_response(application)
+        except ValueError as e:
+            raise NotFoundError(description=str(e))
+        except Exception as e:
+            logger.exception(f"设置应用被钉状态失败: {e}")
+            raise InternalError(description=f"设置应用被钉状态失败: {str(e)}")
 
     # ============ 4.2、查看业务知识网络配置 ============
     @router.get(

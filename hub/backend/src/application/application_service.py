@@ -64,14 +64,17 @@ class ApplicationService:
         self._agent_factory_port = agent_factory_port
         self._settings = settings
 
-    async def get_all_applications(self) -> List[Application]:
+    async def get_all_applications(self, pinned: Optional[bool] = None) -> List[Application]:
         """
-        获取所有已安装的应用列表。
+        获取所有已安装的应用列表，可按被钉状态过滤。
+
+        参数:
+            pinned: 可选，按被钉状态过滤（True=仅被钉，False=仅未被钉，None=不过滤）
 
         返回:
             List[Application]: 应用列表
         """
-        return await self._application_port.get_all_applications()
+        return await self._application_port.get_all_applications(pinned=pinned)
 
     async def get_application_by_key(self, key: str) -> Application:
         """
@@ -117,6 +120,22 @@ class ApplicationService:
             ValueError: 当应用不存在时抛出
         """
         return await self._application_port.get_application_by_id(app_id)
+
+    async def set_application_pinned(self, app_id: int, pinned: bool) -> Application:
+        """
+        设置应用是否被钉状态。
+
+        参数:
+            app_id: 应用主键 ID
+            pinned: 是否被钉
+
+        返回:
+            Application: 更新后的应用实体
+
+        异常:
+            ValueError: 当应用不存在时抛出
+        """
+        return await self._application_port.set_application_pinned(app_id=app_id, pinned=pinned)
 
     async def get_application_ontologies_by_id(
         self,
@@ -634,6 +653,7 @@ class ApplicationService:
                 ontology_config=ontology_config,
                 agent_config=agent_config,
                 is_config=False,  # 安装后需要手动配置
+                pinned=existing_app.pinned if existing_app else False,
                 updated_by=updated_by,
                 updated_by_id=updated_by_id,
                 updated_at=datetime.now(),

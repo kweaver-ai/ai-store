@@ -18,12 +18,32 @@ class ApplicationPort(ABC):
     """
 
     @abstractmethod
-    async def get_all_applications(self) -> List[Application]:
+    async def get_all_applications(self, pinned: Optional[bool] = None) -> List[Application]:
         """
         获取所有已安装的应用列表。
 
+        参数:
+            pinned: 可选，按被钉状态过滤（True=仅被钉，False=仅未被钉，None=不过滤）
+
         返回:
             List[Application]: 应用列表
+        """
+        pass
+
+    @abstractmethod
+    async def set_application_pinned(self, app_id: int, pinned: bool) -> Application:
+        """
+        设置应用是否被钉状态。
+
+        参数:
+            app_id: 应用主键 ID
+            pinned: 是否被钉
+
+        返回:
+            Application: 更新后的应用实体
+
+        异常:
+            ValueError: 当应用不存在时抛出
         """
         pass
 

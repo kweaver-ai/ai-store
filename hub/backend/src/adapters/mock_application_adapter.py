@@ -8,7 +8,7 @@ from typing import List, Optional
 from datetime import datetime
 from copy import deepcopy
 
-from src.domains.application import Application, MicroAppInfo, OntologyConfigItem, AgentConfigItem
+from src.domains.application import Application, MicroAppInfo, OntologyConfigItem, AgentConfigItem, ReleaseConfigItem
 from src.ports.application_port import ApplicationPort
 
 logger = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ class MockApplicationAdapter(ApplicationPort):
                     entry="/intelligent_fault_analysis",
                     headless=False,
                 ),
-                release_config=["itops-analysis-release"],
+                release_config=[ReleaseConfigItem(name="itops-analysis-release", namespace="default")],
                 ontology_config=[
                     OntologyConfigItem(id="1", is_config=True),
                     OntologyConfigItem(id="2", is_config=True),
@@ -56,6 +56,7 @@ class MockApplicationAdapter(ApplicationPort):
                     AgentConfigItem(id="1", is_config=True),
                 ],
                 is_config=True,
+                pinned=False,
                 updated_by="system",
                 updated_at=datetime.now(),
             ),
@@ -68,10 +69,11 @@ class MockApplicationAdapter(ApplicationPort):
                 version="2.1.0",
                 category="安全运营",
                 micro_app=None,
-                release_config=["security-monitor-release"],
+                release_config=[ReleaseConfigItem(name="security-monitor-release", namespace="default")],
                 ontology_config=[],
                 agent_config=[],
                 is_config=False,
+                pinned=False,
                 updated_by="system",
                 updated_at=datetime.now(),
             ),
@@ -82,17 +84,26 @@ class MockApplicationAdapter(ApplicationPort):
         
         self._next_id = len(sample_apps) + 1
 
-    async def get_all_applications(self) -> List[Application]:
+    async def get_all_applications(self, pinned: Optional[bool] = None) -> List[Application]:
         """
-        获取所有已安装的应用列表。
-
-        返回:
-            List[Application]: 应用列表
+        获取所有已安装的应用列表，可按被钉状态过滤。
         """
         apps = list(self._applications.values())
+        if pinned is not None:
+            apps = [a for a in apps if getattr(a, 'pinned', False) == pinned]
         apps.sort(key=lambda x: x.updated_at or datetime.min, reverse=True)
         logger.info(f"[Mock] 获取应用列表: {len(apps)} 个应用")
         return apps
+
+    async def set_application_pinned(self, app_id: int, pinned: bool) -> Application:
+        """设置应用是否被钉状态。"""
+        for app in self._applications.values():
+            if app.id == app_id:
+                app.pinned = pinned
+                app.updated_at = datetime.now()
+                logger.info(f"[Mock] 设置应用被钉状态: id={app_id}, pinned={pinned}")
+                return deepcopy(app)
+        raise ValueError(f"应用不存在: id={app_id}")
 
     async def get_application_by_key(self, key: str) -> Application:
         """

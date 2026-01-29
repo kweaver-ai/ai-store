@@ -67,6 +67,7 @@ class ApplicationResponse(BaseModel):
     ontology_config: List[OntologyConfigItemResponse] = Field(default_factory=list, description="业务知识网络配置列表")
     agent_config: List[AgentConfigItemResponse] = Field(default_factory=list, description="智能体配置列表")
     is_config: bool = Field(False, description="是否完成配置")
+    pinned: bool = Field(False, description="是否被钉（置顶）")
     updated_by: str = Field(..., description="更新者用户显示名称", max_length=128)
     updated_by_id: str = Field(..., description="更新者用户ID", max_length=36)
     updated_at: datetime = Field(..., description="更新时间")
@@ -91,11 +92,19 @@ class ApplicationBasicInfoResponse(BaseModel):
     category: Optional[str] = Field(None, description="应用所属分组")
     micro_app: Optional[MicroAppResponse] = Field(None, description="微应用配置")
     is_config: bool = Field(..., description="是否完成配置")
+    pinned: bool = Field(False, description="是否被钉（置顶）")
     updated_by: str = Field(..., description="更新者用户显示名称")
     updated_by_id: str = Field(..., description="更新者用户ID")
     updated_at: datetime = Field(..., description="更新时间")
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# ============ 设置被钉状态请求 ============
+
+class SetPinnedRequest(BaseModel):
+    """设置应用是否被钉的请求体。"""
+    pinned: bool = Field(..., description="是否被钉")
 
 
 # ============ 业务知识网络配置响应 ============
