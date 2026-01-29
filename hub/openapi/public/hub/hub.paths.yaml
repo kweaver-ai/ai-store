@@ -44,9 +44,16 @@ paths:
     get:
       operationId: listApplications
       summary: 获取应用列表
-      description: 获取当前已安装的所有应用列表。
+      description: 获取当前已安装的所有应用列表。可通过 pinned 参数按被钉状态过滤。
       tags:
         - Application
+      parameters:
+        - name: pinned
+          in: query
+          description: 按被钉状态过滤（true=仅被钉，false=仅未被钉，不传=不过滤）
+          required: false
+          schema:
+            type: boolean
       responses:
         '200':
           description: 获取已安装的应用列表
@@ -82,6 +89,42 @@ paths:
       responses:
         '200':
           description: 配置成功
+          content:
+            application/json:
+              schema:
+                $ref: './hub.schemas.yaml#/components/schemas/Application'
+        "400":
+          $ref: './hub.schemas.yaml#/components/errors/ParameterError'
+        "404":
+          $ref: './hub.schemas.yaml#/components/errors/NotFoundError'
+        "500":
+          $ref: './hub.schemas.yaml#/components/errors/InternalServerError'
+
+  # ============ 设置应用被钉状态 ============
+  /applications/{id}/pinned:
+    put:
+      operationId: setApplicationPinned
+      summary: 设置应用被钉状态
+      description: 设置指定应用是否被钉（置顶）。
+      tags:
+        - Application
+      parameters:
+        - in: path
+          name: id
+          description: 应用主键 ID
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './hub.schemas.yaml#/components/schemas/SetPinnedRequest'
+      responses:
+        '200':
+          description: 设置成功
           content:
             application/json:
               schema:

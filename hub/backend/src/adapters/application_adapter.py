@@ -216,23 +216,21 @@ class ApplicationAdapter(ApplicationPort):
         ontology_config = self._parse_config_list(row[9], 'ontology')
         agent_config = self._parse_config_list(row[10], 'agent')
         
-        # 处理 updated_by_id 字段（如果存在，兼容旧数据）
-        updated_by_id = ""
-        if len(row) > 13 and row[13] is not None:
-            updated_by_id = row[13] or ""
-        
-        # 处理 updated_at 字段
-        updated_at = None
-        if len(row) > 14:
-            updated_at = row[14]
-        elif len(row) > 13:
-            # 兼容旧格式：如果没有 updated_by_id，updated_at 在 row[13]
-            updated_at = row[13]
-        
-        # 处理 business_domain 字段（如果存在）
-        business_domain = "db_public"  # 默认值
-        if len(row) > 15 and row[15] is not None:
-            business_domain = row[15]
+        # is_config, pinned, updated_by, updated_by_id, updated_at, business_domain
+        # 新结构（17 列）：row[11]=is_config, row[12]=pinned, row[13]=updated_by, row[14]=updated_by_id, row[15]=updated_at, row[16]=business_domain
+        # 旧结构（16 列）：row[11]=is_config, row[12]=updated_by, row[13]=updated_by_id, row[14]=updated_at, row[15]=business_domain
+        if len(row) > 16:
+            pinned = bool(row[12]) if row[12] is not None else False
+            updated_by = row[13] or ""
+            updated_by_id = (row[14] or "") if len(row) > 14 else ""
+            updated_at = row[15] if len(row) > 15 else None
+            business_domain = row[16] if row[16] is not None else "db_public"
+        else:
+            pinned = False
+            updated_by = row[12] or "" if len(row) > 12 else ""
+            updated_by_id = (row[13] or "") if len(row) > 13 else ""
+            updated_at = row[14] if len(row) > 14 else (row[13] if len(row) > 13 else None)
+            business_domain = row[15] if len(row) > 15 and row[15] is not None else "db_public"
 
         return Application(
             id=row[0],
@@ -248,28 +246,30 @@ class ApplicationAdapter(ApplicationPort):
             ontology_config=ontology_config,
             agent_config=agent_config,
             is_config=bool(row[11]) if row[11] is not None else False,
-            updated_by=row[12] or "",
+            pinned=pinned,
+            updated_by=updated_by,
             updated_by_id=updated_by_id,
             updated_at=updated_at,
         )
 
-    async def get_all_applications(self) -> List[Application]:
+    async def get_all_applications(self, pinned: Optional[bool] = None) -> List[Application]:
         """
-        获取所有已安装的应用列表。
-
-        返回:
-            List[Application]: 应用列表
+        获取所有已安装的应用列表，可按被钉状态过滤。
         """
         pool = await self._get_pool()
         async with pool.acquire() as conn:
             async with conn.cursor() as cursor:
-                await cursor.execute(
-                    """SELECT id, `key`, name, description, icon, version, category, micro_app,
-                              release_config, ontology_ids, agent_ids, is_config, 
+                sql = """SELECT id, `key`, name, description, icon, version, category, micro_app,
+                              release_config, ontology_ids, agent_ids, is_config,
+                              COALESCE(pinned, 0) as pinned,
                               updated_by, updated_by_id, updated_at, COALESCE(business_domain, 'db_public') as business_domain
-                       FROM t_application 
-                       ORDER BY updated_at DESC"""
-                )
+                       FROM t_application"""
+                params = ()
+                if pinned is not None:
+                    sql += " WHERE pinned = %s"
+                    params = (pinned,)
+                sql += " ORDER BY updated_at DESC"
+                await cursor.execute(sql, params)
                 rows = await cursor.fetchall()
                 return [self._row_to_application(row) for row in rows]
 
@@ -292,7 +292,8 @@ class ApplicationAdapter(ApplicationPort):
                 await cursor.execute(
                     """SELECT id, `key`, name, description, icon, version, category, micro_app,
                               release_config, ontology_ids, agent_ids, is_config,
-                              updated_by, updated_at, COALESCE(business_domain, 'db_public') as business_domain
+                              COALESCE(pinned, 0) as pinned,
+                              updated_by, updated_by_id, updated_at, COALESCE(business_domain, 'db_public') as business_domain
                        FROM t_application 
                        WHERE `key` = %s""",
                     (key,)
@@ -318,7 +319,8 @@ class ApplicationAdapter(ApplicationPort):
                 await cursor.execute(
                     """SELECT id, `key`, name, description, icon, version, category, micro_app,
                               release_config, ontology_ids, agent_ids, is_config,
-                              updated_by, updated_at, COALESCE(business_domain, 'db_public') as business_domain
+                              COALESCE(pinned, 0) as pinned,
+                              updated_by, updated_by_id, updated_at, COALESCE(business_domain, 'db_public') as business_domain
                        FROM t_application 
                        WHERE `key` = %s""",
                     (key,)
@@ -347,6 +349,7 @@ class ApplicationAdapter(ApplicationPort):
                 await cursor.execute(
                     """SELECT id, `key`, name, description, icon, version, category, micro_app,
                               release_config, ontology_ids, agent_ids, is_config,
+                              COALESCE(pinned, 0) as pinned,
                               updated_by, updated_by_id, updated_at, COALESCE(business_domain, 'db_public') as business_domain
                        FROM t_application 
                        WHERE id = %s""",
@@ -356,6 +359,19 @@ class ApplicationAdapter(ApplicationPort):
                 if row is None:
                     raise ValueError(f"应用不存在: id={app_id}")
                 return self._row_to_application(row)
+
+    async def set_application_pinned(self, app_id: int, pinned: bool) -> Application:
+        """设置应用是否被钉状态。"""
+        pool = await self._get_pool()
+        async with pool.acquire() as conn:
+            async with conn.cursor() as cursor:
+                await cursor.execute(
+                    "UPDATE t_application SET pinned = %s WHERE id = %s",
+                    (pinned, app_id),
+                )
+                if cursor.rowcount == 0:
+                    raise ValueError(f"应用不存在: id={app_id}")
+        return await self.get_application_by_id(app_id)
 
     async def create_application(self, application: Application) -> Application:
         """
@@ -416,9 +432,9 @@ class ApplicationAdapter(ApplicationPort):
                 await cursor.execute(
                     """INSERT INTO t_application 
                        (`key`, name, description, icon, version, category, micro_app,
-                        release_config, ontology_ids, agent_ids, is_config,
+                        release_config, ontology_ids, agent_ids, is_config, pinned,
                         updated_by, updated_by_id, updated_at, business_domain) 
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                     (
                         application.key,
                         application.name,
@@ -431,6 +447,7 @@ class ApplicationAdapter(ApplicationPort):
                         ontology_config_json,
                         agent_config_json,
                         application.is_config,
+                        getattr(application, 'pinned', False),
                         application.updated_by,
                         application.updated_by_id,
                         application.updated_at or datetime.now(),
@@ -491,7 +508,7 @@ class ApplicationAdapter(ApplicationPort):
                 await cursor.execute(
                     """UPDATE t_application 
                        SET name = %s, description = %s, icon = %s, version = %s, category = %s, micro_app = %s,
-                           release_config = %s, ontology_ids = %s, agent_ids = %s, is_config = %s,
+                           release_config = %s, ontology_ids = %s, agent_ids = %s, is_config = %s, pinned = %s,
                            updated_by = %s, updated_by_id = %s, updated_at = %s, business_domain = %s
                        WHERE `key` = %s""",
                     (
@@ -505,6 +522,7 @@ class ApplicationAdapter(ApplicationPort):
                         ontology_config_json,
                         agent_config_json,
                         application.is_config,
+                        getattr(application, 'pinned', False),
                         application.updated_by,
                         application.updated_by_id,
                         application.updated_at or datetime.now(),

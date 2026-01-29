@@ -12,6 +12,7 @@ info:
     - **获取应用列表**: GET /applications - 获取已安装的应用列表
     - **配置应用**: PUT /applications/config - 配置业务知识网络和智能体
     - **查看基础信息**: GET /applications/basic-info - 查看应用基本信息
+    - **设置被钉状态**: PUT /applications/{id}/pinned - 设置应用是否被钉（置顶）
     - **查看业务知识网络**: GET /applications/ontologies - 查看业务知识网络配置
     - **查看智能体**: GET /applications/agents - 查看智能体配置
     - **卸载应用**: DELETE /applications/{id} - 卸载指定应用
@@ -50,6 +51,10 @@ paths:
   # 4.1、查看基础信息
   /applications/basic-info:
     $ref: "./hub/hub.paths.yaml#/paths/~1applications~1basic-info"
+
+  # 设置应用被钉状态
+  /applications/{id}/pinned:
+    $ref: "./hub/hub.paths.yaml#/paths/~1applications~1{id}~1pinned"
 
   # 4.2、查看业务知识网络配置
   /applications/ontologies:

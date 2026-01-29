@@ -99,6 +99,7 @@ async def ensure_tables_exist(settings: Settings) -> None:
                     `ontology_ids` TEXT NULL COMMENT '业务知识网络配置（JSON数组，每个元素包含id和is_config字段）',
                     `agent_ids` TEXT NULL COMMENT '智能体配置（JSON数组，每个元素包含id和is_config字段）',
                     `is_config` BOOLEAN NOT NULL DEFAULT FALSE COMMENT '是否完成配置',
+                    `pinned` BOOLEAN NOT NULL DEFAULT FALSE COMMENT '是否被钉（置顶）',
                     `updated_by` VARCHAR(128) NOT NULL COMMENT '更新者用户显示名称',
                     `updated_by_id` CHAR(36) NULL COMMENT '更新者用户ID',
                     `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -136,6 +137,15 @@ async def ensure_tables_exist(settings: Settings) -> None:
                 "t_application",
                 "updated_by",
                 "ALTER TABLE `t_application` MODIFY COLUMN `updated_by` VARCHAR(128) NOT NULL COMMENT '更新者用户显示名称'"
+            )
+            
+            # 升级脚本：检查并添加 pinned 字段（是否被钉），用于已有表无该列时的自动升级
+            await _ensure_column_exists(
+                cursor,
+                settings.db_name,
+                "t_application",
+                "pinned",
+                "ALTER TABLE `t_application` ADD COLUMN `pinned` BOOLEAN NOT NULL DEFAULT FALSE COMMENT '是否被钉（置顶）' AFTER `is_config`"
             )
         
         await connection.commit()
