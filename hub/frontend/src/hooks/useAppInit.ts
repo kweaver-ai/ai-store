@@ -12,6 +12,7 @@ import { useLanguage } from './useLanguage'
  * - 初始化语言配置
  * - 初始化 OEM 配置
  * - 初始化 qiankun
+ * - 获取钉住的微应用列表
  */
 export const useAppInit = () => {
   const { initLanguage } = useLanguage()

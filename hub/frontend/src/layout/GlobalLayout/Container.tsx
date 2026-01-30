@@ -1,22 +1,16 @@
 import { Layout } from 'antd'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
-import { useMatches } from 'react-router-dom'
+import { useMatches, useParams } from 'react-router-dom'
 import bg from '@/assets/images/gradient-container-bg.svg'
+import type { RouteHandle } from '@/routes/types'
+import { WENSHU_APP_KEY } from '@/routes/types'
+import { usePreferenceStore } from '@/stores'
 import { useMicroAppStore } from '@/stores/microAppStore'
-import MicroAppHeader from '../../components/MicroAppHeader'
+import Header from '../../components/Header'
 import Sider from '../../components/Sider'
 
 const { Content } = Layout
-
-interface LayoutConfig {
-  hasSider?: boolean
-  hasHeader?: boolean
-}
-
-interface RouteHandle {
-  layout?: LayoutConfig
-}
 
 interface ContainerProps {
   children: ReactNode
@@ -25,40 +19,63 @@ interface ContainerProps {
 const Container = ({ children }: ContainerProps) => {
   const [collapsed, setCollapsed] = useState(false)
   const matches = useMatches()
+  const params = useParams()
   const { currentMicroApp } = useMicroAppStore()
+  const { wenshuAppInfo } = usePreferenceStore()
 
   // 当前是否处于微应用容器场景
   const isMicroApp = !!currentMicroApp
-  // headless 微应用：不需要任何壳层 Header / Sider
-  const isHeadlessMicroApp = isMicroApp && currentMicroApp?.micro_app?.headless
+  // headless 微应用：需要任何壳层 Header / Sider
+  const microAppHasHeader = isMicroApp && currentMicroApp?.micro_app?.headless
 
   // 只使用最后一个匹配的路由（当前路由）的布局配置
   // 主应用页面只依赖路由的静态布局配置
   const currentMatch = matches[matches.length - 1]
   const routeLayoutConfig = (currentMatch?.handle as RouteHandle | undefined)?.layout
 
+  // 特殊处理：问数应用没有导航头，有侧边栏
+  // 1. 优先通过当前微应用的 key 判断（兼容直接刷新 /application/:appId 的场景）
+  // 2. 兼容通过 store 中缓存的 wenshuAppInfo.id 判断（兼容从首页/登录跳转的场景）
+  const isWenshuByKey = currentMicroApp?.key === WENSHU_APP_KEY
+  const isWenshuById = wenshuAppInfo?.id === Number(params?.appId)
+  const isWenshuApp = isWenshuByKey || isWenshuById
+
+  console.log('isWenshuByKey', currentMicroApp, wenshuAppInfo, params)
+
   // 布局决策：
   // - headless 微应用：强制 { hasHeader: false, hasSider: false }
+  // - 问数应用：强制 { hasHeader: false, hasSider: true }
   // - 其他情况（主应用页面或普通微应用）：使用路由静态配置
-  const layoutConfig: LayoutConfig | undefined = isHeadlessMicroApp
-    ? { hasHeader: false, hasSider: false }
-    : routeLayoutConfig
+  const layoutConfig = microAppHasHeader
+    ? { ...routeLayoutConfig, hasHeader: true }
+    : isWenshuApp
+      ? { ...routeLayoutConfig, hasSider: true }
+      : routeLayoutConfig
 
-  // 默认值：如果当前路由没有设置，则默认都是 false
-  const { hasSider = false, hasHeader = false } = layoutConfig || {}
+  // 默认值
+  const {
+    hasSider = false,
+    hasHeader = false,
+    siderType = 'home',
+    headerType = 'micro-app',
+  } = layoutConfig || {}
+
+  console.log('layoutConfig', layoutConfig)
 
   const headerHeight = 52
 
   return (
     <Layout className="overflow-hidden">
-      {/* 微应用壳 Header：当前项目仅微应用容器路由会开启 hasHeader */}
-      {hasHeader && <MicroAppHeader />}
+      {/* Header 决策 */}
+      {hasHeader && <Header headerType={headerType} />}
+
       <Layout style={{ backgroundImage: `url(${bg})` }} className="bg-no-repeat bg-cover">
         {hasSider && (
           <Sider
             collapsed={collapsed}
             onCollapse={setCollapsed}
             topOffset={hasHeader ? headerHeight : 0}
+            type={siderType}
           />
         )}
         <Layout

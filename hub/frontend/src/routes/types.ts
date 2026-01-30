@@ -1,5 +1,26 @@
 import type { ReactNode } from 'react'
-import type { RouteObject } from 'react-router-dom'
+
+export type HeaderType = 'store' | 'studio' | 'micro-app'
+export type SiderType = 'store' | 'studio' | 'home' | 'project'
+
+export const WENSHU_APP_KEY = 'wenshu-app'
+
+/** 布局配置 */
+export interface LayoutConfig {
+  /** 是否展示侧边栏 */
+  hasSider?: boolean
+  /** 是否展示顶栏 */
+  hasHeader?: boolean
+  /** 侧边栏类型 */
+  siderType?: SiderType
+  /** 顶栏类型 */
+  headerType?: HeaderType
+}
+
+/** 路由 handle 配置 */
+export interface RouteHandle {
+  layout?: LayoutConfig
+}
 
 /** 路由配置 */
 export interface RouteConfig {
@@ -14,6 +35,6 @@ export interface RouteConfig {
   disabled?: boolean
   /** 是否在侧边栏展示 */
   showInSidebar?: boolean
-  handle?: RouteObject['handle']
+  handle?: RouteHandle
   children?: RouteConfig[]
 }

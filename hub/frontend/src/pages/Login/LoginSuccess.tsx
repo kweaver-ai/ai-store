@@ -2,7 +2,7 @@ import { Spin } from 'antd'
 import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import GradientContainer from '@/components/GradientContainer'
-import { getFirstVisibleSidebarRoute } from '@/routes/utils'
+import { resolveDefaultMicroAppPath } from '@/routes/utils'
 import { useUserInfoStore } from '@/stores'
 
 const LoginSuccess = () => {
@@ -33,11 +33,20 @@ const LoginSuccess = () => {
               // 注意：如果有 asredirect 参数，后端会直接重定向到该地址，不会到 login-success 页面
               // 所以这里只需要处理没有 asredirect 的情况（跳转到首页）
               // TODO: 角色信息需要从其他地方获取，暂时使用空数组
-              const roleIds = new Set<string>([])
-              const firstRoute = getFirstVisibleSidebarRoute(roleIds)
-              const to = firstRoute?.path ? `/${firstRoute.path}` : '/'
-              hasNavigatedRef.current = true
-              navigate(to, { replace: true })
+              // const roleIds = new Set<string>([])
+              // const firstRoute = getFirstVisibleSidebarRoute(roleIds)
+              // const to = firstRoute?.path ? `/${firstRoute.path}` : '/'
+              // hasNavigatedRef.current = true
+              // navigate(to, { replace: true })
+
+              // 通过公共方法解析默认微应用路由（基于固定应用 key）
+              resolveDefaultMicroAppPath().then((targetPath) => {
+                if (hasNavigatedRef.current) {
+                  return
+                }
+                hasNavigatedRef.current = true
+                navigate(targetPath, { replace: true })
+              })
             } else {
               // 请求完成但没有用户信息，说明获取失败
               hasNavigatedRef.current = true

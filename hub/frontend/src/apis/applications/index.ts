@@ -5,7 +5,6 @@ import type {
   ApplicationInfo,
   OntologyInfo,
   PinMicroAppParams,
-  PinnedMicroAppsResponse,
 } from './index.d'
 
 // 导出类型定义（仅导出外部使用的类型）
@@ -28,20 +27,8 @@ export const postApplications = (file: Blob | ArrayBuffer): Promise<ApplicationI
  * 获取应用列表
  * @returns 应用列表
  */
-export const getApplications = (): Promise<ApplicationInfo[]> => get(`/api/dip-hub/v1/applications`)
-
-/**
- * 配置应用（业务知识网络 & 智能体）
- * OpenAPI: PUT /applications/config?app_id=xxx
- */
-// export const putApplicationsConfig = (
-//   appId: string,
-//   body: ApplicationConfigRequest,
-// ): Promise<ApplicationInfo> =>
-//   put(`/api/dip-hub/v1/applications/config`, {
-//     params: { app_id: appId },
-//     body,
-//   })
+export const getApplications = (params?: Record<string, any>): Promise<ApplicationInfo[]> =>
+  get(`/api/dip-hub/v1/applications`, { params })
 
 /**
  * 查看应用基础信息
@@ -72,20 +59,6 @@ export const getApplicationsAgents = (id: number): Promise<AgentInfo[]> =>
  */
 export const deleteApplications = (id: number): Promise<void> => {
   return del(`/api/dip-hub/v1/applications/${id}`)
-}
-
-/**
- * 获取钉住的微应用列表
- */
-export async function getPinnedMicroAppsApi(): Promise<PinnedMicroAppsResponse> {
-  // TODO: 替换为真实接口
-  // return get('/micro-app/pinned')
-
-  // Mock 数据
-  await new Promise((resolve) => setTimeout(resolve, 200))
-  return {
-    appIds: [],
-  }
 }
 
 /**
