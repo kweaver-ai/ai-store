@@ -29,6 +29,8 @@ export interface ApplicationBasicInfo {
     /** 是否无头模式 */
     headless: boolean
   }
+  /** 是否钉住 */
+  is_pinned: boolean
 }
 
 /** 应用信息 */
@@ -357,13 +359,13 @@ export interface ApplicationConfigRequest {
 /** 获取钉住的微应用列表响应 */
 export interface PinnedMicroAppsResponse {
   /** 钉住的微应用 ID 列表 */
-  appIds: string[]
+  appIds: number[]
 }
 
 /** 钉住/取消钉住微应用参数 */
 export interface PinMicroAppParams {
-  /** 微应用 ID */
-  appId: string
+  /** 应用 ID */
+  appId: number
   /** 是否钉住 */
   pinned: boolean
 }

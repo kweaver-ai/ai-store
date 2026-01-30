@@ -1,6 +1,7 @@
 import { ExclamationCircleFilled, ReloadOutlined } from '@ant-design/icons'
 import { Button, Modal, message, Spin, Tooltip } from 'antd'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { type ApplicationInfo, deleteApplications } from '@/apis/applications'
 import AppConfigDrawer from '@/components/AppConfigDrawer'
 import AppList from '@/components/AppList'
@@ -10,13 +11,16 @@ import Empty from '@/components/Empty'
 import IconFont from '@/components/IconFont'
 import SearchInput from '@/components/SearchInput'
 import { useApplicationsService } from '@/hooks/useApplicationsService'
-import { getFullPath } from '@/utils/config'
+import { usePreferenceStore } from '@/stores'
 import styles from './index.module.less'
 import { AppStoreActionEnum } from './types'
+import { getAppStoreMenuItems } from './utils'
 
 const AppStore = () => {
   const { apps, loading, error, searchValue, handleSearch, handleRefresh } =
     useApplicationsService()
+  const { unpinMicroApp } = usePreferenceStore()
+  const navigate = useNavigate()
   const [installModalVisible, setInstallModalVisible] = useState(false)
   const [configModalVisible, setConfigModalVisible] = useState(false)
   const [selectedApp, setSelectedApp] = useState<ApplicationInfo | null>(null)
@@ -24,7 +28,6 @@ const AppStore = () => {
   const hasEverHadDataRef = useRef(false) // 使用 ref 追踪是否曾经有过数据，避免循环依赖
   const prevSearchValueRef = useRef('') // 追踪上一次的搜索值，用于判断是否是从搜索状态清空
   const [modal, contextHolder] = Modal.useModal()
-
   // 当数据加载完成且有数据时，标记为已加载过数据；所有应用卸载后重置
   useEffect(() => {
     // 在开始处理前，先保存上一次的搜索值用于判断
@@ -79,6 +82,7 @@ const AppStore = () => {
                   await deleteApplications(_app.id)
                   message.success('卸载成功')
                   handleRefresh()
+                  unpinMicroApp(_app.id, false)
                 } catch (err: any) {
                   if (err?.description) {
                     message.error(err.description)
@@ -97,7 +101,7 @@ const AppStore = () => {
 
           /** 运行应用 */
           case AppStoreActionEnum.Run:
-            window.open(getFullPath(`/application/${_app.id}`), '_blank')
+            navigate(`/application/${_app.id}`)
             break
 
           /** 授权管理 */
@@ -126,7 +130,7 @@ const AppStore = () => {
     if (error) {
       return (
         <Empty type="failed" desc="加载失败">
-          <Button type="primary" onClick={handleRefresh}>
+          <Button className="mt-1" type="primary" onClick={handleRefresh}>
             重试
           </Button>
         </Empty>
@@ -143,7 +147,7 @@ const AppStore = () => {
           subDesc="当前应用市场空空如也，您可以点击下方按钮安装第一个企业应用。"
         >
           <Button
-            className="mt-2"
+            className="mt-1"
             type="primary"
             icon={<IconFont type="icon-dip-upload" />}
             onClick={() => {
@@ -167,7 +171,13 @@ const AppStore = () => {
       return <div className="absolute inset-0 flex items-center justify-center">{stateContent}</div>
     }
 
-    return <AppList mode={ModeEnum.AppStore} apps={apps} onMenuClick={handleMenuClick} />
+    return (
+      <AppList
+        mode={ModeEnum.AppStore}
+        apps={apps}
+        menuItems={(app) => getAppStoreMenuItems((key) => handleMenuClick(key, app))}
+      />
+    )
   }
 
   return (

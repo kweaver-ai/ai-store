@@ -11,7 +11,7 @@ import { onMicroAppGlobalStateChange, setMicroAppGlobalState } from '@/utils/mic
 import { microAppLoadFailureManager } from '@/utils/micro-app/loadFailureManager'
 import { getMicroAppEntry } from '@/utils/micro-app/localDev'
 import type { MicroAppProps } from '@/utils/micro-app/types'
-import { AppMenu } from '../MicroAppHeader/AppMenu'
+import { AppMenu } from '../Header/components/AppMenu'
 
 interface MicroAppComponentProps {
   /** 应用基础信息 */
@@ -358,7 +358,7 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
       failureInfo.error instanceof Error ? failureInfo.error.message : String(failureInfo.error)
 
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
+      <div className="absolute inset-0 flex items-center justify-center">
         <Empty
           type="failed"
           // desc="微应用加载失败"
@@ -383,7 +383,9 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
         className="h-full w-full"
         id={`micro-app-container-${appBasicInfo.id}`}
       />
-      {loading && <Spin size="large" className="fixed inset-0 flex items-center justify-center" />}
+      {loading && (
+        <Spin size="large" className="absolute inset-0 flex items-center justify-center" />
+      )}
     </>
   )
 }

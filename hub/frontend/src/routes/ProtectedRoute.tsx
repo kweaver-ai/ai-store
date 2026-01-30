@@ -4,7 +4,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import GradientContainer from '@/components/GradientContainer'
 import { getFullPath } from '@/utils/config'
 import { getAccessToken } from '@/utils/http/token-config'
-import { useUserInfoStore } from '../stores'
+import { usePreferenceStore, useUserInfoStore } from '../stores'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -17,6 +17,7 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   // 订阅 store 状态，用于触发重新渲染
   const { fetchUserInfo, userInfo, isLoading } = useUserInfoStore()
+  const { fetchPinnedMicroApps } = usePreferenceStore()
   const location = useLocation()
   // 用于跟踪是否已经尝试过获取用户信息，防止重复调用
   const hasTriedFetchRef = useRef(false)
@@ -110,6 +111,13 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     // 这样可以避免状态更新导致的无限循环
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, isLoginPage, fetchUserInfo, skipAuth])
+
+  // 用户已登录且通过路由守卫时，确保刷新后拉取一次 pinned 列表（带内部去重）
+  useEffect(() => {
+    if (!skipAuth && token && userInfo) {
+      fetchPinnedMicroApps()
+    }
+  }, [skipAuth, token, userInfo, fetchPinnedMicroApps])
 
   // 如果跳过认证，直接返回子组件
   if (skipAuth) {

@@ -1,24 +1,36 @@
-import { Col, Row, Tabs } from 'antd'
+import { Col, type MenuProps, Row, Tabs } from 'antd'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import AutoSizer from 'react-virtualized-auto-sizer'
 import type { ApplicationInfo } from '@/apis/applications'
+import ScrollBarContainer from '../ScrollBarContainer'
 import AppCard from './AppCard'
 import styles from './index.module.less'
 import { ALL_TAB_KEY, type ModeEnum } from './types'
 import { computeColumnCount, gap } from './utils'
 
 interface AppListProps {
+  /** 组件模式：我的应用 或 应用商店 */
   mode: ModeEnum.MyApp | ModeEnum.AppStore
   /** 应用列表数据 */
   apps: ApplicationInfo[]
+  /** 卡片菜单项生成函数 */
+  menuItems?: (app: ApplicationInfo) => MenuProps['items']
+  /** 卡片菜单右上角按钮点击回调 */
+  onMenuButtonClick?: (app: ApplicationInfo) => void
   /** 卡片菜单点击回调 */
-  onMenuClick?: (action: string, app: ApplicationInfo) => void
+  onCardClick?: (app: ApplicationInfo) => void
 }
 
 /**
  * AppList 组件
  */
-const AppList: React.FC<AppListProps> = ({ mode, apps, onMenuClick }) => {
+const AppList: React.FC<AppListProps> = ({
+  mode,
+  apps,
+  menuItems,
+  onMenuButtonClick,
+  onCardClick,
+}) => {
   const [activeTab, setActiveTab] = useState<string>(ALL_TAB_KEY)
 
   // 根据后端返回的 category 动态分组
@@ -77,7 +89,7 @@ const AppList: React.FC<AppListProps> = ({ mode, apps, onMenuClick }) => {
   }, [appTypes])
 
   /** 渲染应用卡片 */
-  const renderAppCard = useCallback(
+  const renderCard = useCallback(
     (app: ApplicationInfo, width: number) => {
       return (
         <Col key={app.id} style={{ width, minWidth: width }}>
@@ -85,16 +97,18 @@ const AppList: React.FC<AppListProps> = ({ mode, apps, onMenuClick }) => {
             app={app}
             mode={mode}
             width={width}
-            onMenuClick={(key) => onMenuClick?.(key, app)}
+            menuItems={menuItems?.(app)}
+            onMenuButtonClick={onMenuButtonClick}
+            onCardClick={onCardClick}
           />
         </Col>
       )
     },
-    [mode, onMenuClick],
+    [mode, menuItems, onMenuButtonClick, onCardClick],
   )
 
   return (
-    <div className="mr-[-16px] flex flex-col h-0 flex-1">
+    <div className="flex flex-col h-0 flex-1">
       <Tabs
         activeKey={activeTab}
         items={tabItems}
@@ -113,7 +127,7 @@ const AppList: React.FC<AppListProps> = ({ mode, apps, onMenuClick }) => {
         //     : undefined
         // }
       />
-      <div className={styles.hideScrollbar}>
+      <ScrollBarContainer className="mr-[-24px] pr-2">
         <AutoSizer style={{ width: 'calc(100% - 8px)' }} disableHeight>
           {({ width }) => {
             const count = computeColumnCount(width)
@@ -121,12 +135,12 @@ const AppList: React.FC<AppListProps> = ({ mode, apps, onMenuClick }) => {
 
             return (
               <Row gutter={[gap, gap]}>
-                {currentApps.map((app) => renderAppCard(app, calculatedCardWidth))}
+                {currentApps.map((app) => renderCard(app, calculatedCardWidth))}
               </Row>
             )
           }}
         </AutoSizer>
-      </div>
+      </ScrollBarContainer>
     </div>
   )
 }

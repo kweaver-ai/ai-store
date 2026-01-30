@@ -16,6 +16,7 @@ export interface BreadcrumbItem {
   name: string
   path?: string
   icon?: string
+  disabled?: boolean
 }
 
 /**
