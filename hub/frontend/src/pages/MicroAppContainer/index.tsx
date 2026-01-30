@@ -7,6 +7,7 @@ import { getFullPath } from '@/utils/config'
 import { setMicroAppGlobalState } from '@/utils/micro-app/globalState'
 import MicroAppComponent from '../../components/MicroAppComponent'
 import { type CurrentMicroAppInfo, useMicroAppStore } from '../../stores/microAppStore'
+import { testPinnedMicroApps } from '@/stores/preferenceStore'
 
 const MicroAppContainer = () => {
   const { appId } = useParams<{ appId: string }>()
@@ -18,13 +19,14 @@ const MicroAppContainer = () => {
   useEffect(() => {
     const fetchApp = async () => {
       if (!appId) {
-        setError('应用不存在')
+        setError('获取应用失败')
         setLoading(false)
         return
       }
 
       try {
-        const appData = await getApplicationsBasicInfo(Number(appId))
+        // const appData = await getApplicationsBasicInfo(Number(appId))
+        const appData = testPinnedMicroApps.find((app) => app.id === Number(appId)) ?? null
         if (!appData) {
           setError('获取应用配置失败')
         } else {
@@ -73,14 +75,14 @@ const MicroAppContainer = () => {
   const renderContent = () => {
     if (loading) {
       return (
-        <div className="fixed inset-0 flex justify-center items-center">
+        <div className="absolute inset-0 flex justify-center items-center">
           <Spin size="large" />
         </div>
       )
     }
     if (error || !appBasicInfo) {
       return (
-        <div className="fixed inset-0 flex justify-center items-center">
+        <div className="absolute inset-0 flex justify-center items-center">
           <Empty type="failed" desc="加载失败" subDesc={error ?? ''} />
         </div>
       )

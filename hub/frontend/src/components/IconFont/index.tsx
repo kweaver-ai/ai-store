@@ -19,7 +19,7 @@ const IconFont: React.FC<IconFontType> = (props) => {
   const { className, ...restProps } = props
   return (
     <IconBaseComponent
-      className={classNames('text-sm leading-none inline-block', className)}
+      className={classNames('text-sm leading-[0px] inline-flex items-center', className)}
       {...restProps}
     />
   )

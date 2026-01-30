@@ -1,10 +1,10 @@
-import { lazy, useMemo } from 'react'
+import { lazy, useEffect, useRef } from 'react'
 import type { RouteObject } from 'react-router-dom'
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { createBrowserRouter, useNavigate } from 'react-router-dom'
 import { BASE_PATH } from '@/utils/config'
 import { ProtectedRoute } from './ProtectedRoute'
 import { routeConfigs } from './routes'
-import { getFirstVisibleSidebarRoute } from './utils'
+import { resolveDefaultMicroAppPath } from './utils'
 
 const Login = lazy(() => import('../pages/Login'))
 const LoginSuccess = lazy(() => import('../pages/Login/LoginSuccess'))
@@ -22,13 +22,32 @@ const LoginFailed = lazy(() => import('../pages/Login/LoginFailed'))
  * 默认首页重定向
  */
 const DefaultIndexRedirect = () => {
+  const navigate = useNavigate()
+  const hasNavigatedRef = useRef(false)
+
+  useEffect(() => {
+    if (hasNavigatedRef.current) {
+      return
+    }
+
+    resolveDefaultMicroAppPath().then((targetPath) => {
+      if (hasNavigatedRef.current) {
+        return
+      }
+      hasNavigatedRef.current = true
+      navigate(targetPath, { replace: true })
+    })
+  }, [navigate])
+
   // const { userInfo } = useUserInfoStore()
 
   // TODO: 角色信息需要从其他地方获取，暂时使用空数组
-  const roleIds = useMemo(() => new Set<string>([]), [])
-  const first = useMemo(() => getFirstVisibleSidebarRoute(roleIds), [roleIds])
-  const to = first?.path ? `/${first.path}` : '/403'
-  return <Navigate to={to} replace />
+  // const roleIds = useMemo(() => new Set<string>([]), [])
+  // const first = useMemo(() => getFirstVisibleSidebarRoute(roleIds), [roleIds])
+  // const to = first?.path ? `/${first.path}` : '/403'
+  // navigate(to, { replace: true })
+
+  return null
 }
 
 /**
@@ -91,7 +110,7 @@ export const router = createBrowserRouter(
           index: true,
           element: <DefaultIndexRedirect />,
         },
-        // 从配置生成的路由
+        // 从配置生成的路由 (Store, Studio, Home)
         ...generateRoutesFromConfig(),
         // 动态路由（微应用容器）
         {
@@ -100,7 +119,21 @@ export const router = createBrowserRouter(
           handle: {
             layout: {
               hasSider: false,
-              hasHeader: true,
+              hasHeader: false,
+              siderType: 'home',
+              headerType: 'micro-app',
+            },
+          },
+        },
+        {
+          path: 'application/error',
+          element: <MicroAppContainer />,
+          handle: {
+            layout: {
+              hasSider: true,
+              hasHeader: false,
+              siderType: 'home',
+              headerType: 'micro-app',
             },
           },
         },

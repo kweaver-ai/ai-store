@@ -31,6 +31,12 @@ const AppUploadModal = ({ open, onCancel, onSuccess }: AppUploadModalProps) => {
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [uploadedAppInfo, setUploadedAppInfo] = useState<ApplicationInfo | null>(null)
   const uploadRequestRef = useRef<{ abort: () => void } | null>(null)
+  const uploadStatusRef = useRef<UploadStatus>(UploadStatus.INITIAL)
+
+  // 同步最新的上传状态到 ref，避免 Modal.confirm 回调闭包中拿到旧状态
+  useEffect(() => {
+    uploadStatusRef.current = uploadStatus
+  }, [uploadStatus])
 
   // 重置状态
   const resetState = () => {
@@ -151,6 +157,12 @@ const AppUploadModal = ({ open, onCancel, onSuccess }: AppUploadModalProps) => {
 
   // 处理取消上传
   const handleCancelUpload = () => {
+    // 竞态处理：如果已经成功安装，则不允许取消（使用 ref 避免拿到旧状态）
+    if (uploadStatusRef.current === UploadStatus.SUCCESS) {
+      message.warning('安装已完成，无法取消')
+      return
+    }
+
     if (uploadRequestRef.current) {
       uploadRequestRef.current.abort()
       uploadRequestRef.current = null

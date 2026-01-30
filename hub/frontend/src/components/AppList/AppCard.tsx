@@ -2,31 +2,34 @@ import type { MenuProps } from 'antd'
 import { Avatar, Button, Card, Dropdown } from 'antd'
 import classNames from 'classnames'
 import type React from 'react'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import type { ApplicationInfo } from '@/apis/applications'
 import { formatTimeMinute } from '@/utils/handle-function/FormatTime'
 import AppIcon from '../AppIcon'
 import IconFont from '../IconFont'
 import { ModeEnum } from './types'
-import { cardHeight, getAppCardMenuItems } from './utils'
+import { cardHeight } from './utils'
 
 interface AppCardProps {
   app: ApplicationInfo
   mode: ModeEnum.MyApp | ModeEnum.AppStore
   width: number
-  onMenuClick?: (key: string, app: ApplicationInfo) => void
+  menuItems?: MenuProps['items']
+  /** 卡片菜单点击回调 */
+  onCardClick?: (app: ApplicationInfo) => void
+  /** 卡片菜单右上角按钮点击回调 */
+  onMenuButtonClick?: (app: ApplicationInfo) => void
 }
 
-const AppCard: React.FC<AppCardProps> = ({ app, mode, width, onMenuClick }) => {
+const AppCard: React.FC<AppCardProps> = ({
+  app,
+  mode,
+  width,
+  menuItems,
+  onCardClick,
+  onMenuButtonClick,
+}) => {
   const [menuOpen, setMenuOpen] = useState(false)
-
-  const menuItems = useMemo(() => {
-    return getAppCardMenuItems(mode, app) as MenuProps['items']
-  }, [mode, app])
-
-  const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
-    onMenuClick?.(key as string, app)
-  }
 
   const updateTime = app.updated_at ? formatTimeMinute(new Date(app.updated_at).getTime()) : ''
   const userName = app.updated_by || ''
@@ -43,10 +46,13 @@ const AppCard: React.FC<AppCardProps> = ({ app, mode, width, onMenuClick }) => {
           flexDirection: 'column',
         },
       }}
+      onClick={() => {
+        onCardClick?.(app)
+      }}
     >
       <div className="flex gap-4 mb-2 flex-shrink-0">
         {/* 应用图标 */}
-        <div className="w-16 h-16 flex-shrink-0 rounded-full flex items-center justify-center overflow-hidden">
+        <div className="w-16 h-16 flex-shrink-0 rounded-full flex overflow-hidden">
           <AppIcon icon={app.icon} name={app.name} size={64} className="w-full h-full" hasBorder />
         </div>
         {/* 名称 + 版本号 + 描述 */}
@@ -62,7 +68,7 @@ const AppCard: React.FC<AppCardProps> = ({ app, mode, width, onMenuClick }) => {
                   variant="filled"
                   className="px-3 bg-[#F9FAFC] text-[--dip-text-color-65] hover:!bg-[--dip-primary-color] hover:!text-[--dip-white]"
                   onClick={() => {
-                    onMenuClick?.('use', app)
+                    onMenuButtonClick?.(app)
                   }}
                 >
                   <span className="text-xs">立即使用</span>
@@ -105,7 +111,7 @@ const AppCard: React.FC<AppCardProps> = ({ app, mode, width, onMenuClick }) => {
           {/* 更多操作 */}
           {menuItems && menuItems.length > 0 && (
             <Dropdown
-              menu={{ items: menuItems, onClick: handleMenuClick }}
+              menu={{ items: menuItems }}
               trigger={['click']}
               placement="bottomRight"
               onOpenChange={(open) => {

@@ -10,7 +10,9 @@ import { router } from './routes'
 import { useLanguageStore } from './stores/languageStore'
 import './App.css'
 import './styles/resetAntd.less'
+import './styles/styleIsolation.less'
 import GradientContainer from './components/GradientContainer'
+import { themeColors } from './styles/themeColors'
 
 function getUILocale(lang: string): typeof enUS | typeof zhTW | typeof zhCN {
   return lang === 'en-US' ? enUS : lang === 'zh-TW' ? zhTW : zhCN
@@ -28,16 +30,18 @@ const App = () => {
       iconPrefixCls="dip-icon"
       locale={getUILocale(language)}
       theme={{
+        cssVar: { prefix: 'dip' },
         token: {
           colorPrimary: primaryColor,
-          colorSuccess: '#52c41a',
-          colorWarning: '#faad14',
-          colorError: '#f5222d',
-          colorInfo: '#126ee3',
-          colorText: 'rgba(0,0,0,0.85)',
+          colorSuccess: themeColors.success,
+          colorWarning: themeColors.warning,
+          colorError: themeColors.error,
+          colorInfo: themeColors.info,
+          colorText: themeColors.text,
+          colorLink: themeColors.link,
         },
       }}
-      getPopupContainer={() => document.getElementById('root') || document.body}
+      getPopupContainer={() => document.getElementById('dip-kweaver-root') || document.body}
     >
       <Suspense
         fallback={

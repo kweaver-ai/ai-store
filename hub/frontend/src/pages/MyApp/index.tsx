@@ -1,6 +1,7 @@
 import { ReloadOutlined } from '@ant-design/icons'
 import { Button, message, Spin, Tooltip } from 'antd'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { ApplicationInfo } from '@/apis/applications'
 import AppList from '@/components/AppList'
 import { ModeEnum } from '@/components/AppList/types'
@@ -8,13 +9,13 @@ import Empty from '@/components/Empty'
 import SearchInput from '@/components/SearchInput'
 import { useApplicationsService } from '@/hooks/useApplicationsService'
 import { usePreferenceStore } from '@/stores'
-import { getFullPath } from '@/utils/config'
 import { MyAppActionEnum } from './types'
 
 const MyApp = () => {
   const { apps, loading, error, searchValue, handleSearch, handleRefresh } =
     useApplicationsService()
   const { togglePin } = usePreferenceStore()
+  const navigate = useNavigate()
   const [hasLoadedData, setHasLoadedData] = useState(false) // 记录是否已经成功加载过数据（有数据的情况）
   const hasEverHadDataRef = useRef(false) // 使用 ref 追踪是否曾经有过数据，避免循环依赖
   const prevSearchValueRef = useRef('') // 追踪上一次的搜索值，用于判断是否是从搜索状态清空
@@ -53,17 +54,17 @@ const MyApp = () => {
       try {
         switch (action) {
           case MyAppActionEnum.Fix:
-            await togglePin(_app.key)
+            await togglePin(_app.id)
             message.success('已固定')
             handleRefresh()
             break
           case MyAppActionEnum.Unfix:
-            await togglePin(_app.key)
+            await togglePin(_app.id)
             message.success('已取消固定')
             handleRefresh()
             break
           case MyAppActionEnum.Use:
-            window.open(getFullPath(`/application/${_app.id}`), '_blank')
+            navigate(`/application/${_app.id}`)
             break
           default:
             break
@@ -86,7 +87,7 @@ const MyApp = () => {
     if (error) {
       return (
         <Empty type="failed" desc="加载失败">
-          <Button type="primary" onClick={handleRefresh}>
+          <Button className="mt-1" type="primary" onClick={handleRefresh}>
             重试
           </Button>
         </Empty>
@@ -116,7 +117,13 @@ const MyApp = () => {
       return <div className="absolute inset-0 flex items-center justify-center">{stateContent}</div>
     }
 
-    return <AppList mode={ModeEnum.MyApp} apps={apps} onMenuClick={handleMenuClick} />
+    return (
+      <AppList
+        mode={ModeEnum.MyApp}
+        apps={apps}
+        onMenuButtonClick={(app) => handleMenuClick(MyAppActionEnum.Use, app)}
+      />
+    )
   }
 
   return (

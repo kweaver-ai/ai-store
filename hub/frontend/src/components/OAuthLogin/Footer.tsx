@@ -22,7 +22,7 @@ function Footer() {
       {showUserAgreement && (
         <a
           href="/Agreement/UserAgreement/ServiceAgreement-CN.html"
-          className="text-[rgba(52,97,236,0.75)] hover:text-[#3461ec]"
+          className="text-[rgba(52,97,236,0.75)] hover:text-[--dip-link-color]"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -33,7 +33,7 @@ function Footer() {
       {showPrivacyPolicy && (
         <a
           href="/Agreement/Privacy/Privacy-CN.html"
-          className="text-[rgba(52,97,236,0.75)] hover:text-[#3461ec]"
+          className="text-[rgba(52,97,236,0.75)] hover:text-[--dip-link-color]"
           target="_blank"
           rel="noopener noreferrer"
         >

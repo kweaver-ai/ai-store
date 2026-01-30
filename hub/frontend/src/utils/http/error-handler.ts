@@ -2,6 +2,28 @@ import { message } from 'antd'
 import intl from 'react-intl-universal'
 import { httpConfig } from './token-config'
 
+// 错误消息去重：记录每个错误消息的最后显示时间
+const errorMessageCache = new Map<string, number>()
+const DEDUP_INTERVAL = 2000 // 2秒内相同错误只显示一次
+
+/**
+ * 显示错误消息（带去重）
+ * @param messageText 错误消息文本
+ */
+function showDeduplicatedMessage(messageText: string) {
+  const now = Date.now()
+  const lastShownTime = errorMessageCache.get(messageText)
+
+  // 如果相同错误在 2 秒内已经显示过，则跳过
+  if (lastShownTime && now - lastShownTime < DEDUP_INTERVAL) {
+    return
+  }
+
+  // 记录显示时间并显示消息
+  errorMessageCache.set(messageText, now)
+  message.warning(messageText)
+}
+
 export async function handleError({
   error,
   url,
@@ -24,13 +46,13 @@ export async function handleError({
   }
 
   if (isOffline) {
-    message.warning(intl.get('error.networkError'))
+    showDeduplicatedMessage(intl.get('error.networkError'))
     handleReject(0)
     return
   }
 
   if (error.code === 'ECONNABORTED' && error.message === 'TIMEOUT') {
-    message.warning(intl.get('error.timeoutError'))
+    showDeduplicatedMessage(intl.get('error.timeoutError'))
     handleReject(0)
     return
   }
@@ -41,7 +63,7 @@ export async function handleError({
   }
 
   if (!error.response) {
-    message.warning(intl.get('error.serverError'))
+    showDeduplicatedMessage(intl.get('error.serverError'))
     handleReject(0)
     return
   }
@@ -60,7 +82,7 @@ export async function handleError({
       return
     }
     const messageText = getServerErrorMsg(status)
-    message.warning(messageText)
+    showDeduplicatedMessage(messageText)
     handleReject(status)
     return
   }
