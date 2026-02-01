@@ -9,6 +9,7 @@ interface AgentConfigProps {
 }
 
 const AgentConfig = ({ appId }: AgentConfigProps) => {
+  const [messageApi, messageContextHolder] = message.useMessage()
   const [loading, setLoading] = useState(false)
   const [agents, setAgents] = useState<AgentInfo[]>([])
 
@@ -25,10 +26,10 @@ const AgentConfig = ({ appId }: AgentConfigProps) => {
     setLoading(true)
     try {
       const data = await getApplicationsAgents(appId)
-      setAgents(data || [])
+      setAgents(data)
     } catch (error: any) {
       if (error?.description) {
-        message.error(error?.description)
+        messageApi.error(error?.description)
       }
     } finally {
       setLoading(false)
@@ -45,6 +46,7 @@ const AgentConfig = ({ appId }: AgentConfigProps) => {
 
   return (
     <div className="h-full flex flex-col gap-y-2">
+      {messageContextHolder}
       <div className="px-4 text-sm font-medium text-[--dip-text-color]">智能体配置</div>
 
       {/* 提示信息框 */}

@@ -28,7 +28,10 @@ export const postApplications = (file: Blob | ArrayBuffer): Promise<ApplicationI
  * @returns 应用列表
  */
 export const getApplications = (params?: Record<string, any>): Promise<ApplicationInfo[]> =>
-  get(`/api/dip-hub/v1/applications`, { params })
+  get(`/api/dip-hub/v1/applications`, { params }).then((result: any) => {
+    // 如果结果不是数组，返回空数组
+    return Array.isArray(result) ? result : []
+  })
 
 /**
  * 查看应用基础信息
@@ -44,14 +47,20 @@ export const getApplicationsBasicInfo = (id?: number): Promise<ApplicationBasicI
  * OpenAPI: GET /applications/ontologies?app_id=xxx
  */
 export const getApplicationsOntologies = (id: number): Promise<OntologyInfo[]> =>
-  get(`/api/dip-hub/v1/applications/ontologies`, { params: { id } })
+  get(`/api/dip-hub/v1/applications/ontologies`, { params: { id } }).then((result: any) => {
+    // 如果结果不是数组，返回空数组
+    return Array.isArray(result) ? result : []
+  })
 
 /**
  * 查看智能体配置
  * OpenAPI: GET /applications/agents?app_id=xxx
  */
 export const getApplicationsAgents = (id: number): Promise<AgentInfo[]> =>
-  get(`/api/dip-hub/v1/applications/agents`, { params: { id } })
+  get(`/api/dip-hub/v1/applications/agents`, { params: { id } }).then((result: any) => {
+    // 如果结果不是数组，返回空数组
+    return Array.isArray(result) ? result : []
+  })
 
 /**
  * 卸载应用

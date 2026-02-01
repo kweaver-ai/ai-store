@@ -1,4 +1,4 @@
-import { ConfigProvider, Spin } from 'antd'
+import { App as AntdApp, ConfigProvider, Spin } from 'antd'
 import enUS from 'antd/locale/en_US'
 import zhCN from 'antd/locale/zh_CN'
 import zhTW from 'antd/locale/zh_TW'
@@ -40,18 +40,30 @@ const App = () => {
           colorText: themeColors.text,
           colorLink: themeColors.link,
         },
+        components: {
+          Table: {
+            headerBg: '#f5f5f5',
+            headerBorderRadius: 4,
+            cellPaddingBlock: 12,
+            cellPaddingBlockMD: 12,
+            cellPaddingInlineMD: 16,
+            cellPaddingInlineSM: 12,
+          },
+        },
       }}
       getPopupContainer={() => document.getElementById('dip-kweaver-root') || document.body}
     >
-      <Suspense
-        fallback={
-          <GradientContainer className="w-full h-full flex items-center justify-center">
-            <Spin size="large" />
-          </GradientContainer>
-        }
-      >
-        <RouterProvider router={router} />
-      </Suspense>
+      <AntdApp>
+        <Suspense
+          fallback={
+            <GradientContainer className="w-full h-full flex items-center justify-center">
+              <Spin size="large" />
+            </GradientContainer>
+          }
+        >
+          <RouterProvider router={router} />
+        </Suspense>
+      </AntdApp>
     </ConfigProvider>
   )
 }

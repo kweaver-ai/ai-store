@@ -19,7 +19,7 @@ export const Strike = TStrike.extend<StrikeOptions>({
       ...this.parent?.(),
       HTMLAttributes: {},
       dictionary: {
-        name: 'Strike',
+        name: '删除线',
       },
     }
   },

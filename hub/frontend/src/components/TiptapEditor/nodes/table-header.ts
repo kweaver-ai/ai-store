@@ -35,12 +35,12 @@ export const TableHeader = TTableHeader.extend<TableHeaderOptions>({
       ...this.parent?.(),
       HTMLAttributes: {},
       dictionary: {
-        insertLeft: 'Insert column on the left',
-        insertRight: 'Insert column on the right',
-        alignLeft: 'Left alignment',
-        alignCenter: 'Center alignment',
-        alignRight: 'Right alignment',
-        deleteCol: 'Delete column',
+        insertLeft: '在左侧插入列',
+        insertRight: '在右侧插入列',
+        alignLeft: '左对齐',
+        alignCenter: '居中对齐',
+        alignRight: '右对齐',
+        deleteCol: '删除列',
       },
     }
   },

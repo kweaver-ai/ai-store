@@ -1,6 +1,7 @@
-import React, { CSSProperties } from 'react'
-import { AnimateLayoutChanges, useSortable } from '@dnd-kit/sortable'
+import type { AnimateLayoutChanges } from '@dnd-kit/sortable'
+import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import type { CSSProperties } from 'react'
 import { TreeItem, type TreeItemProps } from './TreeItem'
 
 interface Props extends TreeItemProps {
@@ -10,7 +11,7 @@ interface Props extends TreeItemProps {
 const animateLayoutChanges: AnimateLayoutChanges = ({ isSorting, wasDragging }) =>
   !(isSorting || wasDragging)
 
-export function SortableTreeItem({ id, depth, ...props }: Props) {
+export function SortableTreeItem({ id, depth, canDrag = true, ...props }: Props) {
   const {
     attributes,
     isDragging,
@@ -23,6 +24,7 @@ export function SortableTreeItem({ id, depth, ...props }: Props) {
   } = useSortable({
     id,
     animateLayoutChanges,
+    disabled: !canDrag, // 如果 canDrag 为 false，禁用拖拽
   })
   const style: CSSProperties = {
     transform: CSS.Translate.toString(transform),
@@ -34,15 +36,20 @@ export function SortableTreeItem({ id, depth, ...props }: Props) {
       ref={setDraggableNodeRef}
       wrapperRef={setDroppableNodeRef}
       style={style}
+      id={id}
       depth={depth}
       ghost={isDragging}
       disableInteraction={isSorting}
-      handleProps={{
-        ...attributes,
-        ...listeners,
-      }}
+      canDrag={canDrag}
+      handleProps={
+        canDrag
+          ? {
+              ...attributes,
+              ...listeners,
+            }
+          : undefined
+      }
       {...props}
     />
   )
 }
-

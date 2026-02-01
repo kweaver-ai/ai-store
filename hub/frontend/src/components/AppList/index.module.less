@@ -9,21 +9,3 @@
     }
   }
 }
-
-/* 隐藏滚动条但保持可滚动 */
-.hideScrollbar {
-  overflow: auto;
-
-  /* Firefox */
-  scrollbar-width: none;
-
-  /* IE and Edge */
-  -ms-overflow-style: none;
-
-  /* Webkit浏览器 */
-  &::-webkit-scrollbar {
-    width: 0;
-    height: 0;
-    display: none;
-  }
-}

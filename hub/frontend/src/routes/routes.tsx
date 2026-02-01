@@ -76,9 +76,9 @@ export const routeConfigs: RouteConfig[] = [
     showInSidebar: false,
     handle: {
       layout: {
-        hasSider: true,
+        hasSider: false,
         hasHeader: true,
-        siderType: 'project',
+        siderType: 'studio',
         headerType: 'studio',
       },
     },

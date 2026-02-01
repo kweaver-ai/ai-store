@@ -1,8 +1,6 @@
 import { Layout } from 'antd'
 import clsx from 'classnames'
-import { useParams } from 'react-router-dom'
 import type { SiderType } from '@/routes/types'
-import ProjectSider from '../ProjectSider'
 import BaseSider from './BaseSider'
 import HomeSider from './HomeSider'
 import styles from './index.module.less'
@@ -25,9 +23,6 @@ interface SiderProps {
  * 根据 type 选择渲染 BaseSider（store/studio）或 MicroAppSider（micro-app）
  */
 const Sider = ({ collapsed, onCollapse, topOffset = 0, type = 'home' }: SiderProps) => {
-  const params = useParams()
-  const projectId = params.projectId || ''
-
   return (
     <AntdSider
       width={240}
@@ -49,8 +44,6 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0, type = 'home' }: SiderPro
     >
       {type === 'home' ? (
         <HomeSider collapsed={collapsed} onCollapse={onCollapse} />
-      ) : type === 'project' ? (
-        <ProjectSider collapsed={collapsed} onCollapse={onCollapse} projectId={projectId} />
       ) : (
         <BaseSider collapsed={collapsed} onCollapse={onCollapse} type={type} />
       )}

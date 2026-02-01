@@ -10,6 +10,7 @@ interface OntologyConfigProps {
 }
 
 const OntologyConfig = ({ appId }: OntologyConfigProps) => {
+  const [messageApi, messageContextHolder] = message.useMessage()
   const [loading, setLoading] = useState(false)
   const [ontologies, setOntologies] = useState<OntologyInfo[]>([])
 
@@ -26,10 +27,10 @@ const OntologyConfig = ({ appId }: OntologyConfigProps) => {
     setLoading(true)
     try {
       const data = await getApplicationsOntologies(appId)
-      setOntologies(data || [])
+      setOntologies(data)
     } catch (error: any) {
       if (error?.description) {
-        message.error(error?.description)
+        messageApi.error(error?.description)
       }
     } finally {
       setLoading(false)
@@ -46,6 +47,7 @@ const OntologyConfig = ({ appId }: OntologyConfigProps) => {
 
   return (
     <div className="h-full flex flex-col gap-y-2">
+      {messageContextHolder}
       <div className="px-4 text-sm font-medium text-[--dip-text-color]">业务知识网络</div>
 
       {/* 提示信息框 */}

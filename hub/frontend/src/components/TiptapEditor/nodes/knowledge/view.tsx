@@ -1,115 +1,168 @@
 import type { NodeViewProps } from '@tiptap/core'
 import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
-import { Card, Modal } from 'antd'
+import { Popover, Spin } from 'antd'
+import clsx from 'clsx'
 import type React from 'react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { getKnowledgeNetworks } from '@/apis/ontology-manager'
+import type { KnowledgeNetworkInfo } from '@/apis/ontology-manager/index.d'
+import Empty from '@/components/Empty'
+import ScrollBarContainer from '@/components/ScrollBarContainer'
+import SearchInput from '@/components/SearchInput'
+import styles from './index.module.less'
+import IconFont from '@/components/IconFont'
 
 const KnowledgeView: React.FC<NodeViewProps> = (props) => {
-  const { node, updateAttributes, editor } = props
-  const [isModalVisible, setIsModalVisible] = useState(false)
-  const { id, title, description, icon: nodeIcon } = node.attrs
+  const { node, updateAttributes, editor, selected } = props
+  const { id, name } = node.attrs
+  const [knowledgeOptions, setKnowledgeOptions] = useState<KnowledgeNetworkInfo[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+  const [popoverOpen, setPopoverOpen] = useState(false)
+  const [searchValue, setSearchValue] = useState('')
+  console.log('props', props)
 
-  const handleClick = () => {
-    if (editor.isEditable) {
-      setIsModalVisible(true)
+  // 获取知识网络列表
+  const fetchKnowledgeNetworks = async () => {
+    if (loading) return // 防止重复请求
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await getKnowledgeNetworks({ limit: -1 })
+      setKnowledgeOptions(result.entries)
+    } catch (error) {
+      setKnowledgeOptions([])
+      setError(error as Error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleSelect = (data: { id: string; title: string; description: string; icon: string }) => {
-    updateAttributes(data)
-    setIsModalVisible(false)
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      handleClick()
+  // Popover 打开时获取数据
+  const handlePopoverOpenChange = (open: boolean) => {
+    setPopoverOpen(open)
+    if (open && !loading) {
+      fetchKnowledgeNetworks()
     }
   }
 
-  return (
-    <NodeViewWrapper className="dip-knowledge-node-wrapper">
-      <button
-        className="dip-knowledge-node"
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
-        type="button"
-        tabIndex={0}
-      >
-        {!id ? (
-          <div className="dip-knowledge-placeholder">
-            <span
-              className="dip-prose-mirror-icon dip-prose-mirror-icon-knowledge"
-              style={{ fontSize: '24px', marginRight: '8px' }}
-            />
-            <span>点击选择知识网络</span>
+  // 过滤后的选项列表
+  const filteredOptions = useMemo(() => {
+    if (!searchValue.trim()) {
+      return knowledgeOptions
+    }
+    const keyword = searchValue.trim().toLowerCase()
+    return knowledgeOptions.filter((item) => item.name?.toLowerCase().includes(keyword))
+  }, [knowledgeOptions, searchValue])
+
+  // 选择知识网络
+  const handleSelect = (item: KnowledgeNetworkInfo) => {
+    updateAttributes({
+      id: item.id,
+      name: item.name,
+    })
+    setPopoverOpen(false)
+    setSearchValue('')
+  }
+
+  // Popover 内容
+  const popoverContent = (
+    <div className="w-[352px] flex flex-col gap-y-2">
+      {/* 搜索框 */}
+      <div className="px-4">
+        <SearchInput
+          variant="outlined"
+          className="w-full"
+          placeholder="搜索业务知识网络"
+          onSearch={(value) => setSearchValue(value)}
+        />
+      </div>
+
+      {/* 列表 */}
+      <ScrollBarContainer className="max-h-[200px] overflow-y-auto px-2">
+        {loading ? (
+          <div className="flex justify-center py-4">
+            <Spin />
+          </div>
+        ) : error ? (
+          <div className="mx-auto text-sm text-[rgba(0,0,0,0.45)] text-center py-4">暂无数据</div>
+        ) : filteredOptions.length === 0 ? (
+          <div className="mx-auto text-sm text-[rgba(0,0,0,0.45)] text-center py-4">
+            抱歉，没有找到相关内容
           </div>
         ) : (
-          <Card
-            hoverable
-            className="dip-knowledge-card"
-            size="small"
-            title={
-              <div className="dip-knowledge-card-title">
-                {nodeIcon && (
-                  <span
-                    className={`dip-prose-mirror-icon ${nodeIcon}`}
-                    style={{ marginRight: '8px' }}
-                  />
-                )}
-                <span>{title}</span>
-              </div>
-            }
-          >
-            <div className="dip-knowledge-card-description">{description}</div>
-          </Card>
+          <div className="space-y-1">
+            {filteredOptions.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => handleSelect(item)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    handleSelect(item)
+                  }
+                }}
+                className={`w-full h-8 text-left px-3 rounded cursor-pointer transition-colors ${
+                  id === item.id ? 'bg-[rgba(18,110,227,0.06)]' : 'hover:bg-[rgba(0,0,0,0.04)]'
+                }`}
+              >
+                {item.name}
+              </button>
+            ))}
+          </div>
         )}
-      </button>
+      </ScrollBarContainer>
+    </div>
+  )
 
-      <Modal
-        title="选择知识网络"
-        open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        footer={null}
-        width={600}
-        destroyOnHidden
-      >
-        <div className="dip-knowledge-selector-list">
-          {[
-            {
-              id: '1',
-              title: '项目架构指南',
-              description: '关于 DIP 项目的技术选型、目录结构和核心模块说明。',
-              icon: 'dip-prose-mirror-icon-orderedList',
-            },
-            {
-              id: '2',
-              title: '组件库文档',
-              description: '内部 Antd 组件封装及业务组件库的使用说明。',
-              icon: 'dip-prose-mirror-icon-bulletList',
-            },
-          ].map((item) => (
-            <Card
-              key={item.id}
-              hoverable
-              className="dip-knowledge-selector-item"
-              onClick={() => handleSelect(item)}
-              style={{ marginBottom: '12px' }}
-            >
-              <Card.Meta
-                avatar={
-                  <span
-                    className={`dip-prose-mirror-icon ${item.icon}`}
-                    style={{ fontSize: '20px' }}
-                  />
-                }
-                title={item.title}
-                description={item.description}
-              />
-            </Card>
-          ))}
-        </div>
-      </Modal>
+  // 展示视图
+  const displayView = (
+    <div
+      className={clsx(
+        'flex h-8 w-fit items-center py-1 px-2 border rounded-md text-muted-foreground text-sm gap-x-2',
+        !id ? 'border-dashed' : 'bg-[#779EEA1A] border-[#779EEA8C]',
+        selected && editor.isEditable && 'border-[--dip-link-color]',
+      )}
+    >
+      <IconFont type="icon-yewuzhishiwangluo" className="text-lg" />
+      {!id ? <span className="text-[rgba(0,0,0,0.65)]">暂无知识网络</span> : <span>{name}</span>}
+    </div>
+  )
+  return (
+    <NodeViewWrapper className="max-w-full">
+      {editor.isEditable ? (
+        <Popover
+          content={popoverContent}
+          trigger="click"
+          open={popoverOpen}
+          onOpenChange={handlePopoverOpenChange}
+          placement="bottomLeft"
+          arrow={false}
+          classNames={{
+            container: styles['dip-node-knowledge-popover'],
+          }}
+        >
+          <button
+            type="button"
+            className="w-fit text-left cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault()
+              setPopoverOpen(!popoverOpen)
+            }}
+            // onKeyDown={(e) => {
+            //   if (e.key === 'Enter' || e.key === ' ') {
+            //     e.preventDefault()
+            //     setPopoverOpen(!popoverOpen)
+            //   }
+            // }}
+          >
+            {displayView}
+          </button>
+        </Popover>
+      ) : (
+        <div>{displayView}</div>
+      )}
     </NodeViewWrapper>
   )
 }

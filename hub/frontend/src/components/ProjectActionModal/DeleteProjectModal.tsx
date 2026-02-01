@@ -1,3 +1,4 @@
+import { ExclamationCircleFilled } from '@ant-design/icons'
 import type { ModalProps } from 'antd'
 import { Form, Input, Modal, message } from 'antd'
 import { useEffect, useState } from 'react'
@@ -18,7 +19,7 @@ const DeleteProjectModal = ({ open, onCancel, project, onSuccess }: DeleteProjec
 
   // 当弹窗关闭时重置表单
   useEffect(() => {
-    if (!open) {
+    if (open) {
       form.resetFields()
       setLoading(false)
     }
@@ -35,7 +36,7 @@ const DeleteProjectModal = ({ open, onCancel, project, onSuccess }: DeleteProjec
       setLoading(true)
 
       // 验证输入的项目名称是否匹配
-      if (values.projectName !== project.name) {
+      if (values.projectName?.trim() !== project.name?.trim()) {
         form.setFields([
           {
             name: 'projectName',
@@ -71,16 +72,21 @@ const DeleteProjectModal = ({ open, onCancel, project, onSuccess }: DeleteProjec
     <>
       {contextHolder}
       <Modal
-        title="删除项目"
+        title={
+          <div className="flex items-center gap-3">
+            <ExclamationCircleFilled className="text-[24px] text-[--dip-warning-color]" />
+            确认删除项目
+          </div>
+        }
         open={open && !!project}
         onCancel={onCancel}
         onOk={handleOk}
         confirmLoading={loading}
-        closable
+        closable={false}
         maskClosable={false}
         destroyOnHidden
-        width={520}
-        okText="确认删除"
+        width={424}
+        okText="确认"
         cancelText="取消"
         okButtonProps={{ danger: true }}
         footer={(_, { OkBtn, CancelBtn }) => (
@@ -89,22 +95,18 @@ const DeleteProjectModal = ({ open, onCancel, project, onSuccess }: DeleteProjec
             <CancelBtn />
           </>
         )}
+        styles={{ body: { padding: '0 0 0 36px' } }}
       >
         <div className="mt-4">
-          <div className="mb-4 text-sm text-[--dip-text-color-65]">
-            删除项目后，相关配置和数据将被清除，用户将无法使用项目。此操作不可恢复。
-          </div>
-          <div className="mb-4 text-sm">
-            请输入项目名称{' '}
-            <span className="font-medium text-[--dip-text-color-85]">{project?.name}</span>{' '}
-            以确认删除：
+          <div className="mb-4">
+            您确认要删除项目{' '}
+            <span className="font-medium text-[--dip-link-color] bg-[--dip-hover-bg-color-4] px-1 py-0.5 rounded-md">
+              {project?.name}
+            </span>{' '}
+            吗？删除后，该项目下的所有页面、模块和数据字典将被永久删除，此操作无法撤销。{' '}
           </div>
           <Form form={form} layout="vertical">
-            <Form.Item
-              label="项目名称"
-              name="projectName"
-              rules={[{ required: true, message: '请输入项目名称' }]}
-            >
+            <Form.Item label="请输入项目名称以确认删除：" name="projectName">
               <Input placeholder="请输入项目名称" />
             </Form.Item>
           </Form>

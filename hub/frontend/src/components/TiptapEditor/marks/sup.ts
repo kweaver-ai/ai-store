@@ -24,7 +24,7 @@ export const Superscript = TSuperscript.extend<SuperscriptOptions>({
       ...this.parent?.(),
       HTMLAttributes: {},
       dictionary: {
-        name: 'Superscript',
+        name: '上标',
       },
     }
   },

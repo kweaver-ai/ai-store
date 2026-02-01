@@ -24,9 +24,11 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, width, menuItems, on
 
   return (
     <Card
-      className="group rounded-[10px] shadow-[0px_2px_8px_0px_hsla(0,0%,0%,0.1)] transition-all w-full"
-      style={{ height: cardHeight }}
+      className="group rounded-[10px] shadow-[0px_2px_8px_0px_hsla(0,0%,0%,0.1)] transition-all w-full cursor-pointer"
       styles={{
+        root: {
+          height: cardHeight,
+        },
         body: {
           height: '100%',
           padding: '16px 16px 12px 16px',
