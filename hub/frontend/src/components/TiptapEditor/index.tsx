@@ -31,14 +31,13 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
     extensions: [
       StarterKit.configure({
         // 禁用其他不需要的扩展
-        // link: false,
         details: false,
         detailsContent: false,
         detailsSummary: false,
-        table: false,
-        tableRow: false,
-        tableCell: false,
-        tableHeader: false,
+        // table: false,
+        // tableRow: false,
+        // tableCell: false,
+        // tableHeader: false,
         emoji: false,
         embed: false,
         image: false,

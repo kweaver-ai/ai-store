@@ -2,7 +2,6 @@ import { del, get, post, put } from '@/utils/http'
 import type {
   CreateDictionaryParams,
   CreateNodeParams,
-  DevModeParams,
   DictionaryItem,
   DocumentInfo,
   MoveNodeParams,
@@ -13,12 +12,12 @@ import type {
 export type {
   CreateDictionaryParams,
   CreateNodeParams,
-  DevModeParams,
   DictionaryItem,
   DocumentInfo,
   MoveNodeParams,
   NodeInfo,
   NodeType,
+  ObjectType,
   ProjectInfo,
 } from './index.d'
 
@@ -28,7 +27,11 @@ export type {
  * 获取项目列表
  * @returns 项目列表
  */
-export const getProjects = (): Promise<ProjectInfo[]> => get(`/api/dip-studio/v1/projects`)
+export const getProjects = (): Promise<ProjectInfo[]> =>
+  get(`/api/dip-studio/v1/projects`).then((result: any) => {
+    // 如果结果不是数组，返回空数组
+    return Array.isArray(result) ? result : []
+  })
 
 /**
  * 新建项目
@@ -145,7 +148,10 @@ export const deleteFunctionNode = (nodeId: string): Promise<void> =>
  * @returns 节点树（树形结构）
  */
 export const getProjectNodes = (projectId: string): Promise<NodeInfo[]> =>
-  get(`/api/dip-studio/v1/nodes`, { params: { project_id: projectId } })
+  get(`/api/dip-studio/v1/nodes`, { params: { project_id: projectId } }).then((result: any) => {
+    // 如果结果不是数组，返回空数组
+    return Array.isArray(result) ? result : []
+  })
 
 /**
  * 删除节点
@@ -163,14 +169,6 @@ export const deleteNode = (nodeId: string): Promise<void> =>
 export const moveNode = (params: MoveNodeParams): Promise<void> =>
   put(`/api/dip-studio/v1/nodes/move`, { body: params })
 
-/**
- * 设置节点开发模式
- * @param params 开发模式参数
- * @returns 是否设置成功
- */
-export const setNodeDevMode = (params: DevModeParams): Promise<void> =>
-  put(`/api/dip-studio/v1/nodes/dev-mode`, { body: params })
-
 // ==================== 项目词典 ====================
 
 /**
@@ -178,16 +176,39 @@ export const setNodeDevMode = (params: DevModeParams): Promise<void> =>
  * @param projectId 项目 ID
  * @returns 词典列表
  */
-export const getDictionary = (projectId: string): Promise<DictionaryItem[]> =>
-  get(`/api/dip-studio/v1/dictionary`, { params: { project_id: projectId } })
+export const getProjectDictionary = (projectId: string): Promise<DictionaryItem[]> =>
+  get(`/api/dip-studio/v1/dictionary`, { params: { project_id: projectId } }).then(
+    (result: any) => {
+      // 如果结果不是数组，返回空数组
+      return Array.isArray(result) ? result : []
+    },
+  )
 
 /**
  * 新增术语
  * @param params 术语信息
  * @returns 术语信息
  */
-export const postDictionary = (params: CreateDictionaryParams): Promise<DictionaryItem> =>
+export const postProjectDictionary = (params: CreateDictionaryParams): Promise<DictionaryItem> =>
   post(`/api/dip-studio/v1/dictionary`, { body: params })
+
+/**
+ * 更新术语
+ * @param id 术语 ID
+ * @param params 术语信息
+ * @returns 术语信息
+ */
+export const putProjectDictionary = (
+  id: string,
+  params: CreateDictionaryParams,
+): Promise<DictionaryItem> => put(`/api/dip-studio/v1/dictionary/${id}`, { body: params })
+
+/**
+ * 删除术语
+ * @param id 术语 ID
+ */
+export const deleteProjectDictionary = (id: string): Promise<void> =>
+  del(`/api/dip-studio/v1/dictionary/${id}`)
 
 // ==================== 功能设计文档 ====================
 

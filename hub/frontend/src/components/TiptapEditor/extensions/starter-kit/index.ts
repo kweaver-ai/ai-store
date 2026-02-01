@@ -11,6 +11,7 @@ import { Strike, type StrikeOptions } from '../../marks/strike'
 import { Subscript, type SubscriptOptions } from '../../marks/sub'
 import { Superscript, type SuperscriptOptions } from '../../marks/sup'
 import { Underline, type UnderlineOptions } from '../../marks/underline'
+import { Agent, type AgentOptions } from '../../nodes/agent'
 import { Audio, type AudioOptions } from '../../nodes/audio'
 import { Blockquote, type BlockquoteOptions } from '../../nodes/blockquote'
 import { BulletList, type BulletListOptions } from '../../nodes/bullet-list'
@@ -30,6 +31,7 @@ import { ListItem, type ListItemOptions } from '../../nodes/list-item'
 import { MathBlock, type MathBlockOptions } from '../../nodes/math-block'
 import { MathInline, type MathInlineOptions } from '../../nodes/math-inline'
 import { Mermaid, type MermaidOptions } from '../../nodes/mermaid'
+import { Metric, type MetricOptions } from '../../nodes/metric'
 import { OrderedList, type OrderedListOptions } from '../../nodes/ordered-list'
 import { Paragraph, type ParagraphOptions } from '../../nodes/paragraph'
 import { Plantuml, type PlantumlOptions } from '../../nodes/plantuml'
@@ -96,6 +98,8 @@ export interface StarterKitOptions {
   mathBlock?: Partial<MathBlockOptions> | boolean
   mathInline?: Partial<MathInlineOptions> | boolean
   knowledge?: Partial<KnowledgeOptions> | boolean
+  agent?: Partial<AgentOptions> | boolean
+  metric?: Partial<MetricOptions> | boolean
   // extensions
   uploader?: Partial<UploaderOptions> | boolean
   markdown?: Partial<MarkdownOptions> | boolean
@@ -161,6 +165,8 @@ export const StarterKit = Extension.create<StarterKitOptions>({
     configure(extensions, MathBlock, this.options.mathBlock)
     configure(extensions, MathInline, this.options.mathInline)
     configure(extensions, Knowledge, this.options.knowledge)
+    configure(extensions, Agent, this.options.agent)
+    configure(extensions, Metric, this.options.metric)
     // extensions
     configure(extensions, Uploader, this.options.uploader)
     configure(extensions, Markdown, this.options.markdown) // ☑️

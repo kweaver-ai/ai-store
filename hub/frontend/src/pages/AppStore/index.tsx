@@ -21,6 +21,7 @@ const AppStore = () => {
     useApplicationsService()
   const { unpinMicroApp } = usePreferenceStore()
   const navigate = useNavigate()
+  const [messageApi, messageContextHolder] = message.useMessage()
   const [installModalVisible, setInstallModalVisible] = useState(false)
   const [configModalVisible, setConfigModalVisible] = useState(false)
   const [selectedApp, setSelectedApp] = useState<ApplicationInfo | null>(null)
@@ -80,12 +81,12 @@ const AppStore = () => {
               onOk: async () => {
                 try {
                   await deleteApplications(_app.id)
-                  message.success('卸载成功')
+                  messageApi.success('卸载成功')
                   handleRefresh()
                   unpinMicroApp(_app.id, false)
                 } catch (err: any) {
                   if (err?.description) {
-                    message.error(err.description)
+                    messageApi.error(err.description)
                     return
                   }
                 }
@@ -129,7 +130,7 @@ const AppStore = () => {
 
     if (error) {
       return (
-        <Empty type="failed" desc="加载失败">
+        <Empty type="failed" title="加载失败">
           <Button className="mt-1" type="primary" onClick={handleRefresh}>
             重试
           </Button>
@@ -139,11 +140,11 @@ const AppStore = () => {
 
     if (apps.length === 0) {
       if (searchValue) {
-        return <Empty type="search" subDesc="抱歉，没有找到相关内容" />
+        return <Empty type="search" desc="抱歉，没有找到相关内容" />
       }
       return (
         <Empty
-          desc="暂无应用"
+          title="暂无应用"
           subDesc="当前应用市场空空如也，您可以点击下方按钮安装第一个企业应用。"
         >
           <Button
@@ -183,6 +184,7 @@ const AppStore = () => {
   return (
     <div className="h-full p-6 flex flex-col relative">
       {contextHolder}
+      {messageContextHolder}
       <div className="flex justify-between mb-6 flex-shrink-0 z-20">
         <div className="flex flex-col gap-y-3">
           <span className="text-base font-bold text-[--dip-text-color]">应用商店</span>
@@ -220,7 +222,7 @@ const AppStore = () => {
           handleRefresh()
           // 显示成功提示
           const key = `upload-success-${Date.now()}`
-          message.success({
+          messageApi.success({
             key,
             className: styles.uploadSuccessMessage,
             content: (
@@ -236,7 +238,7 @@ const AppStore = () => {
                     onClick={() => {
                       setSelectedApp(appInfo)
                       setConfigModalVisible(true)
-                      message.destroy(key)
+                      messageApi.destroy(key)
                     }}
                     className="text-[--dip-primary-color]"
                   >

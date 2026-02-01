@@ -10,6 +10,7 @@ interface BasicConfigProps {
 }
 
 const BasicConfig = ({ appId }: BasicConfigProps) => {
+  const [messageApi, messageContextHolder] = message.useMessage()
   const [loading, setLoading] = useState(false)
   const [basicInfo, setBasicInfo] = useState<ApplicationBasicInfo | null>(null)
 
@@ -26,7 +27,7 @@ const BasicConfig = ({ appId }: BasicConfigProps) => {
         }
       } catch (error: any) {
         if (error?.description) {
-          message.error(error?.description)
+          messageApi.error(error?.description)
         }
       } finally {
         if (mounted) {
@@ -55,6 +56,7 @@ const BasicConfig = ({ appId }: BasicConfigProps) => {
 
   return (
     <div className="h-full flex flex-col gap-y-3">
+      {messageContextHolder}
       <div className="px-4 text-sm font-medium text-[--dip-text-color]">基本信息</div>
       <ScrollBarContainer className="px-4">
         <div className="flex flex-col rounded-xl border border-[#E3E8EF] leading-8 p-3 text-sm text-[--dip-text-color] gap-2">

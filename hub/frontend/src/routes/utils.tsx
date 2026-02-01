@@ -4,8 +4,36 @@ import { routeConfigs } from './routes'
 import type { RouteConfig } from './types'
 
 /**
+ * 将动态路由路径模式转换为正则表达式
+ * 例如: 'studio/project-management/:projectId' -> /^studio\/project-management\/([^/]+)$/
+ */
+const routePatternToRegex = (pattern: string): RegExp => {
+  // 将路径中的 :param 替换为正则表达式的捕获组
+  const regexPattern = pattern
+    .split('/')
+    .map((segment) => {
+      if (segment.startsWith(':')) {
+        return '([^/]+)'
+      }
+      return segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    })
+    .join('/')
+  return new RegExp(`^${regexPattern}$`)
+}
+
+/**
+ * 检查实际路径是否匹配路由模式（支持动态参数）
+ */
+const matchRoutePattern = (pattern: string, actualPath: string): boolean => {
+  if (pattern === actualPath) return true
+  if (!pattern.includes(':')) return false
+  const regex = routePatternToRegex(pattern)
+  return regex.test(actualPath)
+}
+
+/**
  * 根据路径获取路由配置
- * 支持动态路由匹配（如 /application/:appId/*）
+ * 支持动态路由匹配（如 /application/:appId/* 和 studio/project-management/:projectId）
  * 自动处理 BASE_PATH 前缀，调用方无需手动移除
  */
 export const getRouteByPath = (path: string): RouteConfig | undefined => {
@@ -33,10 +61,37 @@ export const getRouteByPath = (path: string): RouteConfig | undefined => {
   const exactMatch = routeConfigs.find((route) => route.path === normalizedPath)
   if (exactMatch) return exactMatch
 
+  // 匹配动态路由模式（如 studio/project-management/:projectId）
+  const dynamicMatch = routeConfigs.find((route) => {
+    if (!route.path) return false
+    return matchRoutePattern(route.path, normalizedPath)
+  })
+  if (dynamicMatch) return dynamicMatch
+
   // 按前缀匹配（处理子路径）
   return routeConfigs.find(
     (route) => route.path && `${normalizedPath}/`.startsWith(`${route.path}/`),
   )
+}
+
+/**
+ * 查找路由的父路由
+ * 通过比较路径前缀来找到父路由
+ */
+export const getParentRoute = (route: RouteConfig): RouteConfig | undefined => {
+  if (!route.path) return undefined
+
+  // 移除动态参数部分，获取基础路径
+  // 例如: 'studio/project-management/:projectId' -> 'studio/project-management'
+  const pathSegments = route.path.split('/')
+  if (pathSegments.length <= 1) return undefined
+
+  // 移除最后一个段（可能是动态参数或普通段）
+  const basePath = pathSegments.slice(0, -1).join('/')
+  if (!basePath) return undefined
+
+  // 查找匹配基础路径的路由（排除自身）
+  return routeConfigs.find((r) => r.path === basePath && r.key !== route.key)
 }
 
 /**

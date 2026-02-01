@@ -35,12 +35,12 @@ export const TableRow = TTableRow.extend<TableRowOptions>({
       ...this.parent?.(),
       HTMLAttributes: {},
       dictionary: {
-        insertTop: 'Insert column on the top',
-        insertBottom: 'Insert column on the bottom',
-        alignLeft: 'Left alignment',
-        alignCenter: 'Center alignment',
-        alignRight: 'Right alignment',
-        deleteRow: 'Delete row',
+        insertTop: '在上方插入行',
+        insertBottom: '在下方插入行',
+        alignLeft: '左对齐',
+        alignCenter: '居中对齐',
+        alignRight: '右对齐',
+        deleteRow: '删除行',
       },
     }
   },

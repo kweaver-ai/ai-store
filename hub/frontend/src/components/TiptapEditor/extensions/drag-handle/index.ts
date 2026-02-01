@@ -25,13 +25,12 @@ export const CustomDragHandle = Extension.create<DragHandleOptions>({
         'heading2',
         'heading3',
         '|',
-        'bulletList',
         'orderedList',
+        'bulletList',
         'taskList',
         '|',
         'blockquote',
         'codeBlock',
-        'knowledge',
       ],
       nested: false,
       computePositionConfig: {},
@@ -174,12 +173,21 @@ export const CustomDragHandle = Extension.create<DragHandleOptions>({
 
         const resolvedPos = editor.state.doc.resolve(safePos)
 
+        // 根据节点类型过滤菜单项
+        let filteredItems = options.items
+        const nodeType = node.type.name
+
+        // 分割线只保留复制和删除
+        if (nodeType === 'horizontalRule') {
+          filteredItems = ['copyBlock', 'deleteBlock']
+        }
+
         renderMenu({
           editor,
           root,
           active: { node, pos: resolvedPos },
           selection,
-          items: options.items,
+          items: filteredItems,
           onClose: () => {
             if (menuInstance) {
               menuInstance.destroy()

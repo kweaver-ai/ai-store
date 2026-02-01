@@ -8,14 +8,3 @@ export enum ProjectActionEnum {
   /** 删除项目 */
   Delete = 'delete',
 }
-
-export enum ObjectTypeEnum {
-  /** 项目 */
-  Project = 'project',
-  /** 应用 */
-  Application = 'application',
-  /** 页面 */
-  Page = 'page',
-  /** 功能 */
-  Function = 'function',
-}

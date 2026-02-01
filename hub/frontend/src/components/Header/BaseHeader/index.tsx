@@ -1,11 +1,13 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import LogoIcon from '@/assets/images/brand/logo.svg?react'
-import { Breadcrumb } from '@/components/Header/components/Breadcrumb'
+import InfoIcon from '@/assets/info.svg?react'
 import type { HeaderType } from '@/routes/types'
-import { getRouteByPath } from '@/routes/utils'
-import { useLanguageStore, useOEMConfigStore } from '@/stores'
+import { getParentRoute, getRouteByPath } from '@/routes/utils'
+import { useLanguageStore, useOEMConfigStore, useProjectStore } from '@/stores'
 import type { BreadcrumbItem } from '@/utils/micro-app/globalState'
+import { Breadcrumb } from '../components/Breadcrumb'
+import { ProjectInfoPopover } from '../components/ProjectInfoPopover'
 import { UserInfo } from '../components/UserInfo'
 
 /**
@@ -52,6 +54,9 @@ const BaseHeader = ({ headerType }: { headerType: HeaderType }) => {
   const { getOEMResourceConfig } = useOEMConfigStore()
   const { language } = useLanguageStore()
   const oemResourceConfig = getOEMResourceConfig(language)
+  // 从 store 中获取项目信息
+  const projectInfo = useProjectStore((state) => state.currentProjectInfo)
+  const [projectInfoOpen, setProjectInfoOpen] = useState(false)
 
   // 面包屑导航跳转
   const handleBreadcrumbNavigate = useCallback(
@@ -65,7 +70,10 @@ const BaseHeader = ({ headerType }: { headerType: HeaderType }) => {
   // 获取当前路由配置
   const currentRoute = useMemo(() => getRouteByPath(location.pathname), [location.pathname])
 
-  // 构建面包屑数据：BaseHeaderType名称 / 当前路由名称
+  // 检查是否是项目详情路由
+  const isProjectDetailRoute = currentRoute?.path === 'studio/project-management/:projectId'
+
+  // 构建面包屑数据：BaseHeaderType名称 / 父路由名称 / 当前路由名称
   const breadcrumbItems: BreadcrumbItem[] = useMemo(() => {
     const result: BreadcrumbItem[] = []
 
@@ -77,17 +85,46 @@ const BaseHeader = ({ headerType }: { headerType: HeaderType }) => {
       disabled: true,
     })
 
-    // 当前路由名称（如果存在）
-    if (currentRoute?.label) {
-      result.push({
-        key: currentRoute.key || `route-${currentRoute.path}`,
-        name: currentRoute.label,
-        path: currentRoute.path ? `/${currentRoute.path}` : undefined,
-      })
+    // 查找父路由（如果存在）
+    if (currentRoute) {
+      const parentRoute = getParentRoute(currentRoute)
+      if (parentRoute?.label) {
+        result.push({
+          key: parentRoute.key || `route-${parentRoute.path}`,
+          name: parentRoute.label,
+          path: parentRoute.path ? `/${parentRoute.path}` : undefined,
+        })
+      }
+
+      // 当前路由名称（如果存在）
+      if (currentRoute.label) {
+        // 如果是项目详情路由，使用项目真实名称
+        let displayName = currentRoute.label
+        if (isProjectDetailRoute && projectInfo) {
+          displayName = projectInfo.name
+        }
+
+        // 如果当前路由路径包含动态参数（如 :projectId），使用实际路径
+        // 否则使用路由配置中的路径
+        let routePath: string | undefined
+        if (currentRoute.path?.includes(':')) {
+          // 动态路由，使用实际路径
+          // location.pathname 已经是相对于 basename 的路径，React Router 会自动处理
+          routePath = location.pathname
+        } else if (currentRoute.path) {
+          routePath = `/${currentRoute.path}`
+        }
+
+        result.push({
+          key: currentRoute.key || `route-${currentRoute.path}`,
+          name: displayName,
+          path: routePath,
+        })
+      }
     }
 
     return result
-  }, [headerType, currentRoute])
+  }, [headerType, currentRoute, location.pathname, isProjectDetailRoute, projectInfo])
 
   const getLogoUrl = () => {
     const base64Image = oemResourceConfig?.['logo.png']
@@ -116,6 +153,28 @@ const BaseHeader = ({ headerType }: { headerType: HeaderType }) => {
           type={headerType}
           items={breadcrumbItems}
           onNavigate={handleBreadcrumbNavigate}
+          lastItemSuffix={
+            isProjectDetailRoute && projectInfo ? (
+              <ProjectInfoPopover
+                projectInfo={projectInfo}
+                open={projectInfoOpen}
+                onOpenChange={(open) => {
+                  setProjectInfoOpen(open)
+                }}
+                onClose={() => {
+                  setProjectInfoOpen(false)
+                }}
+              >
+                <button
+                  type="button"
+                  className="flex items-center justify-center w-6 h-6 text-[#505050] opacity-45 hover:opacity-100 transition-opacity"
+                  title="查看项目信息"
+                >
+                  <InfoIcon />
+                </button>
+              </ProjectInfoPopover>
+            ) : null
+          }
         />
       </div>
 

@@ -26,6 +26,8 @@ export interface AppUploadModalProps extends Pick<ModalProps, 'open' | 'onCancel
 
 /** 上传应用安装包弹窗 */
 const AppUploadModal = ({ open, onCancel, onSuccess }: AppUploadModalProps) => {
+  const [modal, contextHolder] = Modal.useModal()
+  const [messageApi, messageContextHolder] = message.useMessage()
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>(UploadStatus.INITIAL)
   const [fileInfo, setFileInfo] = useState<FileInfo | null>(null)
   const [errorMessage, setErrorMessage] = useState<string>('')
@@ -81,13 +83,13 @@ const AppUploadModal = ({ open, onCancel, onSuccess }: AppUploadModalProps) => {
 
     // 验证文件格式
     if (!validateFileFormat(fileObj)) {
-      message.error('仅支持 .dip 格式的应用安装包')
+      messageApi.error('仅支持 .dip 格式的应用安装包')
       return
     }
 
     // 验证文件大小
     if (!validateFileSize(fileObj)) {
-      message.error('应用安装包大小不能超过 1GB')
+      messageApi.error('应用安装包大小不能超过 1GB')
       return
     }
 
@@ -159,7 +161,7 @@ const AppUploadModal = ({ open, onCancel, onSuccess }: AppUploadModalProps) => {
   const handleCancelUpload = () => {
     // 竞态处理：如果已经成功安装，则不允许取消（使用 ref 避免拿到旧状态）
     if (uploadStatusRef.current === UploadStatus.SUCCESS) {
-      message.warning('安装已完成，无法取消')
+      messageApi.warning('安装已完成，无法取消')
       return
     }
 
@@ -181,7 +183,7 @@ const AppUploadModal = ({ open, onCancel, onSuccess }: AppUploadModalProps) => {
   ) => {
     if (uploadStatus === UploadStatus.UPLOADING) {
       // 上传中需要二次确认
-      Modal.confirm({
+      modal.confirm({
         title: '确认取消安装',
         content: '正在上传中，取消后将中断上传。是否继续？',
         okText: '确定',
@@ -381,6 +383,8 @@ const AppUploadModal = ({ open, onCancel, onSuccess }: AppUploadModalProps) => {
         <>{uploadStatus === UploadStatus.SUCCESS ? <OkBtn /> : <CancelBtn />}</>
       )}
     >
+      {contextHolder}
+      {messageContextHolder}
       <div
         className={clsx(styles.uploadContainer, 'flex flex-col h-full')}
         style={{ overflow: 'hidden auto' }}

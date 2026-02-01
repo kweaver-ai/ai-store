@@ -24,7 +24,7 @@ export const Underline = TUnderline.extend<UnderlineOptions>({
       ...this.parent?.(),
       HTMLAttributes: {},
       dictionary: {
-        name: 'Underline',
+        name: '下划线',
       },
     }
   },

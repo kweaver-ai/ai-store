@@ -25,7 +25,7 @@ export const Highlight = THighlight.extend<HighlightOptions>({
       ...this.parent?.(),
       HTMLAttributes: {},
       dictionary: {
-        name: 'Highlight',
+        name: '高亮',
         none: 'None',
         gray: 'Gray',
         tomato: 'Tomato',

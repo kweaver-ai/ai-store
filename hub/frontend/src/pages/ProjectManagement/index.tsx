@@ -10,8 +10,8 @@ import SearchInput from '@/components/SearchInput'
 import { useListService } from '@/hooks/useListService'
 import ActionModal from '../../components/ProjectActionModal/ActionModal'
 import DeleteProjectModal from '../../components/ProjectActionModal/DeleteProjectModal'
-import { ObjectTypeEnum, ProjectActionEnum } from './types'
-import { getProjectMenuItems } from './utils'
+import { ProjectActionEnum } from './types'
+import { getProjectMenuItems, testProjects } from './utils'
 
 /** 项目管理 */
 const ProjectManagement = () => {
@@ -25,38 +25,8 @@ const ProjectManagement = () => {
   } = useListService<ProjectInfo>({
     fetchFn: getProjects,
   })
-  const projects = [
-    {
-      id: '1',
-      name: '项目1',
-      description:
-        '项目1描述项目1描述项目1描述项目1描述项目1描述项目1描述项目1描述项目1描述项目1描述项目1描述项目1描述',
-      updated_at: new Date().toISOString(),
-      updated_by: '1',
-    },
-    {
-      id: '2',
-      name: '项目2',
-      description:
-        '项目2描述项目2描述项目2描述项目2描述项目2描述项目2描述项目2描述项目2描述项目2描述项目2描述项目2描述',
-      updated_at: new Date().toISOString(),
-      updated_by: '2',
-    },
-    {
-      id: '3',
-      name: '项目3',
-      description: '',
-      updated_at: new Date().toISOString(),
-      updated_by: '3',
-    },
-    {
-      id: '4',
-      name: '项目4',
-      description: '',
-      updated_at: new Date().toISOString(),
-      updated_by: '4',
-    },
-  ]
+  const projects = testProjects
+
   const navigate = useNavigate()
   const [addProjectModalVisible, setAddProjectModalVisible] = useState(false)
   const [deleteProjectModalVisible, setDeleteProjectModalVisible] = useState(false)
@@ -94,9 +64,9 @@ const ProjectManagement = () => {
   }, [loading, projects.length, searchValue])
 
   /** 处理新建项目成功 */
-  const handleAddProjectSuccess = (_id: string) => {
+  const handleAddProjectSuccess = (result: { id: string; name: string; description?: string }) => {
     handleRefresh()
-    navigate(`/studio/project-management/${_id}`)
+    navigate(`/studio/project-management/${result.id}`)
   }
 
   /** 处理项目操作 */
@@ -127,7 +97,7 @@ const ProjectManagement = () => {
 
     // if (error) {
     //   return (
-    //     <Empty type="failed" desc="加载失败">
+    //     <Empty type="failed" title="加载失败">
     //       <Button type="primary" onClick={handleRefresh}>
     //         重试
     //       </Button>
@@ -137,10 +107,10 @@ const ProjectManagement = () => {
 
     if (projects.length === 0) {
       if (searchValue) {
-        return <Empty type="search" subDesc="抱歉，没有找到相关内容" />
+        return <Empty type="search" desc="抱歉，没有找到相关内容" />
       }
       return (
-        <Empty desc="暂无项目" subDesc="当前项目管理空空如也，您可以点击下方按钮新建第一个项目。">
+        <Empty title="暂无项目" subDesc="当前项目管理空空如也，您可以点击下方按钮新建第一个项目。">
           <Button
             className="mt-2"
             type="primary"
@@ -200,10 +170,13 @@ const ProjectManagement = () => {
       {renderContent()}
       <ActionModal
         open={addProjectModalVisible}
-        onCancel={() => setAddProjectModalVisible(false)}
+        onCancel={() => {
+          setAddProjectModalVisible(false)
+          setSelectedItem(undefined)
+        }}
         onSuccess={handleAddProjectSuccess}
         operationType={selectedItem ? 'edit' : 'add'}
-        objectType={ObjectTypeEnum.Project}
+        objectType="project"
         objectInfo={selectedItem}
       />
       <DeleteProjectModal

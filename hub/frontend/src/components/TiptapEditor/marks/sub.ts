@@ -24,7 +24,7 @@ export const Subscript = TSubscript.extend<SubscriptOptions>({
       ...this.parent?.(),
       HTMLAttributes: {},
       dictionary: {
-        name: 'Subscript',
+        name: '下标',
       },
     }
   },
