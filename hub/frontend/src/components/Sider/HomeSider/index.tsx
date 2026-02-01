@@ -3,7 +3,7 @@ import type { MenuProps } from 'antd'
 import { Dropdown, Menu, message, Tooltip } from 'antd'
 import clsx from 'classnames'
 import type React from 'react'
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import LogoIcon from '@/assets/images/brand/logo.svg?react'
 import SidebarAiDataPlatformIcon from '@/assets/images/sider/adp.svg?react'
@@ -34,41 +34,27 @@ interface HomeSiderProps {
  */
 const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
   const navigate = useNavigate()
+  const [messageApi, messageContextHolder] = message.useMessage()
   const { pinnedMicroApps, unpinMicroApp, wenshuAppInfo } = usePreferenceStore()
   const { language } = useLanguageStore()
   const { getOEMResourceConfig } = useOEMConfigStore()
   const oemResourceConfig = getOEMResourceConfig(language)
   // TODO: 角色信息需要从其他地方获取，暂时使用空数组
   const roleIds = useMemo(() => new Set<string>([]), [])
-  // 记录最近点击的 Dropdown 菜单项，用于阻止 Menu item 的 onClick
-  const recentDropdownClickRef = useRef<number | null>(null)
 
   const handleOpenApp = useCallback((appId: number) => {
-    // 如果最近点击了 Dropdown 菜单项，则不执行
-    if (recentDropdownClickRef.current === appId) {
-      recentDropdownClickRef.current = null
-      return
-    }
     navigate(`/application/${appId}`)
   }, [])
 
   const handleUnpin = useCallback(
     async (appId: number) => {
-      // 记录最近点击的 Dropdown 菜单项
-      recentDropdownClickRef.current = appId
       try {
         await unpinMicroApp(appId)
-        message.success('已取消钉住')
+        messageApi.success('已取消钉住')
       } catch (error) {
         console.error('Failed to unpin micro app:', error)
-        message.error('取消钉住失败，请稍后重试')
+        messageApi.error('取消钉住失败，请稍后重试')
       }
-      // 延迟清除标记，确保 Menu item 的 onClick 能检测到
-      requestAnimationFrame(() => {
-        if (recentDropdownClickRef.current === appId) {
-          recentDropdownClickRef.current = null
-        }
-      })
     },
     [unpinMicroApp],
   )
@@ -104,7 +90,10 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
                         {
                           key: 'unpin',
                           label: '取消固定',
-                          onClick: () => handleUnpin(app.id),
+                          onClick: (e: any) => {
+                            e.domEvent.stopPropagation()
+                            handleUnpin(app.id)
+                          },
                           icon: <PushpinOutlined className="text-[var(--dip-warning-color)]" />,
                         },
                       ],
@@ -196,6 +185,7 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
 
   return (
     <div className="flex flex-col h-full px-0 pt-4 pb-1 overflow-hidden">
+      {messageContextHolder}
       {/* logo + 收缩按钮 */}
       <div
         className={clsx(

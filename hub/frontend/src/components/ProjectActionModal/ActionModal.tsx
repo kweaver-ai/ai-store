@@ -1,6 +1,7 @@
 import type { ModalProps } from 'antd'
 import { Form, Input, Modal, message } from 'antd'
 import { useEffect, useState } from 'react'
+import type { CreateNodeParams, ObjectType } from '@/apis/projects'
 import {
   postApplicationNode,
   postFunctionNode,
@@ -11,16 +12,15 @@ import {
   putPageNode,
   putProjects,
 } from '@/apis/projects'
-import { ObjectTypeEnum } from '@/pages/ProjectManagement/types'
 import {
-  projectActionModalDescPlaceholderMap,
-  projectActionModalNamePlaceholderMap,
-  projectActionModalTitleMap,
+  objectDescPlaceholderMap,
+  objectNamePlaceholderMap,
+  objectTypeNameMap,
 } from '@/pages/ProjectManagement/utils'
 
 export interface ActionModalProps extends Pick<ModalProps, 'open' | 'onCancel'> {
-  /** 新建成功的回调，传递项目 ID */
-  onSuccess: (id: string) => void
+  /** 新建成功的回调，传递信息 */
+  onSuccess: (result: any) => void
 
   /** 要编辑的对象信息 */
   objectInfo?: {
@@ -33,7 +33,13 @@ export interface ActionModalProps extends Pick<ModalProps, 'open' | 'onCancel'> 
   operationType: 'add' | 'edit'
 
   /** 操作对象类型 */
-  objectType: ObjectTypeEnum
+  objectType: ObjectType
+
+  /** 项目 ID（新建节点时需要） */
+  projectId?: string
+
+  /** 父节点 ID（新建子节点时需要） */
+  parentId?: string | null
 }
 
 /** 新建 编辑 弹窗 */
@@ -44,6 +50,8 @@ const ActionModal = ({
   objectInfo,
   operationType,
   objectType,
+  projectId,
+  parentId,
 }: ActionModalProps) => {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
@@ -52,49 +60,115 @@ const ActionModal = ({
 
   // 当弹窗关闭时重置表单
   useEffect(() => {
-    if (!open) {
+    if (open) {
       form.resetFields()
       setLoading(false)
-    } else if (operationType === 'edit' && objectInfo) {
+    }
+    if (operationType === 'edit' && objectInfo) {
       form.setFieldsValue(objectInfo)
     }
-  }, [open, form, objectInfo])
+  }, [open, form, objectInfo, operationType, projectId, parentId])
 
   /** 处理确定按钮点击 */
   const handleOk = async () => {
     try {
       const values = await form.validateFields()
+      const baseParams = {
+        name: values.name?.trim(),
+        description: values.description?.trim(),
+      }
+      const params: CreateNodeParams = {
+        ...baseParams,
+        project_id: projectId || '',
+        parent_id: parentId || '',
+      }
       setLoading(true)
       let result: any
-      if (objectType === ObjectTypeEnum.Project) {
+      // TODO: 调用 API 创建/编辑节点
+      if (objectType === 'project') {
         if (operationType === 'add') {
-          result = await postProjects(values)
+          result = await postProjects(baseParams)
         } else if (operationType === 'edit' && objectInfo) {
-          result = await putProjects(objectInfo.id, values)
+          result = await putProjects(objectInfo.id, baseParams)
         }
-      } else if (objectType === ObjectTypeEnum.Application) {
+      } else if (objectType === 'application') {
         if (operationType === 'add') {
-          result = await postApplicationNode(values)
+          // result = await postApplicationNode(params)
+          result = {
+            id: `app_${Math.random().toString(36).substring(2, 15)}`,
+            name: values.name,
+            description: values.description,
+            creator: '123',
+            created_at: new Date().toISOString(),
+            editor: '123',
+            edited_at: new Date().toISOString(),
+          }
         } else if (operationType === 'edit' && objectInfo) {
-          result = await putApplicationNode(objectInfo.id, values)
+          // result = await putApplicationNode(objectInfo.id, params)
+          result = {
+            id: objectInfo.id,
+            name: values.name,
+            description: values.description,
+            creator: '123',
+            created_at: new Date().toISOString(),
+            editor: '123',
+            edited_at: new Date().toISOString(),
+          }
         }
-      } else if (objectType === ObjectTypeEnum.Page) {
+      } else if (objectType === 'page') {
         if (operationType === 'add') {
-          result = await postPageNode(values)
+          // result = await postPageNode(params)
+          result = {
+            id: `page_${Math.random().toString(36).substring(2, 15)}`,
+            name: values.name,
+            description: values.description,
+            creator: '123',
+            created_at: new Date().toISOString(),
+            editor: '123',
+            edited_at: new Date().toISOString(),
+          }
         } else if (operationType === 'edit' && objectInfo) {
-          result = await putPageNode(objectInfo.id, values)
+          // result = await putPageNode(objectInfo.id, params)
+          result = {
+            id: objectInfo.id,
+            name: values.name,
+            description: values.description,
+            creator: '123',
+            created_at: new Date().toISOString(),
+            editor: '123',
+            edited_at: new Date().toISOString(),
+          }
         }
-      } else if (objectType === ObjectTypeEnum.Function) {
+      } else if (objectType === 'function') {
         if (operationType === 'add') {
-          result = await postFunctionNode(values)
+          // result = await postFunctionNode(params)
+          result = {
+            id: `func_${Math.random().toString(36).substring(2, 15)}`,
+            name: values.name,
+            description: values.description,
+            creator: '123',
+            created_at: new Date().toISOString(),
+            editor: '123',
+            edited_at: new Date().toISOString(),
+          }
         } else if (operationType === 'edit' && objectInfo) {
-          result = await putFunctionNode(objectInfo.id, values)
+          // result = await putFunctionNode(objectInfo.id, params)
+          result = {
+            id: objectInfo.id,
+            name: values.name,
+            description: values.description,
+            creator: '123',
+            created_at: new Date().toISOString(),
+            editor: '123',
+            edited_at: new Date().toISOString(),
+          }
         }
       }
       messageApi.success(
-        `${operationType === 'add' ? '新建' : '编辑'}${projectActionModalTitleMap(objectType)}成功`,
+        `${operationType === 'add' ? '新建' : '编辑'}${objectTypeNameMap(objectType)}成功`,
       )
-      onSuccess(result.id)
+      // 传递完整的节点信息（包含 id、name、description）
+      onSuccess(result)
       onCancel?.(undefined as any)
     } catch (err: any) {
       // 表单验证失败时不显示错误消息
@@ -106,7 +180,7 @@ const ActionModal = ({
         messageApi.error(err.description)
       } else {
         messageApi.error(
-          `${operationType === 'add' ? '新建' : '编辑'}${projectActionModalTitleMap(objectType)}失败，请稍后重试`,
+          `${operationType === 'add' ? '新建' : '编辑'}${objectTypeNameMap(objectType)}失败，请稍后重试`,
         )
       }
     } finally {
@@ -114,8 +188,7 @@ const ActionModal = ({
     }
   }
 
-  const handleValuesChange = (changedValues: any, allValues: any) => {
-    console.log(changedValues, allValues)
+  const handleValuesChange = (_changedValues: any, allValues: any) => {
     // name有值，则可以提交
     setCanSubmit(!!allValues.name)
   }
@@ -124,7 +197,7 @@ const ActionModal = ({
     <>
       {contextHolder}
       <Modal
-        title={`${operationType === 'add' ? '新建' : '编辑'} ${projectActionModalTitleMap(objectType)}`}
+        title={`${operationType === 'add' ? '新建' : '编辑'}${objectTypeNameMap(objectType)}`}
         open={open}
         onCancel={onCancel}
         onOk={handleOk}
@@ -149,21 +222,13 @@ const ActionModal = ({
           className="mt-4 mb-10"
           onValuesChange={handleValuesChange}
         >
-          <Form.Item
-            label="项目名称"
-            name="name"
-            rules={[{ required: true, message: '请输入项目名称' }]}
-          >
-            <Input
-              placeholder={projectActionModalNamePlaceholderMap(objectType)}
-              maxLength={128}
-              showCount
-            />
+          <Form.Item label="名称" name="name" rules={[{ required: true, message: '请输入名称' }]}>
+            <Input placeholder={objectNamePlaceholderMap(objectType)} maxLength={128} showCount />
           </Form.Item>
 
-          <Form.Item label="项目描述" name="description">
+          <Form.Item label="描述" name="description">
             <Input.TextArea
-              placeholder={projectActionModalDescPlaceholderMap(objectType)}
+              placeholder={objectDescPlaceholderMap(objectType)}
               rows={4}
               maxLength={400}
               showCount

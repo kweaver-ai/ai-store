@@ -4,8 +4,8 @@ import { useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AppIcon from '@/components/AppIcon'
 import IconFont from '@/components/IconFont'
-import type { BreadcrumbItem } from '@/utils/micro-app/globalState'
 import type { HeaderType } from '@/routes/types'
+import type { BreadcrumbItem } from '@/utils/micro-app/globalState'
 
 interface BreadcrumbProps {
   /** 面包屑类型 */
@@ -14,6 +14,8 @@ interface BreadcrumbProps {
   items?: BreadcrumbItem[]
   /** 导航回调函数，如果不传则使用内部的 navigate */
   onNavigate?: (item: BreadcrumbItem) => void
+  /** 最后一项后面的自定义内容 */
+  lastItemSuffix?: ReactNode
 }
 
 /**
@@ -39,7 +41,7 @@ const renderIcon = (icon: string | ReactNode | undefined, name: string) => {
  * - 外部传入 items 数组，组件负责渲染
  * - 如果传入 onNavigate，使用回调函数；否则使用内部的 navigate
  */
-export const Breadcrumb = ({ type, items = [], onNavigate }: BreadcrumbProps) => {
+export const Breadcrumb = ({ type, items = [], onNavigate, lastItemSuffix }: BreadcrumbProps) => {
   const navigate = useNavigate()
 
   // 统一的跳转处理函数
@@ -107,6 +109,10 @@ export const Breadcrumb = ({ type, items = [], onNavigate }: BreadcrumbProps) =>
                     {hasIcon && renderIcon(item.icon, item.name)}
                     {item.name}
                   </Button>
+                )}
+                {/* 最后一项后面的自定义内容 */}
+                {isLast && lastItemSuffix && (
+                  <span className="flex items-center">{lastItemSuffix}</span>
                 )}
               </>
             )}

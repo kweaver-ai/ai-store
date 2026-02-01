@@ -1,4 +1,3 @@
-import clsx from 'clsx'
 import { memo, useMemo } from 'react'
 import empty from '@/assets/images/abnormal/empty.svg'
 import loadFailed from '@/assets/images/abnormal/loadFailed.png'
@@ -23,6 +22,7 @@ interface IEmpty
 const Empty: React.FC<IEmpty> = ({
   type = 'empty',
   iconHeight = 144,
+  title = '',
   desc = '',
   iconSrc,
   subDesc,
@@ -44,16 +44,8 @@ const Empty: React.FC<IEmpty> = ({
   return (
     <div className="flex flex-col h-full w-full items-center justify-center gap-y-3">
       <img src={icon} alt="" style={{ height: iconHeight, maxHeight: iconHeight }} />
-      {desc && (
-        <div
-          className={clsx(
-            'font-medium text-[--dip-text-color-75]',
-            type === 'search' && 'font-normal',
-          )}
-        >
-          {desc}
-        </div>
-      )}
+      {title && <div className="font-medium text-[--dip-text-color-75]">{title}</div>}
+      {desc && <div className="font-normal text-[--dip-text-color-75]">{desc}</div>}
       {subDesc && <div className="text-xs font-normal text-[--dip-text-color-75]">{subDesc}</div>}
       {children}
     </div>

@@ -1,15 +1,13 @@
 import { mergeAttributes, Node } from '@tiptap/core'
 import type { BlockMenuItemStorage } from '../../extensions/block-menu/menu'
 import type { NodeMarkdownStorage } from '../../extensions/markdown'
-import { icon } from '../../utils/icons'
+import { renderIconFont } from '../../utils/icons'
 import KnowledgeView from './view'
 
 export interface KnowledgeOptions {
   HTMLAttributes: Record<string, any>
   dictionary: {
     name: string
-    placeholder: string
-    selectTitle: string
   }
 }
 
@@ -23,9 +21,7 @@ export const Knowledge = Node.create<KnowledgeOptions>({
   addAttributes() {
     return {
       id: { default: '' },
-      title: { default: '' },
-      description: { default: '' },
-      icon: { default: '' },
+      name: { default: '' },
     }
   },
 
@@ -33,9 +29,7 @@ export const Knowledge = Node.create<KnowledgeOptions>({
     return {
       HTMLAttributes: {},
       dictionary: {
-        name: '知识网络',
-        placeholder: '点击选择知识网络',
-        selectTitle: '选择知识网络',
+        name: '业务知识网络',
       },
     }
   },
@@ -77,7 +71,7 @@ export const Knowledge = Node.create<KnowledgeOptions>({
           {
             id: this.name,
             name: this.options.dictionary.name,
-            icon: icon('knowledge'),
+            icon: renderIconFont({ type: 'icon-yewuzhishiwangluo' }),
             keywords: 'knowledge,card,zs,network,zswl',
             action: (editor: any) =>
               editor.chain().insertContent({ type: this.name }).focus().run(),

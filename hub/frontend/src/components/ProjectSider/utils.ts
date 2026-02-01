@@ -1,7 +1,7 @@
 /* eslint-disable no-continue */
 /* eslint-disable no-restricted-syntax */
 import { arrayMove } from '@dnd-kit/sortable'
-import type { NodeType } from '@/apis/projects'
+import type { NodeInfo, NodeType } from '@/apis/projects'
 
 export interface TreeItem {
   id: string
@@ -48,10 +48,18 @@ export function getProjection(
     depth = minDepth
   }
 
+  // 确保 depth 不会小于 0（最小深度是 0，不把 -1 算进去）
+  // 但是允许 depth === -1（应用层级），只是在计算最小深度时不考虑它
+  // 如果计算出的 depth 小于 0 且不是 -1，则限制为 0
+  if (depth < 0 && depth !== -1) {
+    depth = 0
+  }
+
   return { depth, maxDepth, minDepth, parentId: getParentId() }
 
   function getParentId() {
-    if (depth === 0 || !previousItem) {
+    // depth === -1 表示应用层级（根节点），parentId 应该为 null
+    if (depth === -1 || !previousItem) {
       return null
     }
 
@@ -74,31 +82,29 @@ export function getProjection(
 
 function getMaxDepth({ previousItem }: { previousItem?: FlattenedItem }) {
   if (previousItem) {
-    return previousItem.depth + 1
+    // 最大深度不能超过 1（模块层级）
+    return Math.min(1, previousItem.depth + 1)
   }
 
-  return 0
+  return -1
 }
 
 function getMinDepth({ nextItem }: { nextItem?: FlattenedItem }) {
   if (nextItem) {
-    return nextItem.depth
+    // 如果 nextItem 的 depth 是 -1（应用层级），最小深度应该是 0
+    // 因为最小深度不把 -1 算进去
+    return nextItem.depth === -1 ? 0 : nextItem.depth
   }
 
+  // 没有 nextItem 时，最小深度是 0（页面层级）
   return 0
 }
 
-function flatten(
-  items: TreeItems,
-  parentId: string | null = null,
-  depth = 0,
-): FlattenedItem[] {
+function flatten(items: TreeItems, parentId: string | null = null, depth = -1): FlattenedItem[] {
   return items.reduce<FlattenedItem[]>((acc, item, index) => {
-    return [
-      ...acc,
-      { ...item, parentId, depth, index },
-      ...flatten(item.children, item.id, depth + 1),
-    ]
+    acc.push({ ...item, parentId, depth, index })
+    acc.push(...flatten(item.children, item.id, depth + 1))
+    return acc
   }, [])
 }
 
@@ -112,13 +118,13 @@ export function buildTree(flattenedItems: FlattenedItem[]): TreeItems {
   const items = flattenedItems.map((item) => ({ ...item, children: [] }))
 
   for (const item of items) {
-    const { id, name, type, children } = item
+    const { id, name, type, collapsed, children } = item
     const parentId = item.parentId ?? root.id
     const parent = nodes[parentId] ?? findItem(items, parentId)
 
-    nodes[id] = { id, name, type, children }
+    nodes[id] = { id, name, type, collapsed, children }
     if (parent) {
-      parent.children.push({ id, name, type, children })
+      parent.children.push({ id, name, type, collapsed, children })
     }
   }
 
@@ -147,6 +153,53 @@ export function findItemDeep(items: TreeItems, itemId: string): TreeItem | undef
   }
 
   return undefined
+}
+
+/**
+ * 将 NodeInfo 数组转换为树结构
+ */
+export function convertNodeInfoToTree(nodes: NodeInfo[]): TreeItems {
+  // 构建节点映射
+  const nodeMap = new Map<string, NodeInfo>()
+  nodes.forEach((node) => {
+    nodeMap.set(node.id, node)
+  })
+
+  // 构建树结构
+  const treeMap = new Map<string, TreeItem>()
+  const rootNodes: TreeItem[] = []
+
+  // 第一遍：创建所有节点
+  nodes.forEach((node) => {
+    treeMap.set(node.id, {
+      id: node.id,
+      name: node.name,
+      type: node.type,
+      children: [],
+    })
+  })
+
+  // 第二遍：建立父子关系
+  nodes.forEach((node) => {
+    const treeNode = treeMap.get(node.id)
+    if (!treeNode) {
+      return
+    }
+    if (node.parent_id) {
+      const parent = treeMap.get(node.parent_id)
+      if (parent) {
+        parent.children.push(treeNode)
+      } else {
+        // 父节点不存在，作为根节点
+        rootNodes.push(treeNode)
+      }
+    } else {
+      // 没有父节点，作为根节点
+      rootNodes.push(treeNode)
+    }
+  })
+
+  return rootNodes
 }
 
 export function removeItem(items: TreeItems, id: string) {
@@ -217,4 +270,3 @@ export function removeChildrenOf(items: FlattenedItem[], ids: string[]) {
     return true
   })
 }
-

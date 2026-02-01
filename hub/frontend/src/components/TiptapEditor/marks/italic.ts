@@ -21,7 +21,7 @@ export const Italic = TItalic.extend<ItalicOptions>({
       ...this.parent?.(),
       HTMLAttributes: {},
       dictionary: {
-        name: 'Italic',
+        name: '斜体',
       },
     }
   },

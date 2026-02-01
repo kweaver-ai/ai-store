@@ -37,11 +37,11 @@ export const TableCell = TTableCell.extend<TableCellOptions>({
       ...this.parent?.(),
       HTMLAttributes: {},
       dictionary: {
-        mergeCells: 'Merge cells',
-        splitCells: 'Split cells',
-        alignLeft: 'Left alignment',
-        alignCenter: 'Center alignment',
-        alignRight: 'Right alignment',
+        mergeCells: '合并单元格',
+        splitCells: '拆分单元格',
+        alignLeft: '左对齐',
+        alignCenter: '居中对齐',
+        alignRight: '右对齐',
       },
     }
   },

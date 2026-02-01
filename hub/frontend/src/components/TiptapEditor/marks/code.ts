@@ -19,7 +19,7 @@ export const Code = TCode.extend<CodeOptions>({
       ...this.parent?.(),
       HTMLAttributes: {},
       dictionary: {
-        name: 'Code',
+        name: '代码',
       },
     }
   },

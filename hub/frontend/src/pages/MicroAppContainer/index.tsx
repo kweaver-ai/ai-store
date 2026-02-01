@@ -83,7 +83,7 @@ const MicroAppContainer = () => {
     if (error || !appBasicInfo) {
       return (
         <div className="absolute inset-0 flex justify-center items-center">
-          <Empty type="failed" desc="加载失败" subDesc={error ?? ''} />
+          <Empty type="failed" title="加载失败" subDesc={error ?? ''} />
         </div>
       )
     }

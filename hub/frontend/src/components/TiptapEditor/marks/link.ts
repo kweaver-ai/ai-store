@@ -23,10 +23,10 @@ export const Link = TLink.extend<LinkOptions>({
       openOnClick: false,
       autolink: parentOptions.autolink ?? false,
       dictionary: {
-        name: 'Link',
-        inputLink: 'Enter link',
-        openLink: 'Open link',
-        deleteLink: 'Delete link',
+        name: '链接',
+        inputLink: '请输入链接',
+        openLink: '打开链接',
+        deleteLink: '删除链接',
       },
     } satisfies LinkOptions
   },

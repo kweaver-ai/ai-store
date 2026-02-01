@@ -40,8 +40,6 @@ const Container = ({ children }: ContainerProps) => {
   const isWenshuById = wenshuAppInfo?.id === Number(params?.appId)
   const isWenshuApp = isWenshuByKey || isWenshuById
 
-  console.log('isWenshuByKey', currentMicroApp, wenshuAppInfo, params)
-
   // 布局决策：
   // - headless 微应用：强制 { hasHeader: false, hasSider: false }
   // - 问数应用：强制 { hasHeader: false, hasSider: true }
@@ -59,8 +57,6 @@ const Container = ({ children }: ContainerProps) => {
     siderType = 'home',
     headerType = 'micro-app',
   } = layoutConfig || {}
-
-  console.log('layoutConfig', layoutConfig)
 
   const headerHeight = 52
 

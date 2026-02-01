@@ -1,102 +1,165 @@
-import { memo, useState } from 'react'
+import { Button } from 'antd'
+import { memo, useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import type { ProjectInfo } from '@/apis/projects'
+import type { NodeInfo } from '@/apis/projects'
+import DictionaryIcon from '@/assets/images/project/dictionary.svg?react'
+import DictionaryDrawer from '@/components/ProjectDictionaryDrawer'
 import Empty from '@/components/Empty'
+import IconFont from '@/components/IconFont'
 import ActionModal from '@/components/ProjectActionModal/ActionModal'
-import ProjectList from '@/components/ProjectList'
+import ProjectNodeDetail from '@/components/ProjectNodeDetail'
+import ProjectSider from '@/components/ProjectSider'
 import { useProjectStore } from '@/stores'
-import { ObjectTypeEnum, ProjectActionEnum } from '../types'
-import { getProjectMenuItems } from '../utils'
+import { testNodes, testProjects } from '../utils'
 
-/** 项目 */
+/**
+ * 项目详情页面
+ * 显示项目结构树（侧边栏）和选中节点的详情内容（主内容区）
+ */
 const Project = () => {
   const { projectId } = useParams<{ projectId: string }>()
-  const { selectedNode } = useProjectStore()
-  const [addProjectModalVisible, setAddProjectModalVisible] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<ProjectInfo>()
+  const {
+    selectedNode,
+    treeData,
+    initProjectTree,
+    clearTreeData,
+    addNode,
+    setSelectedNode,
+    setProjectInfo,
+  } = useProjectStore()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+  const [collapsed, setCollapsed] = useState(false)
 
-  /** 处理卡片菜单操作 */
-  const handleProjectCardClick = (_project: ProjectInfo) => {
-    // TODO: 处理项目卡片点击
-  }
+  // ActionModal 相关状态
+  const [actionModalVisible, setActionModalVisible] = useState(false)
 
-  /** 处理新建项目成功 */
-  const handleAddProjectSuccess = () => {
-    // TODO: 刷新数据
-  }
+  // 数据字典抽屉相关状态
+  const [dictionaryDrawerVisible, setDictionaryDrawerVisible] = useState(false)
 
-  /** 处理项目操作 */
-  const handleProjectMenuClick = (key: ProjectActionEnum, _project?: ProjectInfo) => {
-    switch (key) {
-      case ProjectActionEnum.Edit:
-        setSelectedItem(_project)
-        setAddProjectModalVisible(true)
-        break
-      case ProjectActionEnum.Delete:
-        // TODO: 实现删除功能
-        setSelectedItem(_project)
-        break
+  // 加载项目树数据
+  const fetchTreeData = useCallback(async () => {
+    if (!projectId) return
+
+    try {
+      setLoading(true)
+      clearTreeData()
+      setError(null)
+
+      // 并行获取项目信息和节点数据
+      // const [projects, nodes] = await Promise.all([getProjects(), getProjectNodes(projectId)])
+
+      const projects = testProjects
+      // const nodes: any = []
+      const nodes = testNodes as NodeInfo[]
+
+      // 从项目列表中找到当前项目信息
+      const projectInfo = projects.find((p) => p.id === projectId) || null
+      setProjectInfo(projectInfo)
+
+      // 初始化项目树
+      initProjectTree(projectId, nodes)
+
+      // 默认选中应用节点
+      const applicationNode = nodes.find((n) => n.type === 'application')
+      if (applicationNode) {
+        setSelectedNode({
+          nodeId: applicationNode.id,
+          nodeType: applicationNode.type,
+          nodeName: applicationNode.name,
+          projectId,
+        })
+      }
+    } catch (err: any) {
+      setError(err)
+    } finally {
+      setLoading(false)
     }
-  }
+  }, [projectId, clearTreeData, initProjectTree, setProjectInfo])
 
-  // 示例项目数据，实际应该从 API 获取
-  const projects: ProjectInfo[] = []
+  // 初始加载数据
+  useEffect(() => {
+    if (projectId) {
+      fetchTreeData()
+    }
+  }, [projectId, fetchTreeData])
+
+  /** 处理新建应用成功 */
+  const handleAddApplicationSuccess = useCallback(
+    (result: NodeInfo) => {
+      if (!projectId) return
+
+      // 确保 NodeInfo 包含必要的字段
+      const newNodeInfo: NodeInfo = {
+        ...result,
+        project_id: projectId,
+        type: 'application',
+        parent_id: null,
+      }
+
+      // 直接添加到本地树中，不需要重新获取数据
+      addNode(newNodeInfo)
+
+      // 自动选中新创建的应用
+      setSelectedNode({
+        nodeId: newNodeInfo.id,
+        nodeType: 'application',
+        nodeName: newNodeInfo.name,
+        projectId,
+      })
+    },
+    [projectId, addNode, setSelectedNode],
+  )
+
+  /** 处理新建应用 */
+  const handleAddApplication = useCallback(() => {
+    setActionModalVisible(true)
+  }, [])
+
+  /** 处理查看数据字典 */
+  const handleViewDictionary = useCallback(() => {
+    setDictionaryDrawerVisible(true)
+  }, [])
 
   /** 根据选中的节点渲染内容 */
   const renderNodeContent = () => {
-    if (!selectedNode || selectedNode.projectId !== projectId) {
+    if (!treeData.length) {
       return (
         <div className="flex items-center justify-center h-full text-[--dip-text-color-65]">
-          请从左侧选择要查看的内容
+          <Empty desc="当前项目尚未建立完善的应用结构。您可以先定义数据字典规范，或者直接开始创建应用。">
+            <div className="flex items-center justify-center gap-2 mt-2">
+              <Button
+                onClick={handleViewDictionary}
+                icon={<DictionaryIcon className="!text-base" />}
+              >
+                查看数据字典
+              </Button>
+              <Button
+                type="primary"
+                onClick={handleAddApplication}
+                icon={<IconFont type="icon-dip-add" />}
+              >
+                新建应用
+              </Button>
+            </div>
+          </Empty>
+        </div>
+      )
+    }
+
+    if (!selectedNode) {
+      return (
+        <div className="flex items-center justify-center h-full text-[--dip-text-color-65]">
+          <Empty desc="请从左侧选择要查看的内容" />
         </div>
       )
     }
 
     switch (selectedNode.nodeType) {
-      case 'dictionary':
-        return (
-          <div className="h-full">
-            <div className="mb-4">
-              <h2 className="text-lg font-medium">数据字典</h2>
-              <p className="text-sm text-[--dip-text-color-65] mt-1">管理项目术语和定义</p>
-            </div>
-            {/* TODO: 实现数据字典内容 */}
-            <Empty desc="数据字典功能开发中" />
-          </div>
-        )
       case 'application':
-        return (
-          <div className="h-full">
-            <div className="mb-4">
-              <h2 className="text-lg font-medium">{selectedNode.nodeName}</h2>
-              <p className="text-sm text-[--dip-text-color-65] mt-1">应用节点详情</p>
-            </div>
-            {/* TODO: 实现应用节点内容 */}
-            <Empty desc="应用节点详情功能开发中" />
-          </div>
-        )
       case 'page':
-        return (
-          <div className="h-full">
-            <div className="mb-4">
-              <h2 className="text-lg font-medium">{selectedNode.nodeName}</h2>
-              <p className="text-sm text-[--dip-text-color-65] mt-1">页面节点详情</p>
-            </div>
-            {/* TODO: 实现页面节点内容 */}
-            <Empty desc="页面节点详情功能开发中" />
-          </div>
-        )
       case 'function':
-        return (
-          <div className="h-full">
-            <div className="mb-4">
-              <h2 className="text-lg font-medium">{selectedNode.nodeName}</h2>
-              <p className="text-sm text-[--dip-text-color-65] mt-1">功能节点详情</p>
-            </div>
-            {/* TODO: 实现功能节点内容 */}
-            <Empty desc="功能节点详情功能开发中" />
-          </div>
-        )
+        return <ProjectNodeDetail nodeId={selectedNode.nodeId} projectId={selectedNode.projectId} />
       default:
         return (
           <div className="flex items-center justify-center h-full text-[--dip-text-color-65]">
@@ -106,44 +169,57 @@ const Project = () => {
     }
   }
 
-  /** 渲染内容区域 */
-  const renderContent = () => {
-    // 如果有选中的节点，显示节点内容；否则显示项目列表
-    if (selectedNode && selectedNode.projectId === projectId) {
-      return renderNodeContent()
-    }
-
-    // 默认显示项目列表（如果有项目数据）
-    if (projects.length > 0) {
-      return (
-        <ProjectList
-          projects={projects}
-          onCardClick={handleProjectCardClick}
-          menuItems={(project) =>
-            getProjectMenuItems((key) => handleProjectMenuClick(key, project))
-          }
-        />
-      )
-    }
-
-    // 没有选中节点且没有项目数据时，显示提示
+  // loading 或 error 时，不显示侧边栏，只显示状态内容
+  if (loading) {
     return (
-      <div className="flex items-center justify-center h-full text-[--dip-text-color-65]">
-        请从左侧选择要查看的内容
+      <div className="h-full flex items-center justify-center bg-[--dip-white]">
+        <div className="text-[--dip-text-color-65]">加载中...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="h-full flex items-center justify-center bg-[--dip-white]">
+        <Empty type="failed" title="加载失败">
+          <Button className="mt-1" type="primary" onClick={fetchTreeData}>
+            重试
+          </Button>
+        </Empty>
       </div>
     )
   }
 
   return (
-    <div className="h-full p-6 flex flex-col relative bg-[--dip-white]">
-      {renderContent()}
+    <div className="h-full flex bg-[--dip-white]">
+      {/* 侧边栏 */}
+      <ProjectSider
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        projectId={projectId || ''}
+        onViewDictionary={handleViewDictionary}
+      />
+      {/* 主内容区 */}
+      <div className="flex-1 h-full p-6 flex flex-col relative overflow-auto">
+        {renderNodeContent()}
+      </div>
+      {/* ActionModal */}
       <ActionModal
-        open={addProjectModalVisible}
-        onCancel={() => setAddProjectModalVisible(false)}
-        onSuccess={handleAddProjectSuccess}
-        operationType={selectedItem ? 'edit' : 'add'}
-        objectType={ObjectTypeEnum.Project}
-        objectInfo={selectedItem}
+        open={actionModalVisible}
+        onCancel={() => {
+          setActionModalVisible(false)
+        }}
+        onSuccess={handleAddApplicationSuccess}
+        operationType="add"
+        objectType="application"
+        projectId={projectId || ''}
+        parentId={null}
+      />
+      {/* 数据字典抽屉 */}
+      <DictionaryDrawer
+        open={dictionaryDrawerVisible}
+        onClose={() => setDictionaryDrawerVisible(false)}
+        projectId={projectId || ''}
       />
     </div>
   )

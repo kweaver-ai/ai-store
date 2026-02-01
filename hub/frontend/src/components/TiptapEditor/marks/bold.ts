@@ -21,7 +21,7 @@ export const Bold = TBold.extend<BoldOptions>({
       ...this.parent?.(),
       HTMLAttributes: {},
       dictionary: {
-        name: 'Bold',
+        name: '加粗',
       },
     }
   },

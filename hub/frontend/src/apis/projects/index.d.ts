@@ -11,6 +11,7 @@ export interface ProjectInfo {
 
 /** 节点类型 */
 export type NodeType = 'application' | 'page' | 'function'
+export type ObjectType = NodeType | 'project'
 
 /** 节点模型 */
 export interface NodeInfo {
@@ -20,7 +21,7 @@ export interface NodeInfo {
   parent_id: string | null
   name: string
   description?: string
-  dev_mode: boolean
+  // dev_mode: boolean
   creator: string
   created_at: string
   editor: string
@@ -40,12 +41,7 @@ export interface CreateNodeParams {
 export interface MoveNodeParams {
   node_id: string
   target_parent_id: string | null
-}
-
-/** 开发模式请求参数 */
-export interface DevModeParams {
-  node_id: string
-  dev_mode: boolean
+  next_id: string
 }
 
 /** 项目词典项 */

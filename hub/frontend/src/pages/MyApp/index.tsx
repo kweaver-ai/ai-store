@@ -16,6 +16,7 @@ const MyApp = () => {
     useApplicationsService()
   const { togglePin } = usePreferenceStore()
   const navigate = useNavigate()
+  const [messageApi, messageContextHolder] = message.useMessage()
   const [hasLoadedData, setHasLoadedData] = useState(false) // 记录是否已经成功加载过数据（有数据的情况）
   const hasEverHadDataRef = useRef(false) // 使用 ref 追踪是否曾经有过数据，避免循环依赖
   const prevSearchValueRef = useRef('') // 追踪上一次的搜索值，用于判断是否是从搜索状态清空
@@ -55,12 +56,12 @@ const MyApp = () => {
         switch (action) {
           case MyAppActionEnum.Fix:
             await togglePin(_app.id)
-            message.success('已固定')
+            messageApi.success('已固定')
             handleRefresh()
             break
           case MyAppActionEnum.Unfix:
             await togglePin(_app.id)
-            message.success('已取消固定')
+            messageApi.success('已取消固定')
             handleRefresh()
             break
           case MyAppActionEnum.Use:
@@ -86,7 +87,7 @@ const MyApp = () => {
 
     if (error) {
       return (
-        <Empty type="failed" desc="加载失败">
+        <Empty type="failed" title="加载失败">
           <Button className="mt-1" type="primary" onClick={handleRefresh}>
             重试
           </Button>
@@ -100,7 +101,7 @@ const MyApp = () => {
       }
       return (
         <Empty
-          desc="暂无可用应用"
+          title="暂无可用应用"
           subDesc="您当前没有任何应用的访问权限。这可能是因为管理员尚未为您分配权限，或者应用尚未部署。"
         />
       )
@@ -128,6 +129,7 @@ const MyApp = () => {
 
   return (
     <div className="h-full p-6 flex flex-col relative overflow-auto">
+      {messageContextHolder}
       <div className="flex justify-between mb-4 flex-shrink-0 z-20">
         <div className="flex flex-col gap-y-3">
           <span className="text-2xl font-bold text-[--dip-text-color-75]">探索企业级 AI 应用</span>
