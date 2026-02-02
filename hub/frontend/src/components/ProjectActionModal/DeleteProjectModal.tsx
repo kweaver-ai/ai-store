@@ -2,7 +2,7 @@ import { ExclamationCircleFilled } from '@ant-design/icons'
 import type { ModalProps } from 'antd'
 import { Form, Input, Modal, message } from 'antd'
 import { useEffect, useState } from 'react'
-import { deleteProjects, type ProjectInfo } from '@/apis/projects'
+import { deleteProjects, type ProjectInfo } from '@/apis'
 
 export interface DeleteProjectModalProps extends Pick<ModalProps, 'open' | 'onCancel'> {
   /** 要删除的项目信息 */
@@ -103,7 +103,7 @@ const DeleteProjectModal = ({ open, onCancel, project, onSuccess }: DeleteProjec
             <span className="font-medium text-[--dip-link-color] bg-[--dip-hover-bg-color-4] px-1 py-0.5 rounded-md">
               {project?.name}
             </span>{' '}
-            吗？删除后，该项目下的所有页面、模块和数据字典将被永久删除，此操作无法撤销。{' '}
+            吗？删除后，该项目下的所有页面、模块和项目词典将被永久删除，此操作无法撤销。{' '}
           </div>
           <Form form={form} layout="vertical">
             <Form.Item label="请输入项目名称以确认删除：" name="projectName">

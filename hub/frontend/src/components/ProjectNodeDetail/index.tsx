@@ -1,14 +1,20 @@
-import { Descriptions, message, Switch, Tabs } from 'antd'
+import { Button, Descriptions, message, Popover, Spin, Switch, Tabs } from 'antd'
 import clsx from 'clsx'
-import { useEffect, useMemo, useState } from 'react'
+import jsonpatch from 'fast-json-patch'
+import { debounce } from 'lodash'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { getDocument, putDocument } from '@/apis/dip-studio'
 import {
   getDevModeNodeId,
   isNodeInDevMode,
+  isNodeInDevModeWithTree,
   setDevModeNodeId,
 } from '@/pages/ProjectManagement/devMode'
 import { objectTypeNameMap } from '@/pages/ProjectManagement/utils'
 import { useProjectStore } from '@/stores'
+import { LoadStatus } from '@/types/enums'
 import { formatTime } from '@/utils/handle-function/FormatTime'
+import Empty from '../Empty'
 import { flattenTree } from '../ProjectSider/utils'
 import ScrollBarContainer from '../ScrollBarContainer'
 import TiptapEditor from '../TiptapEditor'
@@ -28,38 +34,8 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
   const [devModeLoading, setDevModeLoading] = useState(false)
   const [devMode, setDevMode] = useState<boolean>(false)
   const [activeTab, setActiveTab] = useState<NodeDetailTabKey>(NodeDetailTabKey.Detail)
-  const [content, setContent] = useState(`# Welcome to Tiptap Editor
-
-This is a **rich text editor** built with [Tiptap 3.0](https://tiptap.dev/).
-    
-## Features
-    
-- ✨ **Markdown Support**: Write in markdown and see it rendered
-- 🎨 **Rich Formatting**: Bold, *italic*, ~~strikethrough~~, and more
-- 📝 **Lists**: Bullet lists, numbered lists, and task lists
-- 🔗 **Links**: [Add links](https://tiptap.dev) easily
-- 💻 **Code Blocks**: With syntax highlighting
-    
-\`\`\`typescript
-const hello = "world";
-console.log(hello);
-\`\`\`
-    
-:::mermaid
-graph TD
-A[Start] --> B[Stop]
-:::
-    
-## Try it out!
-    
-Start typing below or use the \`/\` command to insert blocks.
-    
-- [ ] Try the task list
-- [ ] Use the floating menu to format text
-- [ ] Insert a table or image
-    
-`)
-  const [markdown, setMarkdown] = useState(content)
+  const [loadStatus, setLoadStatus] = useState<LoadStatus>(LoadStatus.Empty)
+  const [content, setContent] = useState<any>({})
 
   // 计算节点是否可以编辑（与 ProjectSider 中的逻辑保持一致）
   const canEdit = useMemo(() => {
@@ -71,20 +47,21 @@ Start typing below or use the \`/\` command to insert blocks.
     return !isInDevMode
   }, [nodeId, projectId, treeData, nodeInfo])
 
-  const handleUpdate = (newMarkdown: string) => {
-    setMarkdown(newMarkdown)
+  const scheduleSaveDocument = debounce(async (newContent: any) => {
+    // 计算差分（patches）
+    console.log('content', content)
+    console.log('newContent', newContent)
+    const patches = jsonpatch.compare(content || {}, newContent)
+    if (patches.length === 0) return // 没有变化
+
+    // 发送增量指令
+    await putDocument(nodeId, patches)
+    setContent(newContent)
+  }, 800)
+
+  const handleUpdate = (newContent: any) => {
+    scheduleSaveDocument(newContent)
   }
-
-  // const handleCopy = () => {
-  //   navigator.clipboard.writeText(markdown)
-  //   messageApi.success('Markdown copied to clipboard!')
-  // }
-
-  // const handleClear = () => {
-  //   setContent('')
-  //   setMarkdown('')
-  //   messageApi.info('Editor cleared')
-  // }
 
   useEffect(() => {
     if (nodeInfo) {
@@ -109,6 +86,25 @@ Start typing below or use the \`/\` command to insert blocks.
       window.removeEventListener('devModeChanged', handleDevModeChange as EventListener)
     }
   }, [projectId, nodeId])
+
+  const fetchDocument = useCallback(async () => {
+    if (loadStatus === LoadStatus.Loading || !canEdit) return
+    try {
+      setLoadStatus(LoadStatus.Loading)
+      const res = await getDocument(nodeId)
+      const docContent = res?.content || {}
+      setContent(docContent)
+    } catch {
+      setLoadStatus(LoadStatus.Failed)
+    } finally {
+      setLoadStatus(LoadStatus.Normal)
+    }
+  }, [nodeId])
+
+  useEffect(() => {
+    if (!nodeInfo || nodeInfo.type !== 'function') return
+    fetchDocument()
+  }, [nodeId, nodeInfo, fetchDocument])
 
   /** 处理开发模式切换 */
   const handleDevModeChange = (checked: boolean) => {
@@ -152,6 +148,50 @@ Start typing below or use the \`/\` command to insert blocks.
     )
   }
 
+  const prompt = `你是「${nodeInfo.name}」能力的专家，请结合项目上下文，输出清晰、可执行的方案或建议。`
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(prompt)
+    messageApi.success('复制成功')
+  }
+
+  /** Promot 弹窗内容 */
+  const promotContent = () => (
+    <div className="w-[360px]">
+      <div className="mb-2 text-base font-medium">复制Prompt</div>
+      <div className="mb-3 text-[13px] leading-5 text-[--dip-text-color-45]">
+        将以下 Prompt 复制到开发 Agent 中，即可快速读取当前页面的设计文档。
+      </div>
+      <div className="text-xs leading-5 text-[--dip-text-color] bg-[#779EEA1A] border border-dashed border-[#779EEA] px-2.5 py-2 mb-6">
+        {prompt}
+      </div>
+      <div className="flex justify-end">
+        <Button type="primary" onClick={handleCopy}>
+          一键复制
+        </Button>
+      </div>
+    </div>
+  )
+
+  /** 渲染状态内容（loading/error/empty） */
+  const renderStateContent = () => {
+    if (loadStatus === LoadStatus.Loading) {
+      return <Spin />
+    }
+
+    if (loadStatus === LoadStatus.Failed) {
+      return (
+        <Empty type="failed" title="加载失败">
+          <Button className="mt-1" type="primary" onClick={fetchDocument}>
+            重试
+          </Button>
+        </Empty>
+      )
+    }
+
+    return null
+  }
+
   return (
     <div className="h-full overflow-y-auto flex flex-col">
       {messageContextHolder}
@@ -164,6 +204,22 @@ Start typing below or use the \`/\` command to insert blocks.
           </div>
         </div>
         <div className="flex gap-2 shrink-0 items-center h-6">
+          {isNodeInDevModeWithTree(projectId, nodeId, treeData) && (
+            <Popover
+              content={promotContent}
+              trigger="click"
+              placement="bottom"
+              arrow={false}
+              styles={{ container: { padding: '20px 24px' } }}
+            >
+              <button
+                type="button"
+                className="h-full text-sm text-[--dip-white] bg-[#4096FF] rounded px-2"
+              >
+                查看Promot
+              </button>
+            </Popover>
+          )}
           <span className="text-sm text-[--dip-text-color-65]">开发模式</span>
           <Switch
             checked={devMode}
@@ -184,7 +240,7 @@ Start typing below or use the \`/\` command to insert blocks.
       />
       <div
         className={clsx(
-          'border border-[--dip-border-color] overflow-hidden',
+          'border border-[--dip-border-color] overflow-hidden flex-1',
           styles.editorContainer,
         )}
       >
@@ -222,14 +278,17 @@ Start typing below or use the \`/\` command to insert blocks.
               }}
             />
           )}
-          {activeTab === NodeDetailTabKey.Document && (
-            <TiptapEditor
-              content={content}
-              onUpdate={handleUpdate}
-              readOnly={!canEdit}
-              placeholder="Type / to see commands..."
-            />
-          )}
+          {activeTab === NodeDetailTabKey.Document &&
+            (loadStatus === LoadStatus.Normal ? (
+              <TiptapEditor
+                content={content}
+                onUpdate={handleUpdate}
+                readOnly={!canEdit}
+                placeholder="请描述该模块的功能...（输入/ 可引用 业务知识网络、决策智能体、工作流）"
+              />
+            ) : (
+              renderStateContent()
+            ))}
         </ScrollBarContainer>
       </div>
     </div>

@@ -2,7 +2,7 @@ import { ReloadOutlined } from '@ant-design/icons'
 import { Button, message, Spin, Tooltip } from 'antd'
 import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { ApplicationInfo } from '@/apis/applications'
+import type { ApplicationInfo } from '@/apis'
 import AppList from '@/components/AppList'
 import { ModeEnum } from '@/components/AppList/types'
 import Empty from '@/components/Empty'
@@ -52,28 +52,22 @@ const MyApp = () => {
   /** 处理卡片菜单操作 */
   const handleMenuClick = useCallback(
     async (action: string, _app: ApplicationInfo) => {
-      try {
-        switch (action) {
-          case MyAppActionEnum.Fix:
-            await togglePin(_app.id)
-            messageApi.success('已固定')
-            handleRefresh()
-            break
-          case MyAppActionEnum.Unfix:
-            await togglePin(_app.id)
-            messageApi.success('已取消固定')
-            handleRefresh()
-            break
-          case MyAppActionEnum.Use:
-            navigate(`/application/${_app.id}`)
-            break
-          default:
-            break
-        }
-      } catch (err) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Failed to handle app action:', err)
-        }
+      switch (action) {
+        case MyAppActionEnum.Fix:
+          await togglePin(_app.id)
+          messageApi.success('已固定')
+          handleRefresh()
+          break
+        case MyAppActionEnum.Unfix:
+          await togglePin(_app.id)
+          messageApi.success('已取消固定')
+          handleRefresh()
+          break
+        case MyAppActionEnum.Use:
+          navigate(`/application/${_app.id}`)
+          break
+        default:
+          break
       }
     },
     [handleRefresh, togglePin],

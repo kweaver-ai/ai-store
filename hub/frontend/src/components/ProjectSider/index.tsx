@@ -21,14 +21,14 @@ import { Layout, Menu, Modal, message } from 'antd'
 import clsx from 'clsx'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import type { NodeType } from '@/apis/projects'
 import {
   deleteApplicationNode,
   deleteFunctionNode,
   deletePageNode,
   moveNode,
   type NodeInfo,
-} from '@/apis/projects'
+  type NodeType,
+} from '@/apis'
 import DictionaryIcon from '@/assets/images/project/dictionary.svg?react'
 import ActionModal from '@/components/ProjectActionModal/ActionModal'
 import { hasAnyDevMode, isNodeInDevMode } from '@/pages/ProjectManagement/devMode'
@@ -56,7 +56,7 @@ interface ProjectSiderProps {
   onCollapse: (collapsed: boolean) => void
   /** 项目 ID */
   projectId: string
-  /** 查看数据字典回调 */
+  /** 查看项目词典回调 */
   onViewDictionary?: () => void
 }
 
@@ -470,8 +470,8 @@ const ProjectSider = ({
         label: '项目配置',
       },
       {
-        key: 'data-dictionary',
-        label: '数据字典',
+        key: 'project-dictionary',
+        label: '项目词典',
         icon: <DictionaryIcon className="!text-base" />,
         onClick: () => {
           onViewDictionary?.()
@@ -661,7 +661,7 @@ const ProjectSider = ({
           {/* 项目配置菜单 */}
           <Menu
             mode="inline"
-            selectedKeys={selectedKey.startsWith('data-dictionary') ? [selectedKey] : []}
+            selectedKeys={selectedKey.startsWith('project-dictionary') ? [selectedKey] : []}
             items={menuItems}
             inlineCollapsed={collapsed}
             selectable={true}
@@ -681,7 +681,7 @@ const ProjectSider = ({
                     collapsed={false}
                     selected={selectedKey === flattenedItems[0].id}
                     canAddChild
-                    canEdit={!hasAnyDevMode(projectId)}
+                    canEdit={!isNodeInDevMode(projectId, flattenedItems[0].id, flattenedItems)}
                     canDelete={!hasAnyDevMode(projectId)}
                     canDrag={false}
                     onAddChild={() => handleAddChild(flattenedItems[0].id, flattenedItems[0].type)}

@@ -868,6 +868,20 @@
     height: 100%;
   }
 
+  // 官方 Placeholder 扩展的样式
+  p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+    color: var(--tiptap-muted-foreground);
+    opacity: 0.5;
+  }
+
+  &.ProseMirror-focused p.is-editor-empty:first-child::before {
+    opacity: 0.7;
+  }
+
   * {
     box-sizing: border-box;
   }
@@ -1741,6 +1755,30 @@
 // region knowledge
 
 .node-knowledge {
+  .ProseMirror[contenteditable='true'] & {
+    &::after {
+      background-color: transparent;
+    }
+  }
+}
+
+// endregion
+
+// region agent
+
+.node-agent {
+  .ProseMirror[contenteditable='true'] & {
+    &::after {
+      background-color: transparent;
+    }
+  }
+}
+
+// endregion
+
+// region metric
+
+.node-metric {
   .ProseMirror[contenteditable='true'] & {
     &::after {
       background-color: transparent;

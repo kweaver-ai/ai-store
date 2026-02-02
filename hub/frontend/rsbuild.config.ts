@@ -95,9 +95,9 @@ export default defineConfig({
   html: {
     // 设置页面标题，覆盖 Rsbuild 默认的 "Rsbuild App"
     title: 'DIP',
-    // 使用 public/dip.svg 作为浏览器标签页图标
+    // 使用 public/dip.png 作为浏览器标签页图标
     // 这里路径相对于项目根目录（public/dip.svg）
-    favicon: 'public/dip.svg',
+    favicon: 'public/dip.png',
     // 设置根元素 id，避免与微应用的 #root 冲突
     template: 'public/index.html',
   },

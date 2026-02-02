@@ -1,7 +1,7 @@
 import { Col, type MenuProps, Row, Tabs } from 'antd'
 import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import AutoSizer from 'react-virtualized-auto-sizer'
-import type { ApplicationInfo } from '@/apis/applications'
+import type { ApplicationInfo } from '@/apis'
 import ScrollBarContainer from '../ScrollBarContainer'
 import AppCard from './AppCard'
 import styles from './index.module.less'

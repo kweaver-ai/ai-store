@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { type ApplicationInfo, pinMicroAppApi } from '../apis/applications'
+import { type ApplicationInfo, pinMicroAppApi } from '@/apis'
 import { WENSHU_APP_KEY } from '../routes/types'
 
 /**

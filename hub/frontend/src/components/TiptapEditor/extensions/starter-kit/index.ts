@@ -2,6 +2,7 @@ import { type AnyExtension, Extension } from '@tiptap/core'
 import { Dropcursor, type DropcursorOptions } from '@tiptap/extension-dropcursor'
 import { Gapcursor } from '@tiptap/extension-gapcursor'
 import { History, type HistoryOptions } from '@tiptap/extension-history'
+import { Placeholder } from '@tiptap/extensions'
 import { Bold, type BoldOptions } from '../../marks/bold'
 import { Code, type CodeOptions } from '../../marks/code'
 import { Highlight, type HighlightOptions } from '../../marks/highlight'
@@ -114,6 +115,7 @@ export interface StarterKitOptions {
   deleteBlock?: boolean
   clearFormat?: boolean
   // tiptap
+  placeholder?: Parameters<typeof Placeholder.configure>[0] | boolean
   history?: Partial<HistoryOptions> | boolean
   gapCursor?: Partial<any> | boolean
   dropCursor?: Partial<DropcursorOptions> | boolean
@@ -181,6 +183,7 @@ export const StarterKit = Extension.create<StarterKitOptions>({
     configure(extensions, DeleteBlock, this.options.deleteBlock) // ☑️
     // configure(extensions, ClearFormat, this.options.clearFormat)
     // tiptap
+    configure(extensions, Placeholder, this.options.placeholder) // ☑️
     configure(extensions, History, this.options.history)
     configure(extensions, Gapcursor, this.options.gapCursor)
     configure(extensions, Dropcursor, this.options.dropCursor, {

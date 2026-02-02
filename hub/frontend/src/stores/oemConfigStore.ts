@@ -1,6 +1,10 @@
 import { create } from 'zustand'
-import type { OemBasicConfig, OemResourceConfig } from '@/apis'
-import { getOEMBasicConfigApi, getOEMResourceConfigApi } from '@/apis/config'
+import {
+  getOEMBasicConfigApi,
+  getOEMResourceConfigApi,
+  type OemBasicConfig,
+  type OemResourceConfig,
+} from '@/apis'
 
 /** OEM 配置状态 */
 interface OEMConfigState {

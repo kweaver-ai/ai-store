@@ -1,13 +1,14 @@
 import { PlusOutlined } from '@ant-design/icons'
 import { Button, Drawer, Form, Input, Modal, message, Table } from 'antd'
 import { useCallback, useEffect, useState } from 'react'
-import type { CreateDictionaryParams, DictionaryItem } from '@/apis/projects'
 import {
+  type CreateDictionaryParams,
+  type DictionaryItem,
   deleteProjectDictionary,
   getProjectDictionary,
   postProjectDictionary,
   putProjectDictionary,
-} from '@/apis/projects'
+} from '@/apis'
 import Empty from '@/components/Empty'
 import { formatTime } from '@/utils/handle-function/FormatTime'
 import IconFont from '../IconFont'
@@ -24,7 +25,7 @@ interface DictionaryFormValues {
   definition: string
 }
 
-/** 项目数据字典抽屉 */
+/** 项目词典抽屉 */
 const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionaryDrawerProps) => {
   const [modal, contextHolder] = Modal.useModal()
   const [messageApi, messageContextHolder] = message.useMessage()
@@ -39,7 +40,7 @@ const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionary
   const [submitting, setSubmitting] = useState(false)
   const [canSubmit, setCanSubmit] = useState(false)
 
-  /** 加载数据字典列表 */
+  /** 加载项目词典列表 */
   const loadDictionaryList = useCallback(async () => {
     if (!projectId) return
 
@@ -213,7 +214,7 @@ const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionary
 
   return (
     <Drawer
-      title="项目数据字典"
+      title="项目词典"
       open={open}
       onClose={onClose}
       closable={{ placement: 'end' }}
@@ -230,7 +231,7 @@ const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionary
       <div className="flex flex-col h-full gap-y-2">
         {/* 头部 */}
         <div className="flex items-center justify-between gap-x-2">
-          <span className="text-sm font-medium text-[--dip-text-color]">数据字典列表</span>
+          <span className="text-sm font-medium text-[--dip-text-color]">项目词典列表</span>
           <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
             新建术语
           </Button>
@@ -255,7 +256,7 @@ const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionary
                   </Button>
                 </Empty>
               ) : (
-                <Empty desc="暂无数据字典定义" />
+                <Empty desc="暂无项目词典定义" />
               ),
             }}
           />

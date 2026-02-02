@@ -56,7 +56,6 @@ export const useListService = <T extends { name?: string }, P extends any[] = []
         setLoading(true)
         setError(null)
 
-        console.log('fetchList', args)
         // 发起新请求并保存引用（参数完全透传给外部 API）
         const requestPromise = fetchFn(...args)
         currentRequestRef.current = requestPromise as any

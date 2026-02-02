@@ -1,5 +1,5 @@
 import type { MenuProps } from 'antd'
-import type { ObjectType } from '@/apis/projects'
+import type { ObjectType } from '@/apis'
 import IconFont from '@/components/IconFont'
 import { ProjectActionEnum } from './types'
 
