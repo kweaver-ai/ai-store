@@ -3,8 +3,8 @@ import { Avatar, Button, Card, Dropdown } from 'antd'
 import classNames from 'classnames'
 import type React from 'react'
 import { useState } from 'react'
-import type { ApplicationInfo } from '@/apis/applications'
-import { formatTimeMinute } from '@/utils/handle-function/FormatTime'
+import type { ApplicationInfo } from '@/apis'
+import { formatTimeSlash } from '@/utils/handle-function/FormatTime'
 import AppIcon from '../AppIcon'
 import IconFont from '../IconFont'
 import { ModeEnum } from './types'
@@ -31,7 +31,7 @@ const AppCard: React.FC<AppCardProps> = ({
 }) => {
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const updateTime = app.updated_at ? formatTimeMinute(new Date(app.updated_at).getTime()) : ''
+  const updateTime = app.updated_at ? formatTimeSlash(new Date(app.updated_at).getTime()) : ''
   const userName = app.updated_by || ''
 
   return (

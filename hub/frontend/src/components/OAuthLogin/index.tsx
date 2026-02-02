@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getIframeSizeApi, TemplateType } from '@/apis/config'
+import { getIframeSizeApi, TemplateType } from '@/apis'
 import backgroundImage from '@/assets/images/brand/background.png'
 import { useLanguageStore } from '@/stores/languageStore'
 import { useOEMConfigStore } from '@/stores/oemConfigStore'

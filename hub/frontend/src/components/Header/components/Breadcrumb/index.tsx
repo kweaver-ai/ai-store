@@ -86,13 +86,13 @@ export const Breadcrumb = ({ type, items = [], onNavigate, lastItemSuffix }: Bre
             ) : (
               <>
                 {/* 分隔符 */}
-                {index > 0 && <span className="text-sm font-medium text-black/25 mx-2">/</span>}
+                {index > 0 && <span className="text-sm font-medium text-black/25 mx-1.5">/</span>}
                 {/* 面包屑项 */}
                 {isNotClickable ? (
                   <Button
                     size="small"
                     type="text"
-                    className={`font-medium hover:!bg-transparent hover:!cursor-default ${type === 'micro-app' ? '' : 'p-0'}`}
+                    className={`font-medium hover:!bg-transparent hover:!cursor-default ${type === 'micro-app' ? '' : 'px-1'}`}
                     disabled={isDisabled}
                   >
                     {hasIcon && renderIcon(item.icon, item.name)}
@@ -102,7 +102,7 @@ export const Breadcrumb = ({ type, items = [], onNavigate, lastItemSuffix }: Bre
                   <Button
                     size="small"
                     type="text"
-                    className={`${type === 'micro-app' ? '' : 'p-0'}`}
+                    className={`${type === 'micro-app' ? '' : 'px-1'}`}
                     onClick={(e) => !isDisabled && handleNavigate(item, e)}
                     disabled={isDisabled}
                   >

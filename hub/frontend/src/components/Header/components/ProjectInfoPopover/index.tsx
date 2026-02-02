@@ -1,10 +1,9 @@
-import { CloseOutlined } from '@ant-design/icons'
 import type { PopoverProps } from 'antd'
 import { Popover } from 'antd'
 import type { ReactNode } from 'react'
-import type { ProjectInfo } from '@/apis/projects'
+import type { ProjectInfo } from '@/apis'
 import ProjectIcon from '@/assets/images/projectIcon.svg?react'
-import { formatTimeMinute } from '@/utils/handle-function/FormatTime'
+import { formatTimeSlash } from '@/utils/handle-function/FormatTime'
 
 interface ProjectInfoPopoverProps extends Omit<PopoverProps, 'content'> {
   projectInfo: ProjectInfo | null
@@ -28,13 +27,6 @@ export const ProjectInfoPopover = ({
 
   const content = (
     <div className="flex flex-col items-center w-[400px] relative p-3">
-      <button
-        type="button"
-        className="absolute top-0 right-0 w-8 h-8 flex items-center justify-center hover:bg-[--dip-hover-bg-color-6] rounded cursor-pointer"
-        onClick={onClose}
-      >
-        <CloseOutlined />
-      </button>
       {/* 图标 */}
       <div className="w-14 h-14 mb-5 flex-shrink-0 rounded-full flex justify-center overflow-hidden">
         <ProjectIcon className="w-14 h-14" />
@@ -60,7 +52,7 @@ export const ProjectInfoPopover = ({
         <span className="shrink-0">创建时间</span>
         <span className="truncate">
           {projectInfo.created_at
-            ? formatTimeMinute(new Date(projectInfo.created_at).getTime())
+            ? formatTimeSlash(new Date(projectInfo.created_at).getTime())
             : '--'}
         </span>
       </div>

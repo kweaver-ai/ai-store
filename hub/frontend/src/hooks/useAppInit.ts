@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import bgImage from '../assets/images/gradient-container-bg.svg'
+import bgImage from '../assets/images/gradient-container-bg.png'
 import { useOEMConfigStore } from '../stores/oemConfigStore'
 import { initQiankun } from '../utils/qiankun'
 import { useLanguage } from './useLanguage'

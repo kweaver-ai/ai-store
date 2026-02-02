@@ -4,23 +4,22 @@ import { Popover, Spin } from 'antd'
 import clsx from 'clsx'
 import type React from 'react'
 import { useMemo, useState } from 'react'
-import { getKnowledgeNetworks } from '@/apis/ontology-manager'
-import type { KnowledgeNetworkInfo } from '@/apis/ontology-manager/index.d'
-import Empty from '@/components/Empty'
+import { getKnowledgeNetworks, type KnowledgeNetworkInfo } from '@/apis'
+import IconFont from '@/components/IconFont'
 import ScrollBarContainer from '@/components/ScrollBarContainer'
 import SearchInput from '@/components/SearchInput'
 import styles from './index.module.less'
-import IconFont from '@/components/IconFont'
 
 const KnowledgeView: React.FC<NodeViewProps> = (props) => {
-  const { node, updateAttributes, editor, selected } = props
-  const { id, name } = node.attrs
+  const { node, updateAttributes, editor, selected, extension } = props
+  const { knowledge } = node.attrs
+  const knowledgeData = knowledge || { id: '', name: '' }
+  const { id, name } = knowledgeData
   const [knowledgeOptions, setKnowledgeOptions] = useState<KnowledgeNetworkInfo[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
   const [popoverOpen, setPopoverOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
-  console.log('props', props)
 
   // 获取知识网络列表
   const fetchKnowledgeNetworks = async () => {
@@ -58,8 +57,10 @@ const KnowledgeView: React.FC<NodeViewProps> = (props) => {
   // 选择知识网络
   const handleSelect = (item: KnowledgeNetworkInfo) => {
     updateAttributes({
-      id: item.id,
-      name: item.name,
+      knowledge: {
+        id: item.id,
+        name: item.name,
+      },
     })
     setPopoverOpen(false)
     setSearchValue('')
@@ -73,13 +74,13 @@ const KnowledgeView: React.FC<NodeViewProps> = (props) => {
         <SearchInput
           variant="outlined"
           className="w-full"
-          placeholder="搜索业务知识网络"
+          placeholder={`搜索${extension.options.dictionary.name}`}
           onSearch={(value) => setSearchValue(value)}
         />
       </div>
 
       {/* 列表 */}
-      <ScrollBarContainer className="max-h-[200px] overflow-y-auto px-2">
+      <ScrollBarContainer className="max-h-[240px] overflow-y-auto px-2">
         {loading ? (
           <div className="flex justify-center py-4">
             <Spin />
@@ -126,7 +127,11 @@ const KnowledgeView: React.FC<NodeViewProps> = (props) => {
       )}
     >
       <IconFont type="icon-yewuzhishiwangluo" className="text-lg" />
-      {!id ? <span className="text-[rgba(0,0,0,0.65)]">暂无知识网络</span> : <span>{name}</span>}
+      {!id ? (
+        <span className="text-[rgba(0,0,0,0.65)]">暂无{extension.options.dictionary.name}</span>
+      ) : (
+        <span>{name}</span>
+      )}
     </div>
   )
   return (

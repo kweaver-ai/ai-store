@@ -1,7 +1,7 @@
 import { Col, type MenuProps, Row } from 'antd'
 import { memo, useCallback } from 'react'
 import AutoSizer from 'react-virtualized-auto-sizer'
-import type { ProjectInfo } from '@/apis/projects'
+import type { ProjectInfo } from '@/apis'
 import ScrollBarContainer from '../ScrollBarContainer'
 import ProjectCard from './ProjectCard'
 import { computeColumnCount, gap } from './utils'

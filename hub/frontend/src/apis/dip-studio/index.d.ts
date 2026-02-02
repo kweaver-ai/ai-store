@@ -27,6 +27,7 @@ export interface NodeInfo {
   editor: string
   edited_at: string
   node_code?: string // 22位大小写敏感字符串，用于MCP访问
+  document_id?: string // 功能设计文档 ID
 }
 
 /** 创建节点请求参数 */
@@ -65,7 +66,7 @@ export interface CreateDictionaryParams {
 export interface DocumentInfo {
   id: string
   node_id: string
-  content: string
+  content: any
   created_at: string
   updated_at: string
 }

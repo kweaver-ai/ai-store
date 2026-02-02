@@ -1,9 +1,11 @@
 import type { ModalProps } from 'antd'
 import { Form, Input, Modal, message } from 'antd'
 import { useEffect, useState } from 'react'
-import type { CreateNodeParams, ObjectType } from '@/apis/projects'
 import {
+  type CreateNodeParams,
+  type ObjectType,
   postApplicationNode,
+  postDocument,
   postFunctionNode,
   postPageNode,
   postProjects,
@@ -11,7 +13,7 @@ import {
   putFunctionNode,
   putPageNode,
   putProjects,
-} from '@/apis/projects'
+} from '@/apis'
 import {
   objectDescPlaceholderMap,
   objectNamePlaceholderMap,
@@ -151,6 +153,14 @@ const ActionModal = ({
             editor: '123',
             edited_at: new Date().toISOString(),
           }
+          // await postDocument(result.document_id, {
+          //   type: 'doc',
+          //   content: [
+          //     {
+          //       type: 'paragraph',
+          //     },
+          //   ],
+          // })
         } else if (operationType === 'edit' && objectInfo) {
           // result = await putFunctionNode(objectInfo.id, params)
           result = {

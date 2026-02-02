@@ -20,8 +20,42 @@ export const Metric = Node.create<MetricOptions>({
 
   addAttributes() {
     return {
-      id: { default: '' },
-      name: { default: '' },
+      metrics: {
+        default: [],
+        parseHTML: (element) => {
+          const metricsAttr = element.getAttribute('data-metrics')
+          if (metricsAttr) {
+            try {
+              const parsed = JSON.parse(metricsAttr)
+              // 确保只保留 id 和 name
+              if (Array.isArray(parsed)) {
+                return parsed.map((item: any) => ({
+                  id: item.id || '',
+                  name: item.name || '',
+                }))
+              }
+              return []
+            } catch {
+              return []
+            }
+          }
+          return []
+        },
+        renderHTML: (attributes) => {
+          const metrics = attributes.metrics
+          if (!Array.isArray(metrics) || metrics.length === 0) {
+            return {}
+          }
+          // 只保存 id 和 name
+          const simplified = metrics.map((item: any) => ({
+            id: item.id || '',
+            name: item.name || '',
+          }))
+          return {
+            'data-metrics': JSON.stringify(simplified),
+          }
+        },
+      },
     }
   },
 
@@ -52,16 +86,40 @@ export const Metric = Node.create<MetricOptions>({
         parser: {
           match: (node) => node.type === 'leafDirective' && node.name === this.name,
           apply: (state: any, node: any, type: any) => {
-            state.addNode(type, node.attributes)
+            // 从 markdown 属性中解析 metrics 数组
+            const attrs: any = {}
+            if (node.attributes?.metrics) {
+              try {
+                const parsed = JSON.parse(node.attributes.metrics)
+                if (Array.isArray(parsed)) {
+                  attrs.metrics = parsed.map((item: any) => ({
+                    id: item.id || '',
+                    name: item.name || '',
+                  }))
+                } else {
+                  attrs.metrics = []
+                }
+              } catch {
+                attrs.metrics = []
+              }
+            } else {
+              attrs.metrics = []
+            }
+            state.addNode(type, attrs)
           },
         },
         serializer: {
           match: (node) => node.type.name === this.name,
           apply: (state: any, node: any) => {
+            // 将 metrics 数组转换为 JSON 字符串，以便在 markdown 中正确序列化
+            const attributes: Record<string, string> = {}
+            if (Array.isArray(node.attrs.metrics) && node.attrs.metrics.length > 0) {
+              attributes.metrics = JSON.stringify(node.attrs.metrics)
+            }
             state.addNode({
               type: 'leafDirective',
               name: this.name,
-              attributes: node.attrs,
+              attributes,
             })
           },
         },

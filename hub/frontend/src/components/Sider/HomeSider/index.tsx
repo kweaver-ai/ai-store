@@ -5,7 +5,7 @@ import clsx from 'classnames'
 import type React from 'react'
 import { useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import LogoIcon from '@/assets/images/brand/logo.svg?react'
+import logoImage from '@/assets/images/brand/logo.png'
 import SidebarAiDataPlatformIcon from '@/assets/images/sider/adp.svg?react'
 import SidebarAiStoreIcon from '@/assets/images/sider/aiStore.svg?react'
 import SidebarDipStudioIcon from '@/assets/images/sider/dipStudio.svg?react'
@@ -152,10 +152,10 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
         key: 'data-platform',
         label: (
           <a href={getExternalUrl('/studio')} target="_blank" rel="noopener noreferrer">
-            AI Data Platform
+            业务知识网络
           </a>
         ),
-        icon: <SidebarAiDataPlatformIcon />,
+        icon: <IconFont type="icon-yewuzhishiwangluo" />,
       },
       {
         key: 'system',
@@ -173,7 +173,7 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
   const logoUrl = useMemo(() => {
     const base64Image = oemResourceConfig?.['logo.png']
     if (!base64Image) {
-      return null
+      return logoImage
     }
     // 如果已经是 data URL 格式，直接使用
     if (base64Image.startsWith('data:image/')) {
@@ -193,11 +193,7 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
           collapsed ? 'justify-center pl-1.5 pr-1.5' : 'justify-between pl-3 pr-2',
         )}
       >
-        {logoUrl ? (
-          <img src={logoUrl} alt="logo" className={clsx('h-6 w-auto', collapsed && 'hidden')} />
-        ) : (
-          <LogoIcon className={clsx('h-6 w-auto', collapsed && 'hidden')} />
-        )}
+        <img src={logoUrl} alt="logo" className={clsx('h-8 w-auto', collapsed && 'hidden')} />
         <Tooltip title={collapsed ? '展开' : '收起'} placement="right">
           <button
             type="button"

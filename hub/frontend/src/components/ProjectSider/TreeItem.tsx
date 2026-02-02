@@ -2,7 +2,7 @@ import { FolderOutlined, HolderOutlined } from '@ant-design/icons'
 import { Dropdown, type MenuProps } from 'antd'
 import clsx from 'clsx'
 import { forwardRef, type HTMLAttributes, useState } from 'react'
-import type { NodeType } from '@/apis/projects'
+import type { NodeType } from '@/apis'
 import IconFont from '@/components/IconFont'
 import { objectTypeNameMap } from '@/pages/ProjectManagement/utils'
 import styles from './index.module.less'
@@ -157,6 +157,9 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
             >
               {name}
             </span>
+            {!canEdit && (
+              <div className="w-1 h-1 bg-[--dip-link-color] rounded-full ml-1 shrink-0" />
+            )}
           </div>
           {/* {clone && childCount && childCount > 1 ? (
             <span className={styles['content-count']}>{childCount}</span>
@@ -172,6 +175,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
                         key: 'add',
                         icon: <IconFont type="icon-dip-add" />,
                         label: `新建${type === 'application' ? '页面' : '模块'}`,
+                        disabled: !canEdit,
                         onClick: (e: { domEvent: React.MouseEvent }) => {
                           e.domEvent.stopPropagation()
                           onAddChild?.()

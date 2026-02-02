@@ -1,12 +1,12 @@
 import { Button } from 'antd'
 import { memo, useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import type { NodeInfo } from '@/apis/projects'
+import type { NodeInfo } from '@/apis'
 import DictionaryIcon from '@/assets/images/project/dictionary.svg?react'
-import DictionaryDrawer from '@/components/ProjectDictionaryDrawer'
 import Empty from '@/components/Empty'
 import IconFont from '@/components/IconFont'
 import ActionModal from '@/components/ProjectActionModal/ActionModal'
+import DictionaryDrawer from '@/components/ProjectDictionaryDrawer'
 import ProjectNodeDetail from '@/components/ProjectNodeDetail'
 import ProjectSider from '@/components/ProjectSider'
 import { useProjectStore } from '@/stores'
@@ -34,7 +34,7 @@ const Project = () => {
   // ActionModal 相关状态
   const [actionModalVisible, setActionModalVisible] = useState(false)
 
-  // 数据字典抽屉相关状态
+  // 项目词典抽屉相关状态
   const [dictionaryDrawerVisible, setDictionaryDrawerVisible] = useState(false)
 
   // 加载项目树数据
@@ -116,7 +116,7 @@ const Project = () => {
     setActionModalVisible(true)
   }, [])
 
-  /** 处理查看数据字典 */
+  /** 处理查看项目词典 */
   const handleViewDictionary = useCallback(() => {
     setDictionaryDrawerVisible(true)
   }, [])
@@ -126,13 +126,13 @@ const Project = () => {
     if (!treeData.length) {
       return (
         <div className="flex items-center justify-center h-full text-[--dip-text-color-65]">
-          <Empty desc="当前项目尚未建立完善的应用结构。您可以先定义数据字典规范，或者直接开始创建应用。">
+          <Empty desc="当前项目尚未建立完善的应用结构。您可以先定义项目词典规范，或者直接开始创建应用。">
             <div className="flex items-center justify-center gap-2 mt-2">
               <Button
                 onClick={handleViewDictionary}
                 icon={<DictionaryIcon className="!text-base" />}
               >
-                查看数据字典
+                查看项目词典
               </Button>
               <Button
                 type="primary"
@@ -215,7 +215,7 @@ const Project = () => {
         projectId={projectId || ''}
         parentId={null}
       />
-      {/* 数据字典抽屉 */}
+      {/* 项目词典抽屉 */}
       <DictionaryDrawer
         open={dictionaryDrawerVisible}
         onClose={() => setDictionaryDrawerVisible(false)}
