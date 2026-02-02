@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { getLoginUrl } from '@/apis/login'
+import { getLoginUrl } from '@/apis'
 
 interface ContentProps {
   iframeHeight: number

@@ -1,6 +1,6 @@
 import classNames from 'classnames'
 import type { ReactNode } from 'react'
-import type { LoginBoxLocationType, LoginBoxStyleType } from '@/apis/config'
+import type { LoginBoxLocationType, LoginBoxStyleType } from '@/apis'
 import Content from '../Content'
 import Footer from '../Footer'
 import Header from '../Header'

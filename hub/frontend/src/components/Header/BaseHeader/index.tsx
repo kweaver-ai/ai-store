@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import LogoIcon from '@/assets/images/brand/logo.svg?react'
+import logoImage from '@/assets/images/brand/logo.png'
 import InfoIcon from '@/assets/info.svg?react'
 import type { HeaderType } from '@/routes/types'
 import { getParentRoute, getRouteByPath } from '@/routes/utils'
@@ -129,7 +129,7 @@ const BaseHeader = ({ headerType }: { headerType: HeaderType }) => {
   const getLogoUrl = () => {
     const base64Image = oemResourceConfig?.['logo.png']
     if (!base64Image) {
-      return null
+      return logoImage
     }
     // 如果已经是 data URL 格式，直接使用
     if (base64Image.startsWith('data:image/')) {
@@ -143,12 +143,8 @@ const BaseHeader = ({ headerType }: { headerType: HeaderType }) => {
   return (
     <>
       {/* 左侧：Logo 和面包屑 */}
-      <div className="flex items-center gap-x-10">
-        {logoUrl ? (
-          <img src={logoUrl} alt="logo" className="h-6 w-auto" />
-        ) : (
-          <LogoIcon className="h-6 w-auto" />
-        )}
+      <div className="flex items-center gap-x-8">
+        <img src={logoUrl} alt="logo" className="h-8 w-auto" />
         <Breadcrumb
           type={headerType}
           items={breadcrumbItems}

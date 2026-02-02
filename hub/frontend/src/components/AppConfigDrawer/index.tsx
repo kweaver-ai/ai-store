@@ -1,7 +1,7 @@
 import { Drawer, type DrawerProps } from 'antd'
 import clsx from 'classnames'
 import { useEffect, useState } from 'react'
-import type { ApplicationBasicInfo } from '@/apis/applications'
+import type { ApplicationBasicInfo } from '@/apis'
 import AgentConfig from './AgentConfig'
 import BasicConfig from './BasicConfig'
 import OntologyConfig from './OntologyConfig'

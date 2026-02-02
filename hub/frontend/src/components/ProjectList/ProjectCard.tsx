@@ -1,9 +1,9 @@
 import { Card, Dropdown, type MenuProps } from 'antd'
 import clsx from 'clsx'
 import { useState } from 'react'
-import type { ProjectInfo } from '@/apis/projects'
+import type { ProjectInfo } from '@/apis'
 import ProjectIcon from '@/assets/images/projectIcon.svg?react'
-import { formatTimeMinute } from '@/utils/handle-function/FormatTime'
+import { formatTimeSlash } from '@/utils/handle-function/FormatTime'
 import IconFont from '../IconFont'
 import { cardHeight } from './utils'
 
@@ -19,7 +19,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, width, menuItems, on
   const [menuOpen, setMenuOpen] = useState(false)
 
   const updateTime = project.updated_at
-    ? formatTimeMinute(new Date(project.updated_at).getTime())
+    ? formatTimeSlash(new Date(project.updated_at).getTime())
     : ''
 
   return (

@@ -49,63 +49,22 @@ export const CustomDragHandle = Extension.create<DragHandleOptions>({
 
     const element = document.createElement('div')
     element.classList.add('dip-prose-mirror-cm')
+    // 初始状态隐藏，只在鼠标悬浮时显示
+    element.style.opacity = '0'
+    element.style.pointerEvents = 'none'
 
-    // 获取滚动容器
-    const getScrollContainer = (): HTMLElement | null => {
-      let scrollContainer: HTMLElement | null = editor.view.dom.parentElement
-      while (scrollContainer) {
-        if (scrollContainer.classList.contains('tiptap-scroll-container')) {
-          return scrollContainer
-        }
-        const style = window.getComputedStyle(scrollContainer)
-        if (/(auto|scroll)/.test(style.overflow + style.overflowY)) {
-          return scrollContainer
-        }
-        scrollContainer = scrollContainer.parentElement
+    // 显示拖拽手柄
+    const showElement = () => {
+      if (storage.node && storage.pos !== -1) {
+        element.style.opacity = '1'
+        element.style.pointerEvents = 'auto'
       }
-      return null
     }
 
-    // 检查节点是否在容器可见区域内
-    const checkNodeVisibility = (): boolean => {
-      if (!storage.node || storage.pos === -1) {
-        return false
-      }
-
-      const scrollContainer = getScrollContainer()
-      if (!scrollContainer) {
-        return true // 如果没有找到滚动容器，默认显示
-      }
-
-      const nodeDOM = editor.view.nodeDOM(storage.pos) as HTMLElement
-      if (!nodeDOM) {
-        return false
-      }
-
-      // getBoundingClientRect() 返回的是相对于视口（viewport）的位置
-      // 所以可以直接比较节点和容器的位置来判断可见性
-      const containerRect = scrollContainer.getBoundingClientRect()
-      const nodeRect = nodeDOM.getBoundingClientRect()
-
-      // 检查节点是否在容器的可见区域内（允许部分可见）
-      // getBoundingClientRect() 返回的是相对于视口的位置，可以直接比较
-      const isVisible =
-        nodeRect.top > containerRect.top && // 节点底部在容器顶部下方
-        nodeRect.left > containerRect.left // 节点右边界在容器左边界右侧
-
-      return isVisible
-    }
-
-    // 更新 element 的可见性
-    const updateElementVisibility = () => {
-      requestAnimationFrame(() => {
-        const isVisible = checkNodeVisibility()
-        if (isVisible) {
-          element.style.opacity = '1'
-        } else {
-          element.style.opacity = '0'
-        }
-      })
+    // 隐藏拖拽手柄
+    const hideElement = () => {
+      element.style.opacity = '0'
+      element.style.pointerEvents = 'none'
     }
 
     // Plus button
@@ -263,38 +222,139 @@ export const CustomDragHandle = Extension.create<DragHandleOptions>({
       onNodeChange: ({ node, pos }) => {
         storage.node = node
         storage.pos = pos
-        // 节点变化时更新可见性
-        updateElementVisibility()
       },
     })
 
-    // 监听滚动事件，在滚动时也检测可见性
-    const scrollContainer = getScrollContainer()
-    let scrollHandler: (() => void) | undefined
+    // 监听编辑器DOM的鼠标悬浮事件
+    const editorDOM = editor.view.dom
+    let currentHoveredNode: HTMLElement | null = null
 
-    if (scrollContainer) {
-      scrollHandler = () => {
-        updateElementVisibility()
+    const handleMouseOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (!target) return
+
+      // 查找最近的块级节点
+      let nodeElement: HTMLElement | null = target
+      while (nodeElement && nodeElement !== editorDOM) {
+        // 检查是否是块级元素（段落、标题等）
+        const computedStyle = window.getComputedStyle(nodeElement)
+        const display = computedStyle.display
+        if (
+          display === 'block' ||
+          display === 'flex' ||
+          nodeElement.classList.contains('ProseMirror') ||
+          nodeElement.hasAttribute('data-type')
+        ) {
+          // 检查是否是有效的编辑节点
+          const pos = editor.view.posAtDOM(nodeElement, 0)
+          if (pos !== null && pos >= 0) {
+            const $pos = editor.state.doc.resolve(pos)
+            const node = $pos.node()
+            // 只对块级节点显示拖拽手柄
+            if (node?.isBlock) {
+              currentHoveredNode = nodeElement
+              // 更新storage以匹配当前悬浮的节点
+              storage.node = node
+              storage.pos = $pos.start($pos.depth)
+              showElement()
+              return
+            }
+          }
+        }
+        nodeElement = nodeElement.parentElement
       }
-      scrollContainer.addEventListener('scroll', scrollHandler, { passive: true })
     }
 
-    // 创建辅助插件来管理滚动事件监听器的清理
-    const plugins = [pluginResult.plugin]
+    const handleMouseOut = (e: MouseEvent) => {
+      // 检查鼠标是否真的离开了编辑器区域或当前节点
+      const relatedTarget = e.relatedTarget as HTMLElement
 
-    if (scrollHandler && scrollContainer) {
-      const handler = scrollHandler
-      const container = scrollContainer
-      const cleanupPlugin = new Plugin({
+      // 获取鼠标当前实际位置下的元素（包括内边距区域）
+      const elementAtPoint = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement
+
+      // 如果鼠标移到了拖拽手柄上，不隐藏
+      if (elementAtPoint && element.contains(elementAtPoint)) {
+        return
+      }
+
+      // 检查鼠标是否仍在编辑器DOM内（包括内边距区域）
+      const mouseInEditor = elementAtPoint ? editorDOM.contains(elementAtPoint) : false
+
+      if (!relatedTarget) {
+        // 如果鼠标仍在编辑器DOM内（包括内边距区域），不隐藏
+        if (mouseInEditor) {
+          return
+        }
+        hideElement()
+        currentHoveredNode = null
+        return
+      }
+
+      // 如果鼠标移到了拖拽手柄元素上，不隐藏
+      if (element.contains(relatedTarget)) {
+        return
+      }
+
+      const relatedInEditor = editorDOM.contains(relatedTarget)
+
+      // 如果鼠标仍在编辑器内（包括内边距区域），不隐藏
+      if (mouseInEditor) {
+        return
+      }
+
+      // 如果relatedTarget仍在编辑器内，不隐藏
+      if (relatedInEditor) {
+        return
+      }
+
+      // 鼠标真正离开了编辑器区域，隐藏
+      hideElement()
+      currentHoveredNode = null
+    }
+
+    // 当鼠标进入拖拽手柄时保持显示
+    const handleElementMouseEnter = () => {
+      if (storage.node && storage.pos !== -1) {
+        showElement()
+      }
+    }
+
+    // 当鼠标离开拖拽手柄时隐藏
+    const handleElementMouseLeave = (e: MouseEvent) => {
+      const relatedTarget = e.relatedTarget as HTMLElement
+      // 如果鼠标移回了编辑器节点，不隐藏（会由handleMouseOver处理显示）
+      if (relatedTarget && currentHoveredNode?.contains(relatedTarget)) {
+        return
+      }
+      // 如果鼠标移回了编辑器，不隐藏（会由handleMouseOver处理）
+      if (relatedTarget && editorDOM.contains(relatedTarget)) {
+        return
+      }
+      // 否则隐藏
+      hideElement()
+      currentHoveredNode = null
+    }
+
+    editorDOM.addEventListener('mouseover', handleMouseOver)
+    editorDOM.addEventListener('mouseout', handleMouseOut)
+    element.addEventListener('mouseenter', handleElementMouseEnter)
+    element.addEventListener('mouseleave', handleElementMouseLeave)
+
+    // 创建辅助插件来管理事件监听器的清理
+    const plugins = [
+      pluginResult.plugin,
+      new Plugin({
         key: new PluginKey('customDragHandle-cleanup'),
         view: () => ({
           destroy: () => {
-            container.removeEventListener('scroll', handler)
+            editorDOM.removeEventListener('mouseover', handleMouseOver)
+            editorDOM.removeEventListener('mouseout', handleMouseOut)
+            element.removeEventListener('mouseenter', handleElementMouseEnter)
+            element.removeEventListener('mouseleave', handleElementMouseLeave)
           },
         }),
-      })
-      plugins.push(cleanupPlugin)
-    }
+      }),
+    ]
 
     return plugins
   },

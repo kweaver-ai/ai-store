@@ -3,6 +3,8 @@
  * 使用 localStorage 存储，按用户和项目记录
  */
 
+import type { TreeItems } from '@/components/ProjectSider/utils'
+import { flattenTree } from '@/components/ProjectSider/utils'
 import { useUserInfoStore } from '@/stores'
 
 const DEV_MODE_STORAGE_KEY = 'dip_project_dev_mode'
@@ -118,6 +120,25 @@ export const isNodeInDevMode = (
   }
 
   return checkIsDescendant(nodeId, devModeNodeId)
+}
+
+/**
+ * 检查节点是否处于开发模式（包括继承）- 使用树结构
+ * @param projectId 项目 ID
+ * @param nodeId 节点 ID
+ * @param treeItems 树结构的节点列表
+ */
+export const isNodeInDevModeWithTree = (
+  projectId: string,
+  nodeId: string,
+  treeItems: TreeItems,
+): boolean => {
+  // 使用 flattenTree 将树结构扁平化，然后提取 id 和 parentId
+  const flattenedItems = flattenTree(treeItems).map((item) => ({
+    id: item.id,
+    parentId: item.parentId,
+  }))
+  return isNodeInDevMode(projectId, nodeId, flattenedItems)
 }
 
 /**

@@ -1,7 +1,7 @@
 /* eslint-disable no-continue */
 /* eslint-disable no-restricted-syntax */
 import { arrayMove } from '@dnd-kit/sortable'
-import type { NodeInfo, NodeType } from '@/apis/projects'
+import type { NodeInfo, NodeType } from '@/apis'
 
 export interface TreeItem {
   id: string

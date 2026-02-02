@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { type ApplicationInfo, getApplications } from '@/apis/applications'
+import { type ApplicationInfo, getApplications } from '@/apis'
 import { useListService } from './useListService'
 
 interface UseApplicationsServiceOptions {

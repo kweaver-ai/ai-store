@@ -1,6 +1,6 @@
 import { PushpinOutlined } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
-import type { ApplicationInfo } from '@/apis/applications'
+import type { ApplicationInfo } from '@/apis'
 import { usePreferenceStore } from '@/stores'
 import { MyAppActionEnum } from './types'
 
@@ -10,7 +10,7 @@ export const getMyAppMenuItems = (
   onMenuClick: (key: MyAppActionEnum) => void,
 ): MenuProps['items'] => {
   const { isPinned } = usePreferenceStore.getState()
-  const pinned = isPinned(app.key)
+  const pinned = isPinned(app.id)
 
   if (pinned) {
     return [

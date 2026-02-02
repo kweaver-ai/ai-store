@@ -1,7 +1,6 @@
 import { message, Spin } from 'antd'
 import { memo, useEffect, useState } from 'react'
-import type { ApplicationBasicInfo } from '@/apis/applications'
-import { getApplicationsBasicInfo } from '@/apis/applications'
+import { type ApplicationBasicInfo, getApplicationsBasicInfo } from '@/apis'
 import ScrollBarContainer from '../ScrollBarContainer'
 
 interface BasicConfigProps {

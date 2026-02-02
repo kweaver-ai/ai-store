@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { NodeInfo, ObjectType, ProjectInfo } from '@/apis/projects'
+import type { NodeInfo, ObjectType, ProjectInfo } from '@/apis'
 import type { TreeItems } from '@/components/ProjectSider/utils'
 import { convertNodeInfoToTree, removeItem, setProperty } from '@/components/ProjectSider/utils'
 
@@ -96,7 +96,6 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   setTreeData: (treeData) => {
-    console.log('setTreeData', treeData)
     set({ treeData })
   },
 

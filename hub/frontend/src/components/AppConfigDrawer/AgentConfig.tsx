@@ -1,7 +1,7 @@
 import { ShareAltOutlined } from '@ant-design/icons'
 import { Alert, message, Spin } from 'antd'
 import { memo, useEffect, useState } from 'react'
-import { type AgentInfo, getApplicationsAgents } from '@/apis/applications'
+import { type AgentInfo, getApplicationsAgents } from '@/apis'
 import ScrollBarContainer from '../ScrollBarContainer'
 
 interface AgentConfigProps {
