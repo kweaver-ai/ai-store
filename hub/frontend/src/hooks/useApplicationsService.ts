@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { type ApplicationInfo, getApplications } from '@/apis'
 import { useListService } from './useListService'
 
@@ -23,15 +23,26 @@ interface UseApplicationsServiceOptions {
  */
 export const useApplicationsService = (options: UseApplicationsServiceOptions = {}) => {
   const fetchFn = useCallback(() => getApplications(options.params), [options.params])
-
   const { items, loading, error, searchValue, handleSearch, handleRefresh, fetchList } =
     useListService<ApplicationInfo>({
       fetchFn,
       autoLoad: options.autoLoad,
     })
+  const [apps, setApps] = useState<ApplicationInfo[]>([])
+  useEffect(() => {
+    setApps(items)
+  }, [items])
+
+  const updateApp = useCallback(
+    (newApp: ApplicationInfo) => {
+      setApps((prevApps) => prevApps.map((app) => (app.id === newApp?.id ? newApp : app)))
+    },
+    [setApps],
+  )
 
   return {
-    apps: items,
+    apps,
+    updateApp,
     loading,
     error,
     searchValue,

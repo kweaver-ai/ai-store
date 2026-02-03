@@ -11,12 +11,24 @@ export interface HttpConfig {
 
 // 后端设置的Cookie名称是 dip.oauth2_token
 const ACCESS_TOKEN_KEY = 'dip.oauth2_token'
+const REFRESH_TOKEN_KEY = 'dip.refresh_token'
 
 /**
  * 获取当前 access token（从 Cookie 读取，保证获取最新值）
  */
 export function getAccessToken(): string {
   return Cookies.get(ACCESS_TOKEN_KEY) || ''
+}
+
+export function setAccessToken(token: string): void {
+  Cookies.set(ACCESS_TOKEN_KEY, token, {
+    domain: window.location.hostname,
+    path: '/',
+  })
+}
+
+export function getRefreshToken(): string {
+  return Cookies.get(REFRESH_TOKEN_KEY) || ''
 }
 
 // 刷新中的 Promise，用于实现"第一个 401 触发刷新，其它等待结果"的队列逻辑

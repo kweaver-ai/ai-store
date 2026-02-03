@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 export type HeaderType = 'store' | 'studio' | 'micro-app'
 export type SiderType = 'store' | 'studio' | 'home'
 
-export const WENSHU_APP_KEY = 'wenshu-app'
+export const WENSHU_APP_KEY = 'cedb529407c345b1a27317baefa62800'
 
 /** 布局配置 */
 export interface LayoutConfig {

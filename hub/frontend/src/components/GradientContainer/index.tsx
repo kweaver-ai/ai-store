@@ -11,7 +11,7 @@ const GradientContainer: React.FC<GradientContainerProps> = ({ children, classNa
   const wrapperStyle = useMemo(() => {
     const temp = {
       backgroundImage: `url(${bg})`,
-      background: 'transparent',
+      // background: 'transparent',
       ...style,
     }
     // if (process.env.NODE_ENV === 'development') {

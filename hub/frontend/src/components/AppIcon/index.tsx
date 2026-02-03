@@ -64,6 +64,7 @@ const AppIcon = ({
           alt=""
           onError={() => setImageError(true)}
           className="!object-scale-down"
+          style={{ width: size-16, height: size-16 }}
         />
       }
     />

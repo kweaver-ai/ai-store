@@ -1,9 +1,9 @@
 import { Spin } from 'antd'
 import { useEffect, useRef } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import GradientContainer from '@/components/GradientContainer'
 import { getFullPath } from '@/utils/config'
-import { getAccessToken } from '@/utils/http/token-config'
+import { getAccessToken, setAccessToken } from '@/utils/http/token-config'
 import { usePreferenceStore, useUserInfoStore } from '../stores'
 
 interface ProtectedRouteProps {
@@ -19,6 +19,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { fetchUserInfo, userInfo, isLoading } = useUserInfoStore()
   const { fetchPinnedMicroApps } = usePreferenceStore()
   const location = useLocation()
+  const navigate = useNavigate()
   // 用于跟踪是否已经尝试过获取用户信息，防止重复调用
   const hasTriedFetchRef = useRef(false)
   // 用于跟踪上次的 token，当 token 变化时重置 hasTriedFetchRef，允许重新请求
@@ -28,6 +29,18 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   // 通过环境变量控制是否跳过登录认证
   // 在 .env.local 中设置 PUBLIC_SKIP_AUTH=true 即可跳过登录认证
   const skipAuth = import.meta.env.PUBLIC_SKIP_AUTH === 'true'
+
+  // 0) 支持外部平台通过 URL 携带 token 免登录
+  useEffect(() => {
+    const urlToken = location.search && new URLSearchParams(location.search).get('token')
+    if (!urlToken) return
+
+    setAccessToken(urlToken)
+    const params = new URLSearchParams(location.search)
+    params.delete('token')
+    const search = params.toString()
+    navigate({ pathname: location.pathname, search: search ? `?${search}` : '', hash: location.hash }, { replace: true })
+  }, [location.search, location.pathname, location.hash, navigate])
 
   // 1) token 校验：无 token 或未登录 -> 登录页
   const token = getAccessToken()

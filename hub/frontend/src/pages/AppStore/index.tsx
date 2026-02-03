@@ -128,15 +128,15 @@ const AppStore = () => {
       return <Spin size="large" />
     }
 
-    // if (error) {
-    //   return (
-    //     <Empty type="failed" title="加载失败">
-    //       <Button className="mt-1" type="primary" onClick={handleRefresh}>
-    //         重试
-    //       </Button>
-    //     </Empty>
-    //   )
-    // }
+    if (error) {
+      return (
+        <Empty type="failed" title="加载失败">
+          <Button className="mt-1" type="primary" onClick={handleRefresh}>
+            重试
+          </Button>
+        </Empty>
+      )
+    }
 
     if (apps.length === 0) {
       if (searchValue) {
@@ -176,7 +176,7 @@ const AppStore = () => {
       <AppList
         mode={ModeEnum.AppStore}
         apps={apps}
-        menuItems={(app) => getAppStoreMenuItems((key) => handleMenuClick(key, app))}
+        menuItems={(app) => getAppStoreMenuItems(app, (key) => handleMenuClick(key, app))}
       />
     )
   }

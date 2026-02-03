@@ -5,8 +5,9 @@ import type { ApplicationInfo } from '@/apis'
 import ScrollBarContainer from '../ScrollBarContainer'
 import AppCard from './AppCard'
 import styles from './index.module.less'
-import { ALL_TAB_KEY, type ModeEnum } from './types'
+import { ALL_TAB_KEY, ModeEnum } from './types'
 import { computeColumnCount, gap } from './utils'
+import { WENSHU_APP_KEY } from '@/routes/types'
 
 interface AppListProps {
   /** 组件模式：我的应用 或 应用商店 */
@@ -91,13 +92,14 @@ const AppList: React.FC<AppListProps> = ({
   /** 渲染应用卡片 */
   const renderCard = useCallback(
     (app: ApplicationInfo, width: number) => {
+      const isWenshuApp = app.key === WENSHU_APP_KEY
       return (
         <Col key={app.id} style={{ width, minWidth: width }}>
           <AppCard
             app={app}
             mode={mode}
             width={width}
-            menuItems={menuItems?.(app)}
+            menuItems={isWenshuApp && mode === ModeEnum.MyApp ? undefined : menuItems?.(app)}
             onMenuButtonClick={onMenuButtonClick}
             onCardClick={onCardClick}
           />
