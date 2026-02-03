@@ -3,7 +3,7 @@ import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
 import { Popover } from 'antd'
 import clsx from 'clsx'
 import type React from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Agent } from '@/apis/agent-factory/index.d'
 import IconFont from '@/components/IconFont'
 import AgentSelect from './AgentSelect'
@@ -15,6 +15,26 @@ const AgentView: React.FC<NodeViewProps> = (props) => {
   const agentData = agent || { id: '', name: '' }
   const { id, name } = agentData
   const [popoverOpen, setPopoverOpen] = useState(false)
+  const [isEditable, setIsEditable] = useState(editor.isEditable)
+
+  // 监听编辑器编辑状态变化
+  useEffect(() => {
+    const updateEditableState = () => {
+      setIsEditable(editor.isEditable)
+    }
+
+    // 初始化状态
+    updateEditableState()
+
+    // 监听编辑器状态变化
+    editor.on('update', updateEditableState)
+    editor.on('transaction', updateEditableState)
+
+    return () => {
+      editor.off('update', updateEditableState)
+      editor.off('transaction', updateEditableState)
+    }
+  }, [editor])
 
   // 选择智能体
   const handleSelect = (item: Agent) => {
@@ -43,7 +63,7 @@ const AgentView: React.FC<NodeViewProps> = (props) => {
       className={clsx(
         'flex h-8 w-fit items-center py-1 px-2 border rounded-md text-muted-foreground text-sm gap-x-2',
         !id ? 'border-dashed' : 'bg-[#779EEA1A] border-[#779EEA8C]',
-        selected && editor.isEditable && 'border-[--dip-link-color]',
+        selected && isEditable && 'border-[--dip-link-color]',
       )}
     >
       <IconFont type="icon-Agent" className="text-lg" />
@@ -56,7 +76,7 @@ const AgentView: React.FC<NodeViewProps> = (props) => {
   )
   return (
     <NodeViewWrapper className="max-w-full">
-      {editor.isEditable ? (
+      {isEditable ? (
         <Popover
           content={popoverContent}
           trigger="click"

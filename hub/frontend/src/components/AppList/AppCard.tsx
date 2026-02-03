@@ -36,9 +36,12 @@ const AppCard: React.FC<AppCardProps> = ({
 
   return (
     <Card
-      className="group rounded-[10px] border border-[var(--dip-border-color)] transition-all w-full"
-      style={{ height: cardHeight }}
+      className="group rounded-[10px] transition-all w-full"
       styles={{
+        root: {
+          height: cardHeight,
+          boxShadow: '0px 2px 8px 0px hsla(0,0%,0%,0.1)',
+        },
         body: {
           height: '100%',
           padding: '16px 16px 12px 16px',

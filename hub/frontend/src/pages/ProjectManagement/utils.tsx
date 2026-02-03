@@ -37,7 +37,7 @@ export const objectTypeNameMap = (objectType: ObjectType): string => {
     project: '项目',
     application: '应用',
     page: '页面',
-    function: '模块',
+    function: '功能',
   }[objectType]
 }
 
@@ -47,7 +47,7 @@ export const objectNamePlaceholderMap = (objectType: ObjectType): string => {
     project: '请输入项目名称',
     application: '请输入应用名称',
     page: '例如：用户管理',
-    function: '例如：列表查询模块',
+    function: '例如：列表查询功能',
   }[objectType]
 }
 
@@ -127,8 +127,8 @@ export const testNodes = [
     project_id: '1',
     type: 'function',
     parent_id: 'page_1',
-    name: '模块1',
-    description: '模块1描述',
+    name: '功能1',
+    description: '功能1描述',
     creator: '1',
     created_at: new Date().toISOString(),
     editor: '1',

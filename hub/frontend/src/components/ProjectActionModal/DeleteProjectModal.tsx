@@ -32,23 +32,9 @@ const DeleteProjectModal = ({ open, onCancel, project, onSuccess }: DeleteProjec
     }
 
     try {
-      const values = await form.validateFields()
+      await form.validateFields()
       setLoading(true)
-
-      // 验证输入的项目名称是否匹配
-      if (values.projectName?.trim() !== project.name?.trim()) {
-        form.setFields([
-          {
-            name: 'projectName',
-            errors: ['输入的项目名称不匹配'],
-          },
-        ])
-        setLoading(false)
-        return
-      }
-
       await deleteProjects(String(project.id))
-
       messageApi.success('删除项目成功')
       onSuccess()
       onCancel?.(undefined as any)
@@ -86,7 +72,7 @@ const DeleteProjectModal = ({ open, onCancel, project, onSuccess }: DeleteProjec
         maskClosable={false}
         destroyOnHidden
         width={424}
-        okText="确认"
+        okText="删除"
         cancelText="取消"
         okButtonProps={{ danger: true }}
         footer={(_, { OkBtn, CancelBtn }) => (
@@ -103,10 +89,29 @@ const DeleteProjectModal = ({ open, onCancel, project, onSuccess }: DeleteProjec
             <span className="font-medium text-[--dip-link-color] bg-[--dip-hover-bg-color-4] px-1 py-0.5 rounded-md">
               {project?.name}
             </span>{' '}
-            吗？删除后，该项目下的所有页面、模块和项目词典将被永久删除，此操作无法撤销。{' '}
+            吗？删除后，该项目下的所有页面、功能和项目词典将被永久删除，此操作无法撤销。{' '}
           </div>
           <Form form={form} layout="vertical">
-            <Form.Item label="请输入项目名称以确认删除：" name="projectName">
+            <Form.Item
+              label="请输入项目名称以确认删除："
+              name="projectName"
+              rules={[
+                {
+                  validateTrigger: 'onBlur',
+                  validator: (_rule, value, callback) => {
+                    if (!value) {
+                      callback('请输入项目名称')
+                      return
+                    }
+                    if (value !== project?.name) {
+                      callback('输入的项目名称不匹配')
+                    }
+                    callback()
+                  },
+                },
+                {},
+              ]}
+            >
               <Input placeholder="请输入项目名称" />
             </Form.Item>
           </Form>

@@ -3,7 +3,7 @@ import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
 import { Popover, Spin } from 'antd'
 import clsx from 'clsx'
 import type React from 'react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { getKnowledgeNetworks, type KnowledgeNetworkInfo } from '@/apis'
 import IconFont from '@/components/IconFont'
 import ScrollBarContainer from '@/components/ScrollBarContainer'
@@ -20,6 +20,26 @@ const KnowledgeView: React.FC<NodeViewProps> = (props) => {
   const [error, setError] = useState<Error | null>(null)
   const [popoverOpen, setPopoverOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
+  const [isEditable, setIsEditable] = useState(editor.isEditable)
+
+  // 监听编辑器编辑状态变化
+  useEffect(() => {
+    const updateEditableState = () => {
+      setIsEditable(editor.isEditable)
+    }
+
+    // 初始化状态
+    updateEditableState()
+
+    // 监听编辑器状态变化
+    editor.on('update', updateEditableState)
+    editor.on('transaction', updateEditableState)
+
+    return () => {
+      editor.off('update', updateEditableState)
+      editor.off('transaction', updateEditableState)
+    }
+  }, [editor])
 
   // 获取知识网络列表
   const fetchKnowledgeNetworks = async () => {
@@ -123,7 +143,7 @@ const KnowledgeView: React.FC<NodeViewProps> = (props) => {
       className={clsx(
         'flex h-8 w-fit items-center py-1 px-2 border rounded-md text-muted-foreground text-sm gap-x-2',
         !id ? 'border-dashed' : 'bg-[#779EEA1A] border-[#779EEA8C]',
-        selected && editor.isEditable && 'border-[--dip-link-color]',
+        selected && isEditable && 'border-[--dip-link-color]',
       )}
     >
       <IconFont type="icon-yewuzhishiwangluo" className="text-lg" />
@@ -136,7 +156,7 @@ const KnowledgeView: React.FC<NodeViewProps> = (props) => {
   )
   return (
     <NodeViewWrapper className="max-w-full">
-      {editor.isEditable ? (
+      {isEditable ? (
         <Popover
           content={popoverContent}
           trigger="click"

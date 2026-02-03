@@ -82,7 +82,7 @@ export function getProjection(
 
 function getMaxDepth({ previousItem }: { previousItem?: FlattenedItem }) {
   if (previousItem) {
-    // 最大深度不能超过 1（模块层级）
+    // 最大深度不能超过 1（功能层级）
     return Math.min(1, previousItem.depth + 1)
   }
 

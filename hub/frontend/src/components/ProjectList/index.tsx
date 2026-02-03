@@ -37,8 +37,8 @@ const ProjectList: React.FC<ProjectListProps> = ({ projects, onCardClick, menuIt
   )
 
   return (
-    <div className="mr-[-24px] flex flex-col h-0 flex-1">
-      <ScrollBarContainer className="pr-2">
+    <div className="flex flex-col h-0 flex-1">
+      <ScrollBarContainer className="p-2 pt-0 ml-[-8px] mb-[-8px] mr-[-24px]">
         <AutoSizer style={{ width: 'calc(100% - 8px)' }} disableHeight>
           {({ width }) => {
             const count = computeColumnCount(width)

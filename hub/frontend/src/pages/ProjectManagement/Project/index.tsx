@@ -26,6 +26,7 @@ const Project = () => {
     addNode,
     setSelectedNode,
     setProjectInfo,
+    currentProjectInfo,
   } = useProjectStore()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
@@ -50,8 +51,8 @@ const Project = () => {
       // const [projects, nodes] = await Promise.all([getProjects(), getProjectNodes(projectId)])
 
       const projects = testProjects
-      // const nodes: any = []
-      const nodes = testNodes as NodeInfo[]
+      const nodes: any = []
+      // const nodes = testNodes as NodeInfo[]
 
       // 从项目列表中找到当前项目信息
       const projectInfo = projects.find((p) => p.id === projectId) || null
@@ -213,6 +214,7 @@ const Project = () => {
         operationType="add"
         objectType="application"
         projectId={projectId || ''}
+        projectInfo={currentProjectInfo}
         parentId={null}
       />
       {/* 项目词典抽屉 */}

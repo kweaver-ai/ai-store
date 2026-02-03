@@ -163,7 +163,7 @@ const BaseHeader = ({ headerType }: { headerType: HeaderType }) => {
               >
                 <button
                   type="button"
-                  className="flex items-center justify-center w-6 h-6 text-[#505050] opacity-45 hover:opacity-100 transition-opacity"
+                  className="flex items-center justify-center w-6 h-6 text-[#505050]"
                   title="查看项目信息"
                 >
                   <InfoIcon />
