@@ -109,6 +109,12 @@ class OAuth2Adapter(OAuth2Port):
                 response.raise_for_status()
                 
                 token_data = response.json()
+                has_refresh = "refresh_token" in token_data and token_data.get("refresh_token")
+                logger.info(
+                    "[code2token] token 响应: 含 access_token=%s, 含 refresh_token=%s",
+                    bool(token_data.get("access_token")),
+                    has_refresh,
+                )
                 
                 return Code2TokenResponse(
                     access_token=token_data.get("access_token", ""),

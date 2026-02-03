@@ -381,7 +381,8 @@ def create_login_router(login_service: LoginService, settings: Settings = None) 
                 max_age=settings.cookie_timeout,
                 domain=settings.cookie_domain if settings.cookie_domain else None,
             )
-        if getattr(session_info, "refresh_token", None):
+        refresh_token_val = getattr(session_info, "refresh_token", None)
+        if refresh_token_val:
             _set_cookie(
                 response,
                 "dip.refresh_token",
@@ -389,6 +390,10 @@ def create_login_router(login_service: LoginService, settings: Settings = None) 
                 max_age=settings.cookie_timeout,
                 domain=settings.cookie_domain if settings.cookie_domain else None,
                 httponly=True,
+            )
+        else:
+            logger.debug(
+                "登录回调: OAuth2 未返回 refresh_token，跳过设置 dip.refresh_token Cookie"
             )
         if session_info.userid:
             _set_cookie(
