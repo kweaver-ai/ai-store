@@ -5,6 +5,7 @@
 """
 import logging
 from dataclasses import dataclass
+from typing import Optional
 
 from src.domains.session import SessionInfo
 from src.ports.session_port import SessionPort
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 class RefreshResult:
     """刷新结果"""
     token: str  # 新的 Access Token
+    refresh_token: Optional[str] = None  # 新的或当前的 Refresh Token（供设置到前端 Cookie）
 
 
 class RefreshTokenService:
@@ -81,5 +83,8 @@ class RefreshTokenService:
         await self._session_port.save_session(session_id, session_info)
 
         logger.info(f"Token 刷新成功: {session_id}")
-        return RefreshResult(token=token_info.access_token)
+        return RefreshResult(
+            token=token_info.access_token,
+            refresh_token=session_info.refresh_token,
+        )
 

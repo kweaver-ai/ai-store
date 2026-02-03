@@ -50,7 +50,7 @@ def create_logout_router(logout_service: LogoutService, settings: Settings = Non
 
     def _clear_cookies(response: Response):
         """清除所有相关 Cookie"""
-        for cookie_name in ["dip.session_id", "dip.oauth2_token", "dip.userid"]:
+        for cookie_name in ["dip.session_id", "dip.oauth2_token", "dip.refresh_token", "dip.userid"]:
             response.delete_cookie(
                 key=cookie_name,
                 path="/",

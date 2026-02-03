@@ -117,10 +117,11 @@ def create_login_router(login_service: LoginService, settings: Settings = None) 
         """
         清除所有认证相关 Cookie（与 session 服务 clearCookie 函数一致）。
         
-        清除：session_id, oauth2_token, userid
+        清除：session_id, oauth2_token, refresh_token, userid
         """
         _clear_cookie(response, "dip.session_id")
         _clear_cookie(response, "dip.oauth2_token")
+        _clear_cookie(response, "dip.refresh_token")
         _clear_cookie(response, "dip.userid")
 
     @router.get(
@@ -371,7 +372,7 @@ def create_login_router(login_service: LoginService, settings: Settings = None) 
                 status_code=status.HTTP_200_OK,
             )
 
-        # 设置 token 和 userid Cookie（与 session 服务 http.SetCookie 一致）
+        # 设置 token、refresh_token 和 userid Cookie（与 session 服务 http.SetCookie 一致）
         if session_info.token:
             _set_cookie(
                 response,
@@ -379,6 +380,15 @@ def create_login_router(login_service: LoginService, settings: Settings = None) 
                 session_info.token,
                 max_age=settings.cookie_timeout,
                 domain=settings.cookie_domain if settings.cookie_domain else None,
+            )
+        if getattr(session_info, "refresh_token", None):
+            _set_cookie(
+                response,
+                "dip.refresh_token",
+                session_info.refresh_token,
+                max_age=settings.cookie_timeout,
+                domain=settings.cookie_domain if settings.cookie_domain else None,
+                httponly=True,
             )
         if session_info.userid:
             _set_cookie(
