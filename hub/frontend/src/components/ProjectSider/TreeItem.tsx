@@ -81,7 +81,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
     const getPaddingLeft = () => {
       // depth === -1: 应用层级，不缩进
       // depth === 0: 页面层级，缩进 0（因为从 depth 0 开始算缩进层级）
-      // depth === 1: 模块层级，缩进 1 层
+      // depth === 1:功能层级，缩进 1 层
       // depth === N: 缩进 N 层
       if (depth === -1) return 0
       return indentationWidth * depth
@@ -118,7 +118,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
           <div
             ref={ref}
             className={clsx(
-              'flex w-6 h-full shrink-0 items-center justify-center cursor-move text-base',
+              'flex w-5 h-full shrink-0 items-center justify-center cursor-move text-base',
               styles.drag,
             )}
             style={{ visibility: 'hidden' }}
@@ -158,7 +158,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
               {name}
             </span>
             {!canEdit && (
-              <div className="w-1 h-1 bg-[--dip-link-color] rounded-full ml-1 shrink-0" />
+              <div className="w-1.5 h-1.5 bg-[--dip-success-color] rounded-full ml-1 shrink-0" />
             )}
           </div>
           {/* {clone && childCount && childCount > 1 ? (
@@ -174,7 +174,7 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
                       {
                         key: 'add',
                         icon: <IconFont type="icon-dip-add" />,
-                        label: `新建${type === 'application' ? '页面' : '模块'}`,
+                        label: `新建${type === 'application' ? '页面' : '功能'}`,
                         disabled: !canEdit,
                         onClick: (e: { domEvent: React.MouseEvent }) => {
                           e.domEvent.stopPropagation()

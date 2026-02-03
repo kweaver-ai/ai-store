@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react'
 import {
   type CreateNodeParams,
   type ObjectType,
+  type ProjectInfo,
   postApplicationNode,
-  postDocument,
   postFunctionNode,
   postPageNode,
   postProjects,
@@ -42,6 +42,9 @@ export interface ActionModalProps extends Pick<ModalProps, 'open' | 'onCancel'> 
 
   /** 父节点 ID（新建子节点时需要） */
   parentId?: string | null
+
+  /** 项目信息 */
+  projectInfo?: ProjectInfo
 }
 
 /** 新建 编辑 弹窗 */
@@ -54,17 +57,27 @@ const ActionModal = ({
   objectType,
   projectId,
   parentId,
+  projectInfo,
 }: ActionModalProps) => {
   const [form] = Form.useForm()
   const [loading, setLoading] = useState(false)
-  const [canSubmit, setCanSubmit] = useState(false)
   const [messageApi, contextHolder] = message.useMessage()
+
+  // 使用 Form.useWatch 监听 name 字段变化
+  const nameValue = Form.useWatch('name', form)
+  const canSubmit = !!nameValue
 
   // 当弹窗关闭时重置表单
   useEffect(() => {
     if (open) {
       form.resetFields()
       setLoading(false)
+    }
+    if (operationType === 'add' && projectInfo && objectType === 'application') {
+      form.setFieldsValue({
+        name: projectInfo.name,
+        description: projectInfo.description,
+      })
     }
     if (operationType === 'edit' && objectInfo) {
       form.setFieldsValue(objectInfo)
@@ -89,7 +102,16 @@ const ActionModal = ({
       // TODO: 调用 API 创建/编辑节点
       if (objectType === 'project') {
         if (operationType === 'add') {
-          result = await postProjects(baseParams)
+          // result = await postProjects(baseParams)
+          result = {
+            id: `project_${Math.random().toString(36).substring(2, 15)}`,
+            name: values.name,
+            description: values.description,
+            creator: '123',
+            created_at: new Date().toISOString(),
+            editor: '123',
+            edited_at: new Date().toISOString(),
+          }
         } else if (operationType === 'edit' && objectInfo) {
           result = await putProjects(objectInfo.id, baseParams)
         }
@@ -153,14 +175,6 @@ const ActionModal = ({
             editor: '123',
             edited_at: new Date().toISOString(),
           }
-          // await postDocument(result.document_id, {
-          //   type: 'doc',
-          //   content: [
-          //     {
-          //       type: 'paragraph',
-          //     },
-          //   ],
-          // })
         } else if (operationType === 'edit' && objectInfo) {
           // result = await putFunctionNode(objectInfo.id, params)
           result = {
@@ -198,11 +212,6 @@ const ActionModal = ({
     }
   }
 
-  const handleValuesChange = (_changedValues: any, allValues: any) => {
-    // name有值，则可以提交
-    setCanSubmit(!!allValues.name)
-  }
-
   return (
     <>
       {contextHolder}
@@ -226,12 +235,7 @@ const ActionModal = ({
           </>
         )}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          className="mt-4 mb-10"
-          onValuesChange={handleValuesChange}
-        >
+        <Form form={form} layout="vertical" className="mt-4 mb-10">
           <Form.Item label="名称" name="name" rules={[{ required: true, message: '请输入名称' }]}>
             <Input placeholder={objectNamePlaceholderMap(objectType)} maxLength={128} showCount />
           </Form.Item>

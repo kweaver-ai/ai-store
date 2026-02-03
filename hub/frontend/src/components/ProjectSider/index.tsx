@@ -332,8 +332,7 @@ const ProjectSider = ({
         ),
         onOk: async () => {
           try {
-            // TODO: 调用 API 删除节点
-            // await deleteApiMap[item.type](item.id)
+            await deleteApiMap[item.type](item.id)
             messageApi.success('删除成功')
 
             // 从 store 中移除节点
@@ -363,12 +362,11 @@ const ProjectSider = ({
       if (itemIndex < list.length - 1) {
         next_id = list[itemIndex + 1].id
       }
-      // TODO: 调用 API 移动节点
-      // await moveNode({
-      //   node_id: id,
-      //   target_parent_id: parentId,
-      //   next_id,
-      // })
+      await moveNode({
+        node_id: id,
+        target_parent_id: parentId,
+        next_id,
+      })
       setTreeData(newItems)
     } catch (error: any) {
       messageApi.error(error?.description || '移动失败，请稍后重试')
@@ -377,23 +375,16 @@ const ProjectSider = ({
 
   /** 处理 ActionModal 成功回调 */
   const handleActionModalSuccess = useCallback(
-    (result: { id: string; name: string; description?: string }) => {
+    (result: NodeInfo) => {
       if (actionModalType === 'add') {
         // 新建节点
 
         if (actionParentId) {
           // 创建新的 NodeInfo（简化版，实际应该从 API 返回中获取完整信息）
           const newNodeInfo: NodeInfo = {
-            id: result.id,
+            ...result,
             project_id: projectId,
-            type: actionObjectType,
             parent_id: actionParentId,
-            name: result.name,
-            description: result.description,
-            creator: '', // TODO: 从 API 返回中获取
-            created_at: new Date().toISOString(),
-            editor: '', // TODO: 从 API 返回中获取
-            edited_at: new Date().toISOString(),
           }
 
           // 添加到 store

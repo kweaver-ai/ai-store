@@ -2,7 +2,7 @@ import type { NodeViewProps } from '@tiptap/core'
 import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
 import clsx from 'clsx'
 import type React from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { MetricModelType } from '@/apis'
 import IconFont from '@/components/IconFont'
 import MetricSelector from '@/components/MetricSelector'
@@ -18,6 +18,26 @@ const MetricView: React.FC<NodeViewProps> = (props) => {
   const { metrics } = node.attrs
   const metricsArray: Array<SimplifiedMetricType> = Array.isArray(metrics) ? metrics : []
   const [modalOpen, setModalOpen] = useState(false)
+  const [isEditable, setIsEditable] = useState(editor.isEditable)
+
+  // 监听编辑器编辑状态变化
+  useEffect(() => {
+    const updateEditableState = () => {
+      setIsEditable(editor.isEditable)
+    }
+
+    // 初始化状态
+    updateEditableState()
+
+    // 监听编辑器状态变化
+    editor.on('update', updateEditableState)
+    editor.on('transaction', updateEditableState)
+
+    return () => {
+      editor.off('update', updateEditableState)
+      editor.off('transaction', updateEditableState)
+    }
+  }, [editor])
 
   // 选择指标确认 - 只保存 id 和 name
   const handleConfirm = (selectedMetrics: Array<MetricModelType>) => {
@@ -46,36 +66,83 @@ const MetricView: React.FC<NodeViewProps> = (props) => {
   // 取消选择
   const handleCancel = () => {
     setModalOpen(false)
+    updateAttributes({
+      metrics: [
+        {
+          id: '1',
+          name: 'ewfewfewfew',
+        },
+        {
+          id: '2',
+          name: 'ewfewewioghnouewrhbgourfewfew',
+        },
+        {
+          id: '3',
+          name: 'ewfewewioghnouewrhbgourfewfew',
+        },
+        {
+          id: '4',
+          name: 'ewfewewioghnouewrhbgourfewfew',
+        },
+        {
+          id: '5',
+          name: 'ewfewewioghnouewrhbgourfewfew',
+        },
+        {
+          id: '6',
+          name: 'ewfewewioghnouewrhbgourfewfew',
+        },
+        {
+          id: '7',
+          name: 'ewfewewioghnouewrhbgourfewfew',
+        },
+        {
+          id: '8',
+          name: 'ewfewewioghnouewrhbgourfewfew',
+        },
+        {
+          id: '9',
+          name: 'ewfewewioghnouewrhbgourfewfew',
+        },
+        {
+          id: '10',
+          name: 'ewfewewioghnouewrhbgourfewfew',
+        },
+      ],
+    })
   }
 
   // 展示视图
   const displayView = (
     <div
       className={clsx(
-        'flex h-8 w-fit items-center py-1 px-2 border rounded-md text-muted-foreground text-sm gap-x-2',
+        'flex min-h-8 h-fit w-fit max-w-full flex-wrap items-center py-1 px-2 border rounded-md text-muted-foreground text-sm gap-x-3 gap-y-1',
         metricsArray.length === 0 ? 'border-dashed' : 'bg-[#779EEA1A] border-[#779EEA8C]',
-        selected && editor.isEditable && 'border-[--dip-link-color]',
+        selected && isEditable && 'border-[--dip-link-color]',
       )}
     >
-      <IconFont type="icon-a-zhibiaomoxing1" className="text-lg" />
       {metricsArray.length === 0 ? (
-        <span className="text-[rgba(0,0,0,0.65)]">暂无{extension.options.dictionary.name}</span>
+        <>
+          <IconFont type="icon-dip-color-metric" className="text-lg" />
+          <span className="text-[rgba(0,0,0,0.65)]">暂无{extension.options.dictionary.name}</span>
+        </>
       ) : (
-        <span>
-          {metricsArray.length === 1
-            ? metricsArray[0].name
-            : `已选择 ${metricsArray.length} 个指标`}
-        </span>
+        metricsArray.map((metric) => (
+          <div key={metric.id} className="max-w-full flex items-center gap-x-2">
+            <IconFont type="icon-dip-color-metric" className="text-lg" />
+            <span className="truncate w-fit max-w-full">{metricsArray[0].name}</span>
+          </div>
+        ))
       )}
     </div>
   )
   return (
     <NodeViewWrapper className="max-w-full">
-      {editor.isEditable ? (
+      {isEditable ? (
         <>
           <button
             type="button"
-            className="w-fit text-left cursor-pointer"
+            className="w-fit max-w-full text-left"
             onClick={(e) => {
               e.preventDefault()
               setModalOpen(true)

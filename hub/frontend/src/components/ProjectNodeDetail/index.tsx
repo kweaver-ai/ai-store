@@ -2,12 +2,11 @@ import { Button, Descriptions, message, Popover, Spin, Switch, Tabs } from 'antd
 import clsx from 'clsx'
 import jsonpatch from 'fast-json-patch'
 import { debounce } from 'lodash'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { getDocument, putDocument } from '@/apis/dip-studio'
 import {
   getDevModeNodeId,
   isNodeInDevMode,
-  isNodeInDevModeWithTree,
   setDevModeNodeId,
 } from '@/pages/ProjectManagement/devMode'
 import { objectTypeNameMap } from '@/pages/ProjectManagement/utils'
@@ -36,32 +35,17 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
   const [activeTab, setActiveTab] = useState<NodeDetailTabKey>(NodeDetailTabKey.Detail)
   const [loadStatus, setLoadStatus] = useState<LoadStatus>(LoadStatus.Empty)
   const [content, setContent] = useState<any>({})
+  /** 加载根节点时保存初始内容 */
+  const initialContent = useRef<any>({})
 
-  // 计算节点是否可以编辑（与 ProjectSider 中的逻辑保持一致）
-  const canEdit = useMemo(() => {
+  /** 节点是否处于开发模式 */
+  const nodeInDevMode = useMemo(() => {
     if (!nodeInfo) return false
     // 扁平化树数据以检查开发模式
     const flattenedItems = flattenTree(treeData)
     // 检查节点是否处于开发模式（包括继承）
-    const isInDevMode = isNodeInDevMode(projectId, nodeId, flattenedItems)
-    return !isInDevMode
+    return isNodeInDevMode(projectId, nodeId, flattenedItems)
   }, [nodeId, projectId, treeData, nodeInfo])
-
-  const scheduleSaveDocument = debounce(async (newContent: any) => {
-    // 计算差分（patches）
-    console.log('content', content)
-    console.log('newContent', newContent)
-    const patches = jsonpatch.compare(content || {}, newContent)
-    if (patches.length === 0) return // 没有变化
-
-    // 发送增量指令
-    await putDocument(nodeId, patches)
-    setContent(newContent)
-  }, 800)
-
-  const handleUpdate = (newContent: any) => {
-    scheduleSaveDocument(newContent)
-  }
 
   useEffect(() => {
     if (nodeInfo) {
@@ -75,24 +59,24 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
     setDevMode(currentDevModeNodeId === nodeId)
 
     // 监听开发模式变化事件
-    const handleDevModeChange = (event: CustomEvent) => {
+    const handleDevModeChanged = (event: CustomEvent) => {
       if (event.detail.projectId === projectId) {
         setDevMode(event.detail.nodeId === nodeId)
       }
     }
 
-    window.addEventListener('devModeChanged', handleDevModeChange as EventListener)
+    window.addEventListener('devModeChanged', handleDevModeChanged as EventListener)
     return () => {
-      window.removeEventListener('devModeChanged', handleDevModeChange as EventListener)
+      window.removeEventListener('devModeChanged', handleDevModeChanged as EventListener)
     }
   }, [projectId, nodeId])
 
   const fetchDocument = useCallback(async () => {
-    if (loadStatus === LoadStatus.Loading || !canEdit) return
+    if (loadStatus === LoadStatus.Loading) return
     try {
       setLoadStatus(LoadStatus.Loading)
       const res = await getDocument(nodeId)
-      const docContent = res?.content || {}
+      const docContent = res.content || {}
       setContent(docContent)
     } catch {
       setLoadStatus(LoadStatus.Failed)
@@ -127,6 +111,39 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
     } finally {
       setDevModeLoading(false)
     }
+  }
+
+  const saveDocument = async (newContent: any) => {
+    if (nodeInDevMode) return
+    // 计算差分（patches）
+    const patches = jsonpatch.compare(content || {}, newContent)
+    if (patches.length === 0) return // 没有变化
+    // 发送增量指令
+    try {
+      await putDocument(nodeId, patches)
+      setContent(newContent)
+    } catch (error: any) {
+      if (error?.description) {
+        messageApi.error(error.description)
+      } else {
+        messageApi.error('保存失败')
+      }
+    }
+  }
+
+  const scheduleSaveDocument = debounce(async (newContent: any) => {
+    saveDocument(newContent)
+  }, 800)
+
+  const handleUpdate = (newContent: any) => {
+    /** 如果初始内容为空，则保存初始内容 */
+    if (!initialContent.current?.type) {
+      initialContent.current = newContent
+      saveDocument(newContent)
+      return
+    }
+    /** 如果初始内容不为空，则进行差分保存 */
+    scheduleSaveDocument(newContent)
   }
 
   /** 获取节点详情tabs */
@@ -204,7 +221,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
           </div>
         </div>
         <div className="flex gap-2 shrink-0 items-center h-6">
-          {isNodeInDevModeWithTree(projectId, nodeId, treeData) && (
+          {nodeInDevMode && (
             <Popover
               content={promotContent}
               trigger="click"
@@ -244,7 +261,12 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
           styles.editorContainer,
         )}
       >
-        <ScrollBarContainer className="h-full px-6 tiptap-scroll-container relative">
+        <ScrollBarContainer
+          className={clsx(
+            'h-full px-6 tiptap-scroll-container relative',
+            nodeInDevMode && 'bg-[#D9D9D91A]',
+          )}
+        >
           {activeTab === NodeDetailTabKey.Detail && (
             <Descriptions
               className="py-6"
@@ -283,8 +305,8 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
               <TiptapEditor
                 content={content}
                 onUpdate={handleUpdate}
-                readOnly={!canEdit}
-                placeholder="请描述该模块的功能...（输入/ 可引用 业务知识网络、决策智能体、工作流）"
+                readOnly={nodeInDevMode}
+                placeholder="请描述该功能...（输入/ 可引用 业务知识网络、决策智能体、指标）"
               />
             ) : (
               renderStateContent()

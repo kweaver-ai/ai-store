@@ -73,20 +73,21 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
           editor.commands.setContent(initialContent.current)
         }
       }
-      // 编辑器创建后，将光标聚焦到文档最前面
-      if (!readOnly) {
-        // 使用 setTimeout 确保内容已渲染完成
-        setTimeout(() => {
-          editor.commands.setTextSelection(0)
-          editor.commands.focus()
-        }, 0)
-      }
+      // // 编辑器创建后，将光标聚焦到文档最前面
+      // if (!readOnly) {
+      //   // 使用 setTimeout 确保内容已渲染完成
+      //   setTimeout(() => {
+      //     editor.commands.setTextSelection(0)
+      //     editor.commands.focus()
+      //   }, 0)
+      // }
     },
     onUpdate: ({ editor }) => {
       if ((editor.storage as any).markdown) {
         // const markdown = (editor.storage as any).markdown.get()
         // onUpdate?.(markdown)
         // onChange?.(markdown)
+        console.log('editor.getJSON()', editor.getJSON())
         onUpdate?.(editor.getJSON())
       }
     },
@@ -101,13 +102,13 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
           const doc = (editor.storage as any).markdown?.parse(content)
           if (doc) {
             editor.commands.setContent(doc.toJSON())
-            // 内容更新后，将光标聚焦到文档最前面
-            if (!readOnly) {
-              setTimeout(() => {
-                editor.commands.setTextSelection(0)
-                editor.commands.focus()
-              }, 0)
-            }
+            // // 内容更新后，将光标聚焦到文档最前面
+            // if (!readOnly) {
+            //   setTimeout(() => {
+            //     editor.commands.setTextSelection(0)
+            //     editor.commands.focus()
+            //   }, 0)
+            // }
           }
         }
       } else if (typeof content === 'object' && content !== null) {
@@ -116,13 +117,13 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
         // 简单比较，避免不必要的更新
         if (JSON.stringify(currentContent) !== JSON.stringify(content)) {
           editor.commands.setContent(content)
-          // 内容更新后，将光标聚焦到文档最前面
-          if (!readOnly) {
-            setTimeout(() => {
-              editor.commands.setTextSelection(0)
-              editor.commands.focus()
-            }, 0)
-          }
+          // // 内容更新后，将光标聚焦到文档最前面
+          // if (!readOnly) {
+          //   setTimeout(() => {
+          //     editor.commands.setTextSelection(0)
+          //     editor.commands.focus()
+          //   }, 0)
+          // }
         }
       }
       initialContent.current = content

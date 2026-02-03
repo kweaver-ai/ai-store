@@ -223,15 +223,6 @@ export const getDocument = (nodeId: string): Promise<DocumentInfo> =>
   get(`/api/dip-studio/v1/documents`, { params: { node_id: nodeId } })
 
 /**
- * 创建功能设计文档
- * @param documentId 文档 ID
- * @param content 文档内容
- * @returns 文档信息
- */
-export const postDocument = (documentId: string, content: any): Promise<DocumentInfo> =>
-  post(`/api/dip-studio/v1/documents`, { body: { document_id: documentId, content } })
-
-/**
  * 更新功能设计文档
  * @param nodeId 节点 ID
  * @param content 文档内容
