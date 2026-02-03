@@ -105,7 +105,7 @@ def create_refresh_token_router(
                 status_code=status.HTTP_200_OK,
             )
 
-            # 更新 Cookie
+            # 更新 Access Token Cookie
             _set_cookie(
                 response,
                 "dip.oauth2_token",
@@ -113,6 +113,17 @@ def create_refresh_token_router(
                 max_age=settings.cookie_timeout,
                 domain=settings.cookie_domain if settings.cookie_domain else None,
             )
+
+            # 将 Refresh Token 设置到前端 Cookie（若本次刷新返回了新的 refresh_token）
+            if refresh_result.refresh_token:
+                _set_cookie(
+                    response,
+                    "dip.refresh_token",
+                    refresh_result.refresh_token,
+                    max_age=settings.cookie_timeout,
+                    domain=settings.cookie_domain if settings.cookie_domain else None,
+                    httponly=True,
+                )
 
             logger.info(f"Token 刷新成功: {session_id}")
             return response
