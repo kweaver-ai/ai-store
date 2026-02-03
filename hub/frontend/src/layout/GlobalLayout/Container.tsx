@@ -25,8 +25,8 @@ const Container = ({ children }: ContainerProps) => {
 
   // 当前是否处于微应用容器场景
   const isMicroApp = !!currentMicroApp
-  // headless 微应用：需要任何壳层 Header / Sider
-  const microAppHasHeader = isMicroApp && currentMicroApp?.micro_app?.headless
+  // headless 微应用：不显示任何壳层 Header
+  const microAppNoHeader = isMicroApp && currentMicroApp?.micro_app?.headless
 
   // 只使用最后一个匹配的路由（当前路由）的布局配置
   // 主应用页面只依赖路由的静态布局配置
@@ -44,10 +44,10 @@ const Container = ({ children }: ContainerProps) => {
   // - headless 微应用：强制 { hasHeader: false, hasSider: false }
   // - 问数应用：强制 { hasHeader: false, hasSider: true }
   // - 其他情况（主应用页面或普通微应用）：使用路由静态配置
-  const layoutConfig = microAppHasHeader
-    ? { ...routeLayoutConfig, hasHeader: true }
+  const layoutConfig = microAppNoHeader
+    ? { ...routeLayoutConfig, hasHeader: false, hasSider: false }
     : isWenshuApp
-      ? { ...routeLayoutConfig, hasSider: true }
+      ? { ...routeLayoutConfig, hasSider: true, hasHeader: false }
       : routeLayoutConfig
 
   // 默认值

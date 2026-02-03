@@ -53,7 +53,7 @@ const App = () => {
       }}
       getPopupContainer={() => document.getElementById('dip-kweaver-root') || document.body}
     >
-      <AntdApp>
+      <AntdApp className='w-full h-full'>
         <Suspense
           fallback={
             <GradientContainer className="w-full h-full flex items-center justify-center">

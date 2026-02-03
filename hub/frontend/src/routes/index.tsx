@@ -119,7 +119,7 @@ export const router = createBrowserRouter(
           handle: {
             layout: {
               hasSider: false,
-              hasHeader: false,
+              hasHeader: true,
               siderType: 'home',
               headerType: 'micro-app',
             },

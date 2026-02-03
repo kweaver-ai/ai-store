@@ -14,6 +14,7 @@ import { usePreferenceStore } from '@/stores'
 import { useLanguageStore } from '@/stores/languageStore'
 import { useOEMConfigStore } from '@/stores/oemConfigStore'
 import { getFullPath } from '@/utils/config'
+import { getAccessToken, getRefreshToken } from '@/utils/http/token-config'
 import AppIcon from '../../AppIcon'
 import IconFont from '../../IconFont'
 import { UserMenuItem } from '../components/UserMenuItem'
@@ -73,46 +74,55 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
 
   const menuItems = useMemo<MenuProps['items']>(() => {
     const items: MenuProps['items'] = []
-    if (pinnedMicroApps.length > 0) {
-      pinnedMicroApps.forEach((app) => {
-        const isWenshuApp = app.id === wenshuAppInfo?.id
-        if (app) {
-          items.push({
-            key: `micro-app-${app.id}`,
-            label: (
-              <div className="w-full h-full flex justify-between items-center">
-                {app.name}
-                {!isWenshuApp && (
-                  <Dropdown
-                    menu={{
-                      items: [
-                        {
-                          key: 'unpin',
-                          label: '取消固定',
-                          onClick: (e: any) => {
-                            e.domEvent.stopPropagation()
-                            handleUnpin(app.id)
-                          },
-                          icon: <PushpinOutlined className="text-[var(--dip-warning-color)]" />,
-                        },
-                      ],
-                    }}
-                    trigger={['click']}
-                  >
-                    <PushpinOutlined
-                      className="w-6 h-6 text-base flex items-center justify-center rounded text-[var(--dip-warning-color)] pin-icon opacity-0 hover:bg-[rgba(0,0,0,0.04)]"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </Dropdown>
-                )}
-              </div>
-            ),
-            icon: <AppIcon icon={app.icon} name={app.name} size={16} shape="square" />,
-            onClick: () => handleOpenApp(app.id),
-          })
-        }
+
+    // 问数应用始终排在第一位（若存在）
+    if (wenshuAppInfo) {
+      items.push({
+        key: `micro-app-${wenshuAppInfo.id}`,
+        label: wenshuAppInfo.name,
+        icon: (
+          <AppIcon icon={wenshuAppInfo.icon} name={wenshuAppInfo.name} size={16} shape="square" />
+        ),
+        onClick: () => handleOpenApp(wenshuAppInfo.id),
       })
     }
+
+    // 钉住的应用（排除问数，避免重复）
+    pinnedMicroApps
+      .filter((app) => app.id !== wenshuAppInfo?.id)
+      .forEach((app) => {
+        items.push({
+          key: `micro-app-${app.id}`,
+          label: (
+            <div className="w-full h-full flex justify-between items-center">
+              {app.name}
+              <Dropdown
+                menu={{
+                  items: [
+                    {
+                      key: 'unpin',
+                      label: '取消固定',
+                      onClick: (e: any) => {
+                        e.domEvent.stopPropagation()
+                        handleUnpin(app.id)
+                      },
+                      icon: <PushpinOutlined className="text-[var(--dip-warning-color)]" />,
+                    },
+                  ],
+                }}
+                trigger={['click']}
+              >
+                <PushpinOutlined
+                  className="w-6 h-6 text-base flex items-center justify-center rounded text-[var(--dip-warning-color)] pin-icon opacity-0 hover:bg-[rgba(0,0,0,0.04)]"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </Dropdown>
+            </div>
+          ),
+          icon: <AppIcon icon={app.icon} name={app.name} size={16} shape="square" />,
+          onClick: () => handleOpenApp(app.id),
+        })
+      })
 
     return items
   }, [pinnedMicroApps, handleOpenApp, handleUnpin, wenshuAppInfo])
@@ -120,13 +130,36 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
   const externalMenuItems = useMemo<MenuProps['items']>(() => {
     const firstStoreRoute = getFirstVisibleRouteBySiderType('store', roleIds)
     const firstStudioRoute = getFirstVisibleRouteBySiderType('studio', roleIds)
-    const getExternalUrl = (path: string) => `${window.location.origin}${path}`
+    const baseOrigin = 'https://10.4.134.26'
+    const getExternalUrl = (path: string) => `${baseOrigin}${path}`
 
     const storePath = `/${firstStoreRoute?.path || 'store/my-app'}`
     const studioPath = `/${firstStudioRoute?.path || 'studio/project-management'}`
 
     const storeHref = getFullPath(storePath)
     const studioHref = getFullPath(studioPath)
+
+    // 业务知识网络单点登录参数
+    const redirectUrl = '/studio'
+    const token = getAccessToken()
+    const refreshToken = getRefreshToken()
+    const ssoSearchParams = new URLSearchParams({
+      redirect_url: redirectUrl,
+      product: 'adp',
+    })
+    if (token) {
+      // ssoSearchParams.set(
+      //   'token',
+      //   'ory_at_AajnPRKzHzFnQxn7B8uR3MXHQGIOwUppv-Q-CnRMFp8.fHUWFbZmkBS6SN-TguUa2nEhmxigAOLtGTrg_5EIjNw',
+      // )
+      // ssoSearchParams.set(
+      //   'refreshToken',
+      //   'ory_rt_FFDSDFntpLjEMpNUoKejNf3xATtBT0cZAMqZuG6vx5s.mlHSf3htmeBX3Fl1c9Z6nLiJGZqQXtOnDPA7QDJTGCM',
+      // )
+      ssoSearchParams.set('token', token)
+      ssoSearchParams.set('refreshToken', refreshToken)
+    }
+    const ssoUrl = `${baseOrigin}/interface/studioweb/internalSSO?${ssoSearchParams.toString()}`
 
     return [
       {
@@ -150,7 +183,7 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
       {
         key: 'data-platform',
         label: (
-          <a href={getExternalUrl('/studio')} target="_blank" rel="noopener noreferrer">
+          <a href={ssoUrl} target="_blank" rel="noopener noreferrer">
             业务知识网络
           </a>
         ),

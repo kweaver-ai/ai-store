@@ -2,7 +2,21 @@ import { defineConfig } from '@rsbuild/core'
 import { pluginReact } from '@rsbuild/plugin-react'
 import { pluginLess } from '@rsbuild/plugin-less'
 import { pluginSvgr } from '@rsbuild/plugin-svgr'
+import { Agent as HttpsAgent } from 'https'
 import { rsbuildMiddlewarePlugin } from './rsbuild-plugin-middleware'
+
+// 开发环境代理到 HTTPS 后端时，使用自定义 Agent 忽略自签名证书校验，避免 ECONNRESET
+const isHttpsTarget = process.env.DEBUG_ORIGIN?.startsWith('https://')
+const proxyAgent = isHttpsTarget
+  ? new HttpsAgent({ rejectUnauthorized: false })
+  : undefined
+
+const proxyBase = {
+  target: process.env.DEBUG_ORIGIN,
+  changeOrigin: true,
+  secure: false,
+  ...(proxyAgent && { agent: proxyAgent }),
+}
 
 // Docs: https://rsbuild.rs/config/
 // 确保 assetPrefix 始终以 / 结尾，而 BASE_PATH 不带尾部斜杠
@@ -49,9 +63,7 @@ export default defineConfig({
       // 开发环境：将 API 请求代理到远程服务器
       // 登录相关路由由中间件插件处理，不走代理
       '/api/dip-hub': {
-        target: process.env.DEBUG_ORIGIN,
-        changeOrigin: true,
-        secure: false,
+        ...proxyBase,
         // 排除登录相关路由，这些由中间件插件处理
         bypass(req) {
           const url = req.url || ''
@@ -67,22 +79,10 @@ export default defineConfig({
           return undefined // 其他路由继续使用代理
         },
       },
-      '/api/deploy-web-service': {
-        target: process.env.DEBUG_ORIGIN,
-        changeOrigin: true,
-        secure: false,
-      },
+      '/api/deploy-web-service': proxyBase,
       // 剩余所有 API 请求代理到 DEBUG_ORIGIN
-      '/api/*': {
-        target: process.env.DEBUG_ORIGIN,
-        changeOrigin: true,
-        secure: false,
-      },
-      '/oauth2/*': {
-        target: process.env.DEBUG_ORIGIN,
-        changeOrigin: true,
-        secure: false,
-      },
+      '/api/*': proxyBase,
+      '/oauth2/*': proxyBase,
     },
   },
   plugins: [

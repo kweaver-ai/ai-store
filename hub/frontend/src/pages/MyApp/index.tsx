@@ -10,9 +10,10 @@ import SearchInput from '@/components/SearchInput'
 import { useApplicationsService } from '@/hooks/useApplicationsService'
 import { usePreferenceStore } from '@/stores'
 import { MyAppActionEnum } from './types'
+import { getMyAppMenuItems } from './utils'
 
 const MyApp = () => {
-  const { apps, loading, error, searchValue, handleSearch, handleRefresh } =
+  const { apps, updateApp, loading, error, searchValue, handleSearch, handleRefresh } =
     useApplicationsService()
   const { togglePin } = usePreferenceStore()
   const navigate = useNavigate()
@@ -53,16 +54,20 @@ const MyApp = () => {
   const handleMenuClick = useCallback(
     async (action: string, _app: ApplicationInfo) => {
       switch (action) {
-        case MyAppActionEnum.Fix:
-          await togglePin(_app.id)
-          messageApi.success('已固定')
-          handleRefresh()
+        case MyAppActionEnum.Fix: {
+          const result = await togglePin(_app.id)
+          if (result) {
+            updateApp({ ..._app, pinned: true })
+          }
           break
-        case MyAppActionEnum.Unfix:
-          await togglePin(_app.id)
-          messageApi.success('已取消固定')
-          handleRefresh()
+        }
+        case MyAppActionEnum.Unfix: {
+          const result = await togglePin(_app.id)
+          if (result) {
+            updateApp({ ..._app, pinned: false })
+          }
           break
+        }
         case MyAppActionEnum.Use:
           navigate(`/application/${_app.id}`)
           break
@@ -70,7 +75,7 @@ const MyApp = () => {
           break
       }
     },
-    [handleRefresh, togglePin],
+    [apps, updateApp, togglePin],
   )
 
   /** 渲染状态内容（loading/error/empty） */
@@ -116,6 +121,7 @@ const MyApp = () => {
       <AppList
         mode={ModeEnum.MyApp}
         apps={apps}
+        menuItems={(app) => getMyAppMenuItems(app, (key) => handleMenuClick(key, app))}
         onMenuButtonClick={(app) => handleMenuClick(MyAppActionEnum.Use, app)}
       />
     )
