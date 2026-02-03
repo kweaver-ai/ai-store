@@ -11,7 +11,7 @@ import { useMetricSelectorStore } from './store'
 import { MetricConstants } from './types'
 
 // 每一页获取的数量
-const limit = 14
+const limit = 20
 
 const GroupList = () => {
   const { metricSelectorStore, setSelectedGroup } = useMetricSelectorStore()

@@ -127,7 +127,7 @@ const AppList: React.FC<AppListProps> = ({
         //     : undefined
         // }
       />
-      <ScrollBarContainer className="mr-[-24px] pr-2">
+      <ScrollBarContainer className="p-2 pt-0 ml-[-8px] ml-[-8px] mr-[-24px]">
         <AutoSizer style={{ width: 'calc(100% - 8px)' }} disableHeight>
           {({ width }) => {
             const count = computeColumnCount(width)

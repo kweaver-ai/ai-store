@@ -38,7 +38,11 @@ const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionary
   const [form] = Form.useForm<DictionaryFormValues>()
   const [editingItem, setEditingItem] = useState<DictionaryItem | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [canSubmit, setCanSubmit] = useState(false)
+
+  // 使用 Form.useWatch 监听 term 和 definition 字段变化
+  const termValue = Form.useWatch('term', form)
+  const definitionValue = Form.useWatch('definition', form)
+  const canSubmit = !!termValue && !!definitionValue
 
   /** 加载项目词典列表 */
   const loadDictionaryList = useCallback(async () => {
@@ -208,10 +212,6 @@ const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionary
     },
   ]
 
-  const handleValuesChange = (_changedValues: any, allValues: any) => {
-    setCanSubmit(!!allValues.term && !!allValues.definition)
-  }
-
   return (
     <Drawer
       title="项目词典"
@@ -280,9 +280,9 @@ const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionary
           </>
         )}
       >
-        <Form form={form} layout="vertical" className="mt-4" onValuesChange={handleValuesChange}>
+        <Form form={form} layout="vertical" className="mt-4 mb-10">
           <Form.Item label="名称" name="term" rules={[{ required: true, message: '请输入名称' }]}>
-            <Input placeholder="例如：人力资源ROI" />
+            <Input placeholder="例如：人力资源ROI" maxLength={128} showCount />
           </Form.Item>
           <Form.Item
             label="定义"
@@ -293,6 +293,8 @@ const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionary
               placeholder="请输入定义"
               rows={4}
               autoSize={{ minRows: 5, maxRows: 5 }}
+              showCount
+              maxLength={400}
             />
           </Form.Item>
         </Form>
