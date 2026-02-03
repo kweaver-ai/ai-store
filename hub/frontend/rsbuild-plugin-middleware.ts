@@ -23,9 +23,9 @@ export function rsbuildMiddlewarePlugin(): RsbuildPlugin {
       // 创建 Express 应用
       const app = express()
 
-      // 设置中间件
-      app.use(express.json({ limit: '10mb' }))
-      app.use(express.urlencoded({ extended: true, limit: '10mb' }))
+      // 注意：不在此处使用 express.json() / express.urlencoded()
+      // 否则会消费请求 body 流，导致后续代理转发时 body 为空，PUT/POST 等带 body 的请求会失败（ECONNRESET）
+      // 当前认证路由均为 GET，均不需要解析 body
 
       // 手动解析 cookies（Express 4.x 不自动解析 cookies）
       app.use((req: any, res: any, next: any) => {
@@ -109,6 +109,9 @@ function setupAuthRoutes(
     typeof getPort === 'function'
       ? getPort
       : () => (typeof getPort === 'string' ? parseInt(getPort, 10) : getPort)
+
+  // 与 rsbuild 的 publicPath 保持一致，用于登录回调重定向的完整路径
+  const BASE_PATH = (process.env.PUBLIC_PATH || '/dip-hub/').replace(/\/$/, '') || '/dip-hub'
 
   // 动态获取端口和URI的函数
   const getConfig = () => {
@@ -200,10 +203,13 @@ function setupAuthRoutes(
       // 将重定向地址编码为 state，如果没有重定向地址则生成随机 state
       // OAuth 服务器要求 state 至少 8 个字符
       let state: string
-      const redirectUrl = (asredirect as string) || ''
-      if (redirectUrl) {
-        // 如果有重定向地址，编码为 base64
-        state = Buffer.from(decodeURIComponent(redirectUrl)).toString('base64')
+      const redirectPath = (asredirect as string) || ''
+      if (redirectPath) {
+        // 拼上 basePath，登录回调重定向到完整路径（如 /dip-hub/store/my-app）
+        const fullPath = redirectPath.startsWith(BASE_PATH)
+          ? redirectPath
+          : `${BASE_PATH}${redirectPath.startsWith('/') ? '' : '/'}${redirectPath}`
+        state = Buffer.from(decodeURIComponent(fullPath)).toString('base64')
       } else {
         // 如果没有重定向地址，生成随机 state（至少 16 字节，base64 编码后约 24 字符）
         state = randomBytes(16).toString('base64')
@@ -296,7 +302,7 @@ function setupAuthRoutes(
       params.append('redirect_uri', config.REDIRECT_URI)
 
       const {
-        data: { access_token, id_token },
+        data: { access_token, id_token, refresh_token },
       } = await axios.post(`${DEBUG_ORIGIN}/oauth2/token`, params, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -315,6 +321,7 @@ function setupAuthRoutes(
       res.cookie('dip.oauth2_token', access_token, { httpOnly: false })
       // 注意：后端不设置 id_token，但保留以兼容可能的其他用途，使用 dip. 前缀保持一致性
       res.cookie('dip.id_token', id_token, { httpOnly: false })
+      res.cookie('dip.refresh_token', refresh_token, { httpOnly: false })
       res.clearCookie('dip.state')
 
       // 解码 state 获取重定向地址
@@ -378,6 +385,7 @@ function setupAuthRoutes(
     res.clearCookie('dip.session_id')
     res.clearCookie('dip.userid')
     res.clearCookie('dip.id_token')
+    res.clearCookie('dip.refresh_token')
     res.clearCookie('dip.state')
     res.redirect('/api/dip-hub/v1/logout/callback')
   })

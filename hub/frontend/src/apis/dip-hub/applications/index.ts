@@ -1,4 +1,4 @@
-import { del, get, post } from '@/utils/http'
+import { del, get, post, put } from '@/utils/http'
 import type {
   AgentInfo,
   ApplicationBasicInfo,
@@ -73,11 +73,9 @@ export const deleteApplications = (id: number): Promise<void> => {
 /**
  * 钉住/取消钉住微应用
  */
-export async function pinMicroAppApi(params: PinMicroAppParams): Promise<void> {
-  // TODO: 替换为真实接口
-  // return post('/micro-app/pin', { body: params })
-
-  // Mock 数据
-  await new Promise((resolve) => setTimeout(resolve, 200))
-  console.log('Pin micro app:', params) // 避免未使用警告
+export async function pinMicroAppApi(params: PinMicroAppParams): Promise<ApplicationInfo> {
+  const { appId, pinned } = params
+  return put(`/api/dip-hub/v1/applications/${appId}/pinned`, {
+    body: JSON.stringify({ pinned }),
+  })
 }

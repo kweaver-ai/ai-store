@@ -1,5 +1,6 @@
+import { message } from 'antd'
 import { create } from 'zustand'
-import { type ApplicationInfo, pinMicroAppApi } from '@/apis'
+import { type ApplicationInfo, getApplications, pinMicroAppApi } from '@/apis'
 import { WENSHU_APP_KEY } from '../routes/types'
 
 /**
@@ -18,54 +19,20 @@ interface PreferenceState {
   /** 从后端获取钉住的微应用列表 */
   fetchPinnedMicroApps: () => Promise<void>
   /** 添加钉住的微应用 */
-  pinMicroApp: (appId: number) => Promise<void>
+  pinMicroApp: (appId: number) => Promise<boolean>
   /** 取消钉住的微应用 */
-  unpinMicroApp: (appId: number, needRequest?: boolean) => Promise<void>
+  unpinMicroApp: (appId: number, needRequest?: boolean) => Promise<boolean>
   /** 检查是否已钉住 */
   isPinned: (appId: number) => boolean
   /** 切换钉住状态 */
-  togglePin: (appId: number) => Promise<void>
+  togglePin: (appId: number) => Promise<boolean>
 }
-
-export const testPinnedMicroApps: any[] = [
-  {
-    id: 1,
-    key: 'wenshu-app',
-    name: '测试应用1',
-    description: '测试应用1',
-    is_config: true,
-    is_pinned: true,
-    updated_by: 'test',
-    updated_at: new Date().toISOString(),
-    micro_app: {
-      name: '问数',
-      entry: 'local-wenshu',
-      headless: false,
-    },
-  },
-  {
-    id: 2,
-    key: 'test-app-2',
-    name: '测试应用2',
-    description: '测试应用2',
-    release_config: {},
-    is_config: true,
-    is_pinned: true,
-    updated_by: 'test',
-    updated_at: new Date().toISOString(),
-    micro_app: {
-      name: '测试应用2',
-      entry: 'local-test-app-2',
-      headless: false,
-    },
-  },
-]
 
 // 缓存正在进行中的 pinned 微应用加载 Promise，避免重复请求
 let fetchPinnedMicroAppsPromise: Promise<void> | null = null
 
 export const usePreferenceStore = create<PreferenceState>()((set, get) => ({
-  pinnedMicroApps: testPinnedMicroApps,
+  pinnedMicroApps: [],
   wenshuAppInfo: null,
   loading: false,
 
@@ -79,11 +46,10 @@ export const usePreferenceStore = create<PreferenceState>()((set, get) => ({
       set({ loading: true })
       try {
         // 通过应用列表接口获取应用列表，再本地过滤出已钉住的微应用，并缓存 wenshu 应用信息
-        // const apps: ApplicationInfo[] = await getApplications()
-        const apps = testPinnedMicroApps
+        const apps: ApplicationInfo[] = await getApplications()
         const wenshuAppInfo = (apps ?? []).find((app) => app?.key === WENSHU_APP_KEY) ?? null
         set({
-          pinnedMicroApps: (apps ?? []).filter((app) => app?.is_pinned ?? false),
+          pinnedMicroApps: (apps ?? []).filter((app) => app?.pinned ?? false),
           wenshuAppInfo,
           loading: false,
         })
@@ -100,31 +66,41 @@ export const usePreferenceStore = create<PreferenceState>()((set, get) => ({
   pinMicroApp: async (appId: number) => {
     const { pinnedMicroApps } = get()
     if (pinnedMicroApps.some((app) => app.id === appId)) {
-      return
+      return true
     }
 
     try {
       await pinMicroAppApi({ appId, pinned: true })
       await get().fetchPinnedMicroApps()
-    } catch (error) {
-      console.error('Failed to pin micro app:', error)
+      message.success('固定成功')
+      return true
+    } catch (error: any) {
+      if (error?.description) {
+        message.error(error.description)
+      }
+      return false
     }
   },
 
   unpinMicroApp: async (appId: number, needRequest = true) => {
     const { pinnedMicroApps } = get()
     if (!pinnedMicroApps.some((app) => app.id === appId)) {
-      return
+      return true
     }
     if (!needRequest) {
       set({ pinnedMicroApps: pinnedMicroApps.filter((app) => app.id !== appId) })
-      return
+      return true
     }
     try {
       await pinMicroAppApi({ appId, pinned: false })
       set({ pinnedMicroApps: pinnedMicroApps.filter((app) => app.id !== appId) })
-    } catch (error) {
-      console.error('Failed to unpin micro app:', error)
+      message.success('已取消固定')
+      return true
+    } catch (error: any) {
+      if (error?.description) {
+        message.error(error.description)
+      }
+      return false
     }
   },
 
@@ -135,9 +111,9 @@ export const usePreferenceStore = create<PreferenceState>()((set, get) => ({
   togglePin: async (appId: number) => {
     const { isPinned, pinMicroApp, unpinMicroApp } = get()
     if (isPinned(appId)) {
-      await unpinMicroApp(appId)
+      return await unpinMicroApp(appId)
     } else {
-      await pinMicroApp(appId)
+      return await pinMicroApp(appId)
     }
   },
 }))

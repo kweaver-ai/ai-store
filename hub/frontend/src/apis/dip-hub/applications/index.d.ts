@@ -30,7 +30,7 @@ export interface ApplicationBasicInfo {
     headless: boolean
   }
   /** 是否钉住 */
-  is_pinned: boolean
+  pinned: boolean
 }
 
 /** 应用信息 */
