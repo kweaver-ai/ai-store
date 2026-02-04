@@ -141,7 +141,7 @@ const MetricList = () => {
         style={style}
         className={clsx(
           'cursor-pointer flex items-center pl-5 pr-5 gap-[10px] hover:bg-[rgba(166,169,181,0.11)]',
-          isSelected && 'bg-[#e7f2ff] hover:bg-[#e7f2ff]',
+          isSelected && 'bg-[#e7f2ff] hover:!bg-[#e7f2ff]',
         )}
         onClick={() => {
           if (isSelected) {

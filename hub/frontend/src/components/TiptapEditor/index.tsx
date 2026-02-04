@@ -87,7 +87,6 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
         // const markdown = (editor.storage as any).markdown.get()
         // onUpdate?.(markdown)
         // onChange?.(markdown)
-        console.log('editor.getJSON()', editor.getJSON())
         onUpdate?.(editor.getJSON())
       }
     },

@@ -107,6 +107,8 @@ const ActionModal = ({
             id: `project_${Math.random().toString(36).substring(2, 15)}`,
             name: values.name,
             description: values.description,
+            type: objectType,
+            parent_id: parentId || null,
             creator: '123',
             created_at: new Date().toISOString(),
             editor: '123',
@@ -121,6 +123,8 @@ const ActionModal = ({
           result = {
             id: `app_${Math.random().toString(36).substring(2, 15)}`,
             name: values.name,
+            type: objectType,
+            parent_id: parentId || null,
             description: values.description,
             creator: '123',
             created_at: new Date().toISOString(),
@@ -132,6 +136,8 @@ const ActionModal = ({
           result = {
             id: objectInfo.id,
             name: values.name,
+            type: objectType,
+            parent_id: parentId || null,
             description: values.description,
             creator: '123',
             created_at: new Date().toISOString(),
@@ -145,6 +151,8 @@ const ActionModal = ({
           result = {
             id: `page_${Math.random().toString(36).substring(2, 15)}`,
             name: values.name,
+            type: objectType,
+            parent_id: parentId || null,
             description: values.description,
             creator: '123',
             created_at: new Date().toISOString(),
@@ -156,6 +164,8 @@ const ActionModal = ({
           result = {
             id: objectInfo.id,
             name: values.name,
+            type: objectType,
+            parent_id: parentId || null,
             description: values.description,
             creator: '123',
             created_at: new Date().toISOString(),
@@ -169,6 +179,8 @@ const ActionModal = ({
           result = {
             id: `func_${Math.random().toString(36).substring(2, 15)}`,
             name: values.name,
+            type: objectType,
+            parent_id: parentId || null,
             description: values.description,
             creator: '123',
             created_at: new Date().toISOString(),
@@ -180,6 +192,8 @@ const ActionModal = ({
           result = {
             id: objectInfo.id,
             name: values.name,
+            type: objectType,
+            parent_id: parentId || null,
             description: values.description,
             creator: '123',
             created_at: new Date().toISOString(),

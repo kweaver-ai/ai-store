@@ -10,7 +10,7 @@ import DictionaryDrawer from '@/components/ProjectDictionaryDrawer'
 import ProjectNodeDetail from '@/components/ProjectNodeDetail'
 import ProjectSider from '@/components/ProjectSider'
 import { useProjectStore } from '@/stores'
-import { testNodes, testProjects } from '../utils'
+import { testProjects } from '../utils'
 
 /**
  * 项目详情页面
@@ -64,12 +64,7 @@ const Project = () => {
       // 默认选中应用节点
       const applicationNode = nodes.find((n) => n.type === 'application')
       if (applicationNode) {
-        setSelectedNode({
-          nodeId: applicationNode.id,
-          nodeType: applicationNode.type,
-          nodeName: applicationNode.name,
-          projectId,
-        })
+        setSelectedNode(applicationNode.id)
       }
     } catch (err: any) {
       setError(err)
@@ -101,13 +96,8 @@ const Project = () => {
       // 直接添加到本地树中，不需要重新获取数据
       addNode(newNodeInfo)
 
-      // 自动选中新创建的应用
-      setSelectedNode({
-        nodeId: newNodeInfo.id,
-        nodeType: 'application',
-        nodeName: newNodeInfo.name,
-        projectId,
-      })
+      // 自动选中新创建的应用（addNode 已写入 nodeMap，直接传 id）
+      setSelectedNode(newNodeInfo.id)
     },
     [projectId, addNode, setSelectedNode],
   )
