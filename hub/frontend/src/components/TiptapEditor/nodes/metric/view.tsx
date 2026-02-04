@@ -45,6 +45,7 @@ const MetricView: React.FC<NodeViewProps> = (props) => {
       id: metric.id,
       name: metric.name,
     }))
+    console.log('simplified', simplified)
     updateAttributes({
       metrics: simplified,
     })
@@ -66,50 +67,6 @@ const MetricView: React.FC<NodeViewProps> = (props) => {
   // 取消选择
   const handleCancel = () => {
     setModalOpen(false)
-    updateAttributes({
-      metrics: [
-        {
-          id: '1',
-          name: 'ewfewfewfew',
-        },
-        {
-          id: '2',
-          name: 'ewfewewioghnouewrhbgourfewfew',
-        },
-        {
-          id: '3',
-          name: 'ewfewewioghnouewrhbgourfewfew',
-        },
-        {
-          id: '4',
-          name: 'ewfewewioghnouewrhbgourfewfew',
-        },
-        {
-          id: '5',
-          name: 'ewfewewioghnouewrhbgourfewfew',
-        },
-        {
-          id: '6',
-          name: 'ewfewewioghnouewrhbgourfewfew',
-        },
-        {
-          id: '7',
-          name: 'ewfewewioghnouewrhbgourfewfew',
-        },
-        {
-          id: '8',
-          name: 'ewfewewioghnouewrhbgourfewfew',
-        },
-        {
-          id: '9',
-          name: 'ewfewewioghnouewrhbgourfewfew',
-        },
-        {
-          id: '10',
-          name: 'ewfewewioghnouewrhbgourfewfew',
-        },
-      ],
-    })
   }
 
   // 展示视图
@@ -130,7 +87,7 @@ const MetricView: React.FC<NodeViewProps> = (props) => {
         metricsArray.map((metric) => (
           <div key={metric.id} className="max-w-full flex items-center gap-x-2">
             <IconFont type="icon-dip-color-metric" className="text-lg" />
-            <span className="truncate w-fit max-w-full">{metricsArray[0].name}</span>
+            <span className="truncate w-fit max-w-full">{metric.name}</span>
           </div>
         ))
       )}

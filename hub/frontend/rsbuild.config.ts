@@ -79,7 +79,10 @@ export default defineConfig({
           return undefined // 其他路由继续使用代理
         },
       },
+      '/api/mdl-data-model': proxyBase,
+      '/api/agent-factory': proxyBase,
       '/api/deploy-web-service': proxyBase,
+      '/api/ontology-manager': proxyBase,
       // 剩余所有 API 请求代理到 DEBUG_ORIGIN
       '/api/*': proxyBase,
       '/oauth2/*': proxyBase,

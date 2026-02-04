@@ -130,7 +130,8 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
   const externalMenuItems = useMemo<MenuProps['items']>(() => {
     const firstStoreRoute = getFirstVisibleRouteBySiderType('store', roleIds)
     const firstStudioRoute = getFirstVisibleRouteBySiderType('studio', roleIds)
-    const baseOrigin = 'https://10.4.134.26'
+    const baseOrigin =
+      process.env.NODE_ENV === 'development' ? 'https://10.4.134.26' : window.location.origin
     const getExternalUrl = (path: string) => `${baseOrigin}${path}`
 
     const storePath = `/${firstStoreRoute?.path || 'store/my-app'}`
@@ -140,7 +141,7 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
     const studioHref = getFullPath(studioPath)
 
     // 业务知识网络单点登录参数
-    const redirectUrl = '/studio'
+    const redirectUrl = '/studio/home'
     const token = getAccessToken()
     const refreshToken = getRefreshToken()
     const ssoSearchParams = new URLSearchParams({
@@ -148,16 +149,19 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
       product: 'adp',
     })
     if (token) {
-      // ssoSearchParams.set(
-      //   'token',
-      //   'ory_at_AajnPRKzHzFnQxn7B8uR3MXHQGIOwUppv-Q-CnRMFp8.fHUWFbZmkBS6SN-TguUa2nEhmxigAOLtGTrg_5EIjNw',
-      // )
-      // ssoSearchParams.set(
-      //   'refreshToken',
-      //   'ory_rt_FFDSDFntpLjEMpNUoKejNf3xATtBT0cZAMqZuG6vx5s.mlHSf3htmeBX3Fl1c9Z6nLiJGZqQXtOnDPA7QDJTGCM',
-      // )
-      ssoSearchParams.set('token', token)
-      ssoSearchParams.set('refreshToken', refreshToken)
+      if (process.env.NODE_ENV === 'development') {
+        ssoSearchParams.set(
+          'token',
+          'ory_at_wcvCk-4wVGgVqi9ptqhr9l2r5e_s13hNWtwlJJzdIds.mWrGfQxvWmt1ZSgZS8MHryUu1Z9TiMrAGZM8HN9tIog',
+        )
+        ssoSearchParams.set(
+          'refreshToken',
+          'ory_rt_690Swjha9IGgPc66WCVr8rGDRNgHy22P4BsyeO1tYgg.c9_qewseT_AbXQw7Pj4-GyWKDg3F-Musj5E6lqrbWOg',
+        )
+      } else {
+        ssoSearchParams.set('token', token)
+        ssoSearchParams.set('refreshToken', refreshToken)
+      }
     }
     const ssoUrl = `${baseOrigin}/interface/studioweb/internalSSO?${ssoSearchParams.toString()}`
 
@@ -183,7 +187,7 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
       {
         key: 'data-platform',
         label: (
-          <a href={ssoUrl} target="_blank" rel="noopener noreferrer">
+          <a href={ssoUrl} target="_self" rel="noopener noreferrer">
             业务知识网络
           </a>
         ),
