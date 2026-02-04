@@ -110,7 +110,7 @@ const GroupList = () => {
         style={style}
         className={clsx(
           'cursor-pointer flex items-center pl-5 hover:bg-[rgba(166,169,181,0.11)]',
-          metricSelectorStore.selectedGroup?.id === item.id && 'bg-[#e7f2ff] hover:bg-[#e7f2ff]',
+          metricSelectorStore.selectedGroup?.id === item.id && 'bg-[#e7f2ff] hover:!bg-[#e7f2ff]',
         )}
         onClick={() => {
           setSelectedGroup(item)

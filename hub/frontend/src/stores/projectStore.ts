@@ -25,8 +25,8 @@ export interface SelectedNodeInfo {
 interface ProjectState {
   /** 当前选中的节点信息 */
   selectedNode: SelectedNodeInfo | null
-  /** 设置选中的节点 */
-  setSelectedNode: (node: SelectedNodeInfo | null) => void
+  /** 根据节点 ID 设置选中的节点，传 null 清除选中；内部从 nodeMap 查找并组装 SelectedNodeInfo */
+  setSelectedNode: (nodeId: string | null) => void
   /** 清除选中的节点 */
   clearSelectedNode: () => void
 
@@ -61,7 +61,25 @@ interface ProjectState {
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
   selectedNode: null,
-  setSelectedNode: (node) => set({ selectedNode: node }),
+  setSelectedNode: (nodeId) => {
+    if (nodeId === null) {
+      set({ selectedNode: null })
+      return
+    }
+    const node = get().nodeMap.get(nodeId)
+    if (!node) {
+      set({ selectedNode: null })
+      return
+    }
+    set({
+      selectedNode: {
+        nodeId: node.id,
+        nodeType: node.type,
+        nodeName: node.name,
+        projectId: node.project_id,
+      },
+    })
+  },
   clearSelectedNode: () => set({ selectedNode: null }),
 
   currentProjectId: null,

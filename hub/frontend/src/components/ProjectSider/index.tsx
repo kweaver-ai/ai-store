@@ -244,7 +244,6 @@ const ProjectSider = ({
   /** 处理新建子级 */
   const handleAddChild = useCallback((parentId: string, parentType: NodeType) => {
     const newItemType: NodeType = parentType === 'application' ? 'page' : 'function'
-
     setActionParentId(parentId)
     setActionModalType('add')
     setActionObjectType(newItemType)
@@ -268,14 +267,9 @@ const ProjectSider = ({
           },
     ) => {
       setSelectedKey(item.id)
-      setSelectedNode({
-        nodeId: item.id,
-        nodeType: item.type,
-        nodeName: item.name,
-        projectId,
-      })
+      setSelectedNode(item.id)
     },
-    [projectId, setSelectedNode],
+    [setSelectedNode],
   )
 
   /** 处理编辑节点 */
@@ -393,9 +387,7 @@ const ProjectSider = ({
           // 自动选中新创建的节点
           const parentItem = flattenedItems.find((item) => item.id === actionParentId)
           const newItem: FlattenedItem = {
-            id: result.id,
-            name: result.name,
-            type: actionObjectType,
+            ...result,
             parentId: actionParentId,
             depth: parentItem ? parentItem.depth + 1 : 0,
             collapsed: false,
@@ -404,41 +396,21 @@ const ProjectSider = ({
           }
           handleSelect(newItem)
         }
-      } else if (actionModalType === 'edit' && actionObjectInfo) {
+      } else if (actionModalType === 'edit') {
         // 编辑节点
-        updateNodeInfo(result.id, {
-          name: result.name,
-          description: result.description,
-          edited_at: new Date().toISOString(),
-        })
+        updateNodeInfo(result.id, result)
 
-        // 如果当前节点是选中状态，同步更新 store
+        // 如果当前节点是选中状态，同步更新 store（updateNodeInfo 已更新 nodeMap，直接传 id 即可）
         if (selectedNode?.nodeId === result.id) {
-          const updatedNode = flattenedItems.find((item) => item.id === result.id)
-          if (updatedNode) {
-            setSelectedNode({
-              nodeId: result.id,
-              nodeType: updatedNode.type,
-              nodeName: result.name,
-              projectId,
-            })
-          }
+          setSelectedNode(result.id)
         }
       }
-
-      setActionModalVisible(false)
-      setActionObjectInfo(null)
-      setActionParentId(null)
     },
     [
       actionModalType,
-      actionObjectType,
-      actionObjectInfo,
       actionParentId,
       selectedNode,
       setSelectedNode,
-      projectId,
-      flattenedItems,
       handleSelect,
       addNode,
       updateNodeInfo,
