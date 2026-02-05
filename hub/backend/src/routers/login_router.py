@@ -389,7 +389,7 @@ def create_login_router(login_service: LoginService, settings: Settings = None) 
                 session_info.refresh_token,
                 max_age=settings.cookie_timeout,
                 domain=settings.cookie_domain if settings.cookie_domain else None,
-                httponly=True,
+                httponly=False,  # 允许前端访问 refresh_token
             )
         else:
             logger.debug(
