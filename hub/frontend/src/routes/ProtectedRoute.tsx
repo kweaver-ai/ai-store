@@ -30,16 +30,22 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   // 在 .env.local 中设置 PUBLIC_SKIP_AUTH=true 即可跳过登录认证
   const skipAuth = import.meta.env.PUBLIC_SKIP_AUTH === 'true'
 
-  // 0) 支持外部平台通过 URL 携带 token 免登录
+  // 0) 支持外部平台通过 URL 携带 token和 refreshToken 免登录
   useEffect(() => {
     const urlToken = location.search && new URLSearchParams(location.search).get('token')
-    if (!urlToken) return
+    const urlRefreshToken =
+      location.search && new URLSearchParams(location.search).get('refresh_token')
+    if (!(urlToken && urlRefreshToken)) return
 
-    setAccessToken(urlToken)
+    setAccessToken(urlToken, urlRefreshToken)
     const params = new URLSearchParams(location.search)
     params.delete('token')
+    params.delete('refresh_token')
     const search = params.toString()
-    navigate({ pathname: location.pathname, search: search ? `?${search}` : '', hash: location.hash }, { replace: true })
+    navigate(
+      { pathname: location.pathname, search: search ? `?${search}` : '', hash: location.hash },
+      { replace: true },
+    )
   }, [location.search, location.pathname, location.hash, navigate])
 
   // 1) token 校验：无 token 或未登录 -> 登录页

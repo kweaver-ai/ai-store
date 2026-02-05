@@ -1,8 +1,8 @@
 import { EditorContent, useEditor } from '@tiptap/react'
 import type React from 'react'
 import { useEffect, useRef } from 'react'
-import 'plyr/dist/plyr.css'
-import 'katex/dist/katex.css'
+// import 'plyr/dist/plyr.css'
+// import 'katex/dist/katex.css'
 import 'tippy.js/dist/tippy.css'
 import 'tippy.js/animations/shift-away.css'
 import './index.less'
@@ -31,23 +31,23 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
     extensions: [
       StarterKit.configure({
         // 禁用其他不需要的扩展
-        details: false,
-        detailsContent: false,
-        detailsSummary: false,
-        table: false,
-        tableRow: false,
-        tableCell: false,
-        tableHeader: false,
-        emoji: false,
-        embed: false,
-        image: false,
-        audio: false,
-        video: false,
-        plantuml: false,
-        mathBlock: false,
-        mathInline: false,
-        uploader: false,
-        duplicateBlock: false,
+        // details: false,
+        // detailsContent: false,
+        // detailsSummary: false,
+        // table: false,
+        // tableRow: false,
+        // tableCell: false,
+        // tableHeader: false,
+        // emoji: false,
+        // embed: false,
+        // image: false,
+        // audio: false,
+        // video: false,
+        // plantuml: false,
+        // mathBlock: false,
+        // mathInline: false,
+        // uploader: false,
+        // duplicateBlock: false,
         placeholder: {
           placeholder,
         },
