@@ -208,7 +208,8 @@ const AppStore = () => {
           </div>
         )}
       </div>
-      {renderContent()}
+      {/* 预留占位，避免 loading→列表 切换时产生 CLS */}
+      <div className="flex-1 min-h-0 relative flex flex-col">{renderContent()}</div>
       <AppConfigDrawer
         appData={selectedApp ?? undefined}
         open={configModalVisible}

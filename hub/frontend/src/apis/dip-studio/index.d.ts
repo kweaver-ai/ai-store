@@ -1,72 +1,165 @@
-/** 项目信息 */
-export interface ProjectInfo {
-  id: string
+/**
+ * DIP Studio API 类型定义
+ * 与 studio/openapi/public/studio/studio.schemas.yaml 保持一致
+ */
+
+// ============ 项目 ============
+
+/** 项目信息（Project） */
+export interface Project {
+  id: number
   name: string
-  description: string
-  updated_at: string
-  updated_by: string
-  created_at?: string
-  created_by?: string
+  description?: string
+  creator_id: string
+  creator_name: string
+  created_at: string
+  editor_id: string
+  editor_name: string
+  edited_at: string
 }
+
+/** 项目列表（ProjectList） */
+export type ProjectList = Project[]
+
+/** 创建项目请求 */
+export interface CreateProjectRequest {
+  name: string
+  description?: string
+}
+
+/** 更新请求（项目/节点共用） */
+export interface UpdateNameDescRequest {
+  name?: string
+  description?: string
+}
+
+// ============ 节点 ============
 
 /** 节点类型 */
 export type NodeType = 'application' | 'page' | 'function'
 export type ObjectType = NodeType | 'project'
 
-/** 节点模型 */
-export interface NodeInfo {
-  id: string
-  project_id: string
-  type: NodeType
-  parent_id: string | null
+/** 项目节点（Node） */
+export interface Node {
+  id: number
+  project_id: number
+  parent_id: number | null
+  node_type: NodeType
   name: string
   description?: string
-  // dev_mode: boolean
-  creator: string
+  path: string
+  sort: number
+  status: number
+  document_id: number | null
+  creator_id: string
+  creator_name: string
   created_at: string
-  editor: string
+  editor_id: string
+  editor_name: string
   edited_at: string
-  node_code?: string // 22位大小写敏感字符串，用于MCP访问
-  document_id?: string // 功能设计文档 ID
 }
 
-/** 创建节点请求参数 */
-export interface CreateNodeParams {
-  project_id: string
-  parent_id?: string
+/** 节点树（NodeTree，递归结构） */
+export interface NodeTree {
+  id: number
+  project_id: number
+  parent_id: number | null
+  node_type: NodeType
+  name: string
+  description?: string
+  path: string
+  status: number
+  document_id: number | null
+  creator: number
+  created_at: string
+  editor: number
+  edited_at: string
+  children: NodeTree[]
+}
+
+/** 创建节点请求（application 无 parent_id，page/function 需 parent_id） */
+export interface CreateNodeRequest {
+  project_id: number
+  parent_id?: number
   name: string
   description?: string
 }
 
-/** 移动节点请求参数 */
-export interface MoveNodeParams {
-  node_id: string
-  target_parent_id: string | null
-  next_id: string
+/** 移动节点请求（MoveNodeRequest） */
+export interface MoveNodeRequest {
+  node_id: number
+  new_parent_id?: number | null
+  predecessor_node_id?: number | null
 }
 
-/** 项目词典项 */
-export interface DictionaryItem {
-  id: string
-  project_id: string
+// ============ 词典 ============
+
+/** 词典条目（DictionaryEntry） */
+export interface DictionaryEntry {
+  id: number
+  project_id: number
   term: string
   definition: string
-  created_at: string
-  updated_at: string
+  created_at?: string
 }
 
-/** 创建词典项请求参数 */
-export interface CreateDictionaryParams {
-  project_id: string
+/** 词典条目列表（DictionaryEntryList） */
+export type DictionaryEntryList = DictionaryEntry[]
+
+/** 创建词典条目请求 */
+export interface CreateDictionaryEntryRequest {
+  project_id: number
   term: string
   definition: string
 }
 
-/** 功能设计文档 */
-export interface DocumentInfo {
+/** 更新词典条目请求 */
+export interface UpdateDictionaryEntryRequest {
+  term?: string
+  definition?: string
+}
+
+// ============ 文档 ============
+
+/** JSON Patch 单条操作（JsonPatchOperation） */
+export interface JsonPatchOperation {
+  op: 'add' | 'remove' | 'replace' | 'move' | 'copy' | 'test'
+  path: string
+  value?: unknown
+  from?: string
+}
+
+/** JSON Patch 更新文档块请求（PatchDocumentBlocksRequest） */
+export type PatchDocumentBlocksRequest = JsonPatchOperation[]
+
+/** 文档内容对象（DocumentContentObject），含任意 kv */
+export interface DocumentContentObject {
+  blocks?: DocumentBlock[]
+  [key: string]: unknown
+}
+
+/** 文档块（DocumentBlock） */
+export interface DocumentBlock {
   id: string
-  node_id: string
-  content: any
+  document_id: number
+  type: 'text' | 'list' | 'table' | 'plugin'
+  content: Record<string, unknown>
+  order: number
+  updated_at?: string
+}
+
+/** 文档内容（DocumentContent），含 blocks 数组 */
+export interface DocumentContent {
+  blocks: DocumentBlock[]
+}
+
+/** 功能设计文档（FunctionDocument） */
+export interface FunctionDocument {
+  id: number
+  function_node_id: number
+  creator: number
   created_at: string
-  updated_at: string
+  editor: number
+  edited_at: string
+  blocks: DocumentBlock[]
 }

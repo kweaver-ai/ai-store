@@ -1,9 +1,9 @@
 import { PlusOutlined } from '@ant-design/icons'
-import { Button, Drawer, Form, Input, Modal, message, Table } from 'antd'
+import { Button, Drawer, Form, Input, Modal, message, Table, Tooltip } from 'antd'
 import { useCallback, useEffect, useState } from 'react'
 import {
-  type CreateDictionaryParams,
-  type DictionaryItem,
+  type CreateDictionaryEntryRequest,
+  type DictionaryEntry,
   deleteProjectDictionary,
   getProjectDictionary,
   postProjectDictionary,
@@ -31,12 +31,12 @@ const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionary
   const [messageApi, messageContextHolder] = message.useMessage()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
-  const [dictionaryList, setDictionaryList] = useState<DictionaryItem[]>([])
+  const [dictionaryList, setDictionaryList] = useState<DictionaryEntry[]>([])
   const [modalVisible, setModalVisible] = useState(false)
 
   /** 新建/编辑相关状态 */
   const [form] = Form.useForm<DictionaryFormValues>()
-  const [editingItem, setEditingItem] = useState<DictionaryItem | null>(null)
+  const [editingItem, setEditingItem] = useState<DictionaryEntry | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   // 使用 Form.useWatch 监听 term 和 definition 字段变化
@@ -68,7 +68,7 @@ const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionary
 
   /** 打开编辑弹窗 */
   const handleEdit = useCallback(
-    (item: DictionaryItem) => {
+    (item: DictionaryEntry) => {
       setEditingItem(item)
       form.setFieldsValue({
         term: item.term,
@@ -81,7 +81,7 @@ const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionary
 
   /** 处理删除 */
   const handleDelete = useCallback(
-    (item: DictionaryItem) => {
+    (item: DictionaryEntry) => {
       modal.confirm({
         title: '确认删除',
         content: `确定要删除术语"${item.term}"吗？`,
@@ -119,22 +119,21 @@ const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionary
       const values = await form.validateFields()
       setSubmitting(true)
 
-      const params: CreateDictionaryParams = {
-        project_id: projectId,
+      const params: CreateDictionaryEntryRequest = {
+        project_id: Number(projectId),
         term: values.term?.trim(),
         definition: values.definition?.trim(),
       }
 
       if (editingItem) {
         await putProjectDictionary(editingItem.id, params)
-        messageApi.success('更新成功')
+        messageApi.success('编辑成功')
       } else {
         await postProjectDictionary(params)
         messageApi.success('新建成功')
       }
 
       setModalVisible(false)
-      form.resetFields()
       loadDictionaryList()
     } catch (error: any) {
       if (error?.errorFields) {
@@ -144,7 +143,7 @@ const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionary
       if (error?.description) {
         messageApi.error(error.description)
       } else {
-        messageApi.error(editingItem ? '更新失败' : '新建失败')
+        messageApi.error(editingItem ? '编辑失败' : '新建失败')
       }
     } finally {
       setSubmitting(false)
@@ -154,16 +153,16 @@ const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionary
   /** 取消 */
   const handleCancel = useCallback(() => {
     setModalVisible(false)
-    form.resetFields()
     setEditingItem(null)
   }, [form])
 
   // 抽屉打开时加载数据
   useEffect(() => {
     if (open && projectId) {
+      setLoading(true)
+      setDictionaryList([])
       loadDictionaryList()
     } else {
-      setDictionaryList([])
       setError(null)
     }
   }, [open, projectId, loadDictionaryList])
@@ -184,8 +183,8 @@ const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionary
     },
     {
       title: '操作时间',
-      dataIndex: 'updated_at',
-      key: 'updated_at',
+      dataIndex: 'edited_at',
+      key: 'edited_at',
       width: 180,
       render: (text: string) => (text ? formatTime(text) : '--'),
     },
@@ -193,20 +192,24 @@ const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionary
       title: '操作',
       key: 'action',
       width: 100,
-      render: (_: any, record: DictionaryItem) => (
+      render: (_: any, record: DictionaryEntry) => (
         <div className="flex items-center gap-2">
-          <Button
-            variant="link"
-            color="default"
-            icon={<IconFont type="icon-dip-bianji" />}
-            onClick={() => handleEdit(record)}
-          />
-          <Button
-            variant="link"
-            color="default"
-            icon={<IconFont type="icon-dip-trash" />}
-            onClick={() => handleDelete(record)}
-          />
+          <Tooltip title="编辑">
+            <Button
+              variant="link"
+              color="default"
+              icon={<IconFont type="icon-dip-bianji" />}
+              onClick={() => handleEdit(record)}
+            />
+          </Tooltip>
+          <Tooltip title="删除">
+            <Button
+              variant="link"
+              color="default"
+              icon={<IconFont type="icon-dip-trash" />}
+              onClick={() => handleDelete(record)}
+            />
+          </Tooltip>
         </div>
       ),
     },
@@ -223,7 +226,7 @@ const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionary
       styles={{
         wrapper: { width: '60%', minWidth: 640 },
         header: { borderBottom: 'none' },
-        body: { padding: '8px 24px 16px' },
+        body: { padding: '8px 24px 12px' },
       }}
     >
       {contextHolder}
@@ -247,7 +250,7 @@ const ProjectDictionaryDrawer = ({ open, onClose, projectId }: ProjectDictionary
             pagination={false}
             loading={loading}
             className={styles.dictionaryTable}
-            scroll={{ y: 'calc(100vh - 168px)' }}
+            scroll={{ y: 'calc(100vh - 164px)' }}
             locale={{
               emptyText: error ? (
                 <Empty type="failed" title="加载失败">

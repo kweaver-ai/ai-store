@@ -1,26 +1,24 @@
 import { Card, Dropdown, type MenuProps } from 'antd'
 import clsx from 'clsx'
 import { useState } from 'react'
-import type { ProjectInfo } from '@/apis'
+import type { Project } from '@/apis'
 import ProjectIcon from '@/assets/images/projectIcon.svg?react'
 import { formatTimeSlash } from '@/utils/handle-function/FormatTime'
 import IconFont from '../IconFont'
 import { cardHeight } from './utils'
 
 interface ProjectCardProps {
-  project: ProjectInfo
+  project: Project
   width: number
   menuItems?: MenuProps['items']
   /** 卡片菜单点击回调 */
-  onCardClick?: (project: ProjectInfo) => void
+  onCardClick?: (project: Project) => void
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({ project, width, menuItems, onCardClick }) => {
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const updateTime = project.updated_at
-    ? formatTimeSlash(new Date(project.updated_at).getTime())
-    : ''
+  const updateTime = project.edited_at ? formatTimeSlash(new Date(project.edited_at).getTime()) : ''
 
   return (
     <Card

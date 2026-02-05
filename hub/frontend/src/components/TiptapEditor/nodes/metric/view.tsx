@@ -45,7 +45,6 @@ const MetricView: React.FC<NodeViewProps> = (props) => {
       id: metric.id,
       name: metric.name,
     }))
-    console.log('simplified', simplified)
     updateAttributes({
       metrics: simplified,
     })

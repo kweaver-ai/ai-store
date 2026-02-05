@@ -11,7 +11,7 @@ import { usePreferenceStore } from '@/stores'
  */
 export const AppMenu = () => {
   const navigate = useNavigate()
-  const { fetchPinnedMicroApps, loading, pinnedMicroApps } = usePreferenceStore()
+  const { fetchPinnedMicroApps, loading, pinnedMicroApps, wenshuAppInfo } = usePreferenceStore()
 
   // 处理点击按钮触发加载
   const handleButtonClick = () => {
@@ -20,24 +20,33 @@ export const AppMenu = () => {
   }
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
-    const app = pinnedMicroApps.find((item) => item.id === Number(key))
+    const app = [wenshuAppInfo, ...pinnedMicroApps].find((item) => item?.id === Number(key))
     if (app?.id) {
       // 以新标签页形式打开应用
       navigate(`/application/${app.id}`)
     }
   }
 
-  const menuItems: MenuProps['items'] = useMemo(
-    () =>
-      Array.isArray(pinnedMicroApps)
-        ? pinnedMicroApps.map((app) => ({
-            key: app.id,
-            icon: <AppIcon icon={app.icon} name={app.name} size={16} />,
-            label: app.name,
-          }))
-        : [],
-    [pinnedMicroApps],
-  )
+  const menuItems: MenuProps['items'] = useMemo(() => {
+    const items: MenuProps['items'] = []
+    if (wenshuAppInfo) {
+      items.push({
+        key: wenshuAppInfo.id,
+        icon: <AppIcon icon={wenshuAppInfo.icon} name={wenshuAppInfo.name} size={16} />,
+        label: wenshuAppInfo.name,
+      })
+    }
+    if (Array.isArray(pinnedMicroApps)) {
+      items.push(
+        ...pinnedMicroApps.map((app) => ({
+          key: app.id,
+          icon: <AppIcon icon={app.icon} name={app.name} size={16} />,
+          label: app.name,
+        })),
+      )
+    }
+    return items
+  }, [pinnedMicroApps, wenshuAppInfo])
 
   return (
     <Dropdown

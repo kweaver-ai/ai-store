@@ -2,7 +2,7 @@ import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 import { Button, Spin, Tooltip } from 'antd'
 import { memo, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getProjects, type ProjectInfo } from '@/apis'
+import { getProjects, type Project } from '@/apis'
 import Empty from '@/components/Empty'
 import IconFont from '@/components/IconFont'
 import ProjectList from '@/components/ProjectList'
@@ -11,26 +11,25 @@ import { useListService } from '@/hooks/useListService'
 import ActionModal from '../../components/ProjectActionModal/ActionModal'
 import DeleteProjectModal from '../../components/ProjectActionModal/DeleteProjectModal'
 import { ProjectActionEnum } from './types'
-import { getProjectMenuItems, testProjects } from './utils'
+import { getProjectMenuItems } from './utils'
 
 /** 项目管理 */
 const ProjectManagement = () => {
   const {
-    // items: projects,
+    items: projects,
     loading,
     error,
     searchValue,
     handleSearch,
     handleRefresh,
-  } = useListService<ProjectInfo>({
+  } = useListService<Project>({
     fetchFn: getProjects,
   })
-  const projects = testProjects
 
   const navigate = useNavigate()
   const [addProjectModalVisible, setAddProjectModalVisible] = useState(false)
   const [deleteProjectModalVisible, setDeleteProjectModalVisible] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<ProjectInfo>()
+  const [selectedItem, setSelectedItem] = useState<Project>()
   const [hasLoadedData, setHasLoadedData] = useState(false) // 记录是否已经成功加载过数据（有数据的情况）
   const hasEverHadDataRef = useRef(false) // 使用 ref 追踪是否曾经有过数据，避免循环依赖
   const prevSearchValueRef = useRef('') // 追踪上一次的搜索值，用于判断是否是从搜索状态清空
@@ -65,12 +64,15 @@ const ProjectManagement = () => {
 
   /** 处理新建项目成功 */
   const handleAddProjectSuccess = (result: { id: string; name: string; description?: string }) => {
-    handleRefresh()
-    navigate(`/studio/project-management/${result.id}`)
+    if (selectedItem) {
+      handleRefresh()
+    } else {
+      navigate(`/studio/project-management/${result.id}`)
+    }
   }
 
   /** 处理项目操作 */
-  const handleProjectMenuClick = (key: ProjectActionEnum, _project?: ProjectInfo) => {
+  const handleProjectMenuClick = (key: ProjectActionEnum, _project?: Project) => {
     switch (key) {
       case ProjectActionEnum.View:
         navigate(`/studio/project-management/${_project?.id}`)
@@ -91,19 +93,19 @@ const ProjectManagement = () => {
 
   /** 渲染状态内容（loading/error/empty） */
   const renderStateContent = () => {
-    // if (loading) {
-    //   return <Spin size="large" />
-    // }
+    if (loading) {
+      return <Spin size="large" />
+    }
 
-    // if (error) {
-    //   return (
-    //     <Empty type="failed" title="加载失败">
-    //       <Button type="primary" onClick={handleRefresh}>
-    //         重试
-    //       </Button>
-    //     </Empty>
-    //   )
-    // }
+    if (error) {
+      return (
+        <Empty type="failed" title="加载失败">
+          <Button type="primary" onClick={handleRefresh}>
+            重试
+          </Button>
+        </Empty>
+      )
+    }
 
     if (projects.length === 0) {
       if (searchValue) {

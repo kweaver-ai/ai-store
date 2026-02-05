@@ -81,23 +81,24 @@ export const Paragraph = TParagraph.extend<ParagraphOptions>({
   addKeyboardShortcuts() {
     return {
       ...this.parent?.(),
-      // Enter: ({ editor }) => {
-      //   const { state } = editor
-      //   const { selection } = state
-      //   const { $from } = selection
+      // 换行时清除 stored marks，避免加粗/斜体等格式延续到新段落
+      // 在 blockquote、listItem 等内部时返回 false，让它们处理自己的 Enter 行为
+      Enter: ({ editor }) => {
+        const { state } = editor
+        const { selection } = state
+        const { $from } = selection
 
-      //   // 检查是否在特殊块元素中（如 blockquote、listItem 等）
-      //   // 这些块元素需要自己处理 Enter 键行为
-      //   for (let d = $from.depth; d > 0; d--) {
-      //     const node = $from.node(d)
-      //     if (node.type.name === 'blockquote' || node.type.name === 'listItem') {
-      //       return false // 让 blockquote 或 listItem 处理
-      //     }
-      //   }
+        editor.view.dispatch(editor.state.tr.setStoredMarks([]))
 
-      //   // 否则执行默认的分割段落行为
-      //   return this.editor.commands.splitBlock()
-      // },
+        for (let d = $from.depth; d > 0; d--) {
+          const node = $from.node(d)
+          if (['blockquote', 'listItem', 'detailsContent', 'codeBlock'].includes(node.type.name)) {
+            return false
+          }
+        }
+
+        return editor.commands.splitBlock()
+      },
       // Backspace: ({ editor }) => {
       //   const { state } = editor
       //   const { selection } = state
