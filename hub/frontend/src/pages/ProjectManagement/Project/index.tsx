@@ -1,7 +1,7 @@
 import { Button } from 'antd'
 import { memo, useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import type { NodeInfo } from '@/apis'
+import { getProjectById, getProjectNodeTree, type Node } from '@/apis'
 import DictionaryIcon from '@/assets/images/project/dictionary.svg?react'
 import Empty from '@/components/Empty'
 import IconFont from '@/components/IconFont'
@@ -10,7 +10,6 @@ import DictionaryDrawer from '@/components/ProjectDictionaryDrawer'
 import ProjectNodeDetail from '@/components/ProjectNodeDetail'
 import ProjectSider from '@/components/ProjectSider'
 import { useProjectStore } from '@/stores'
-import { testProjects } from '../utils'
 
 /**
  * 项目详情页面
@@ -48,23 +47,19 @@ const Project = () => {
       setError(null)
 
       // 并行获取项目信息和节点数据
-      // const [projects, nodes] = await Promise.all([getProjects(), getProjectNodes(projectId)])
-
-      const projects = testProjects
-      const nodes: any = []
-      // const nodes = testNodes as NodeInfo[]
-
-      // 从项目列表中找到当前项目信息
-      const projectInfo = projects.find((p) => p.id === projectId) || null
-      setProjectInfo(projectInfo)
+      const [project, nodes] = await Promise.all([
+        getProjectById(projectId),
+        getProjectNodeTree(projectId),
+      ])
+      setProjectInfo(project)
 
       // 初始化项目树
       initProjectTree(projectId, nodes)
 
       // 默认选中应用节点
-      const applicationNode = nodes.find((n) => n.type === 'application')
+      const applicationNode = nodes.find((n) => n.node_type === 'application')
       if (applicationNode) {
-        setSelectedNode(applicationNode.id)
+        setSelectedNode(String(applicationNode.id))
       }
     } catch (err: any) {
       setError(err)
@@ -82,14 +77,13 @@ const Project = () => {
 
   /** 处理新建应用成功 */
   const handleAddApplicationSuccess = useCallback(
-    (result: NodeInfo) => {
+    (result: Node) => {
       if (!projectId) return
 
-      // 确保 NodeInfo 包含必要的字段
-      const newNodeInfo: NodeInfo = {
+      const newNodeInfo: Node = {
         ...result,
-        project_id: projectId,
-        type: 'application',
+        project_id: Number(projectId),
+        node_type: 'application',
         parent_id: null,
       }
 
@@ -97,7 +91,7 @@ const Project = () => {
       addNode(newNodeInfo)
 
       // 自动选中新创建的应用（addNode 已写入 nodeMap，直接传 id）
-      setSelectedNode(newNodeInfo.id)
+      setSelectedNode(String(newNodeInfo.id))
     },
     [projectId, addNode, setSelectedNode],
   )
@@ -204,7 +198,7 @@ const Project = () => {
         operationType="add"
         objectType="application"
         projectId={projectId || ''}
-        projectInfo={currentProjectInfo}
+        projectInfo={currentProjectInfo || undefined}
         parentId={null}
       />
       {/* 项目词典抽屉 */}

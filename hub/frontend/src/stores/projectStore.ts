@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { NodeInfo, ObjectType, ProjectInfo } from '@/apis'
+import type { Node, ObjectType, Project } from '@/apis'
 import type { TreeItems } from '@/components/ProjectSider/utils'
 import { convertNodeInfoToTree, removeItem, setProperty } from '@/components/ProjectSider/utils'
 
@@ -33,26 +33,26 @@ interface ProjectState {
   /** 当前项目 ID */
   currentProjectId: string | null
   /** 当前项目信息 */
-  currentProjectInfo: ProjectInfo | null
+  currentProjectInfo: Project | null
   /** 树数据 */
   treeData: TreeItems
-  /** 节点映射（nodeId -> NodeInfo） */
-  nodeMap: Map<string, NodeInfo>
+  /** 节点映射（nodeId -> Node） */
+  nodeMap: Map<string, Node>
 
   /** 初始化项目树数据 */
-  initProjectTree: (projectId: string, nodes: NodeInfo[]) => void
+  initProjectTree: (projectId: string, nodes: Node[]) => void
   /** 设置项目信息 */
-  setProjectInfo: (projectInfo: ProjectInfo | null) => void
+  setProjectInfo: (projectInfo: Project | null) => void
   /** 获取当前项目信息 */
-  getProjectInfo: () => ProjectInfo | null
+  getProjectInfo: () => Project | null
   /** 更新树数据 */
   setTreeData: (treeData: TreeItems) => void
   /** 根据节点 ID 获取节点信息 */
-  getNodeInfo: (nodeId: string) => NodeInfo | undefined
+  getNodeInfo: (nodeId: string) => Node | undefined
   /** 更新节点信息 */
-  updateNodeInfo: (nodeId: string, info: Partial<NodeInfo>) => void
+  updateNodeInfo: (nodeId: string, info: Partial<Node>) => void
   /** 添加节点 */
-  addNode: (node: NodeInfo) => void
+  addNode: (node: Node) => void
   /** 删除节点 */
   removeNode: (nodeId: string) => void
   /** 清除树数据（切换项目时调用） */
@@ -73,10 +73,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     }
     set({
       selectedNode: {
-        nodeId: node.id,
-        nodeType: node.type,
+        nodeId: String(node.id),
+        nodeType: node.node_type,
         nodeName: node.name,
-        projectId: node.project_id,
+        projectId: String(node.project_id),
       },
     })
   },
@@ -97,10 +97,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       })
       return
     }
-    // 构建节点映射
-    const map = new Map<string, NodeInfo>()
+    const map = new Map<string, Node>()
     nodes.forEach((node) => {
-      map.set(node.id, node)
+      map.set(String(node.id), node)
     })
 
     // 转换为树结构
@@ -128,7 +127,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         return state
       }
 
-      const updatedNode: NodeInfo = {
+      const updatedNode: Node = {
         ...existingNode,
         ...info,
       }
@@ -160,25 +159,31 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   addNode: (node) => {
     set((state) => {
       const newMap = new Map(state.nodeMap)
-      newMap.set(node.id, node)
+      newMap.set(String(node.id), node)
 
-      // 添加到树数据
       const newTreeItem = {
-        id: node.id,
+        id: String(node.id),
         name: node.name,
-        type: node.type,
+        type: node.node_type,
         children: [],
       }
 
       let updatedTreeData: TreeItems
-      if (node.parent_id) {
+      if (node.parent_id != null) {
         // 添加到父节点的 children
-        updatedTreeData = setProperty(state.treeData, node.parent_id, 'children', (value) => [
-          ...value,
-          newTreeItem,
-        ])
+        updatedTreeData = setProperty(
+          state.treeData,
+          String(node.parent_id),
+          'children',
+          (value) => [...value, newTreeItem],
+        )
         // 展开父节点
-        updatedTreeData = setProperty(updatedTreeData, node.parent_id, 'collapsed', () => false)
+        updatedTreeData = setProperty(
+          updatedTreeData,
+          String(node.parent_id),
+          'collapsed',
+          () => false,
+        )
       } else {
         // 作为根节点添加
         updatedTreeData = [newTreeItem]

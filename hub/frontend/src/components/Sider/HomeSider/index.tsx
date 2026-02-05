@@ -4,7 +4,7 @@ import { Dropdown, Menu, message, Tooltip } from 'antd'
 import clsx from 'classnames'
 import type React from 'react'
 import { useCallback, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import logoImage from '@/assets/images/brand/logo.png'
 import SidebarAiStoreIcon from '@/assets/images/sider/aiStore.svg?react'
 import SidebarDipStudioIcon from '@/assets/images/sider/dipStudio.svg?react'
@@ -34,6 +34,7 @@ interface HomeSiderProps {
  */
 const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
   const navigate = useNavigate()
+  const location = useLocation()
   const [messageApi, messageContextHolder] = message.useMessage()
   const { pinnedMicroApps, unpinMicroApp, wenshuAppInfo } = usePreferenceStore()
   const { language } = useLanguageStore()
@@ -219,6 +220,23 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
     return `data:image/png;base64,${base64Image}`
   }, [oemResourceConfig])
 
+  const selectedKeys = useMemo(() => {
+    const path = location.pathname
+    const match = path.match(/^\/application\/(\d+)/)
+    if (!match) {
+      return []
+    }
+
+    const appId = Number(match[1])
+    const key = `micro-app-${appId}`
+
+    const exists =
+      (wenshuAppInfo && wenshuAppInfo.id === appId) ||
+      pinnedMicroApps.some((app) => app.id === appId)
+
+    return exists ? [key] : []
+  }, [location.pathname, pinnedMicroApps, wenshuAppInfo])
+
   return (
     <div className="flex flex-col h-full px-0 pt-4 pb-1 overflow-hidden">
       {messageContextHolder}
@@ -246,7 +264,7 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
         <div className="flex-1">
           <Menu
             mode="inline"
-            selectedKeys={[]}
+            selectedKeys={selectedKeys}
             items={menuItems}
             inlineCollapsed={collapsed}
             selectable

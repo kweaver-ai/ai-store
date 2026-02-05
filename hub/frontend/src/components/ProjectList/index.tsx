@@ -1,18 +1,18 @@
 import { Col, type MenuProps, Row } from 'antd'
 import { memo, useCallback } from 'react'
 import AutoSizer from 'react-virtualized-auto-sizer'
-import type { ProjectInfo } from '@/apis'
+import type { Project } from '@/apis'
 import ScrollBarContainer from '../ScrollBarContainer'
 import ProjectCard from './ProjectCard'
 import { computeColumnCount, gap } from './utils'
 
 interface ProjectListProps {
   /** 项目列表数据 */
-  projects: ProjectInfo[]
+  projects: Project[]
   /** 卡片菜单点击回调 */
-  onCardClick?: (project: ProjectInfo) => void
+  onCardClick?: (project: Project) => void
   /** 卡片菜单点击回调 */
-  menuItems?: (project: ProjectInfo) => MenuProps['items']
+  menuItems?: (project: Project) => MenuProps['items']
 }
 
 /**
@@ -21,7 +21,7 @@ interface ProjectListProps {
 const ProjectList: React.FC<ProjectListProps> = ({ projects, onCardClick, menuItems }) => {
   /** 渲染应用卡片 */
   const renderCard = useCallback(
-    (project: ProjectInfo, width: number) => {
+    (project: Project, width: number) => {
       return (
         <Col key={project.id} style={{ width, minWidth: width }}>
           <ProjectCard

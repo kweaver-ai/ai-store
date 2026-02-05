@@ -121,9 +121,9 @@ const BaseSider = ({ collapsed, onCollapse, type }: BaseSiderProps) => {
   }, [type, roleIds, selectedKey, navigate])
 
   return (
-    <div className="flex flex-col h-full px-0 pt-4 pb-2 overflow-hidden">
-      {/* 菜单内容 */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden dip-hideScrollbar">
+    <div className="flex flex-col h-full px-0 pt-4 pb-2 overflow-hidden min-h-0">
+      {/* 菜单内容：min-h-0 保证 flex 子项正确收缩，避免撑开导致底部块位移引发 CLS */}
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden dip-hideScrollbar">
         <Menu
           mode="inline"
           selectedKeys={[selectedKey]}
@@ -133,16 +133,15 @@ const BaseSider = ({ collapsed, onCollapse, type }: BaseSiderProps) => {
         />
       </div>
 
-      {/* 分割线 */}
-      <div className="h-px bg-[--dip-border-color] my-2 shrink-0" />
-
-      {/* 底部收缩按钮 */}
-      <div
-        className={clsx(
-          'flex items-center',
-          collapsed ? 'justify-center' : 'justify-between pl-2 pr-2',
-        )}
-      >
+      {/* 底部块固定占位，避免菜单渲染后挤压导致 CLS */}
+      <div className="shrink-0">
+        <div className="h-px bg-[--dip-border-color] my-2 shrink-0" />
+        <div
+          className={clsx(
+            'flex items-center min-h-8',
+            collapsed ? 'justify-center' : 'justify-between pl-2 pr-2',
+          )}
+        >
         <Tooltip title={collapsed ? '展开' : '收起'} placement="right">
           <button
             type="button"
@@ -152,6 +151,7 @@ const BaseSider = ({ collapsed, onCollapse, type }: BaseSiderProps) => {
             {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           </button>
         </Tooltip>
+        </div>
       </div>
     </div>
   )

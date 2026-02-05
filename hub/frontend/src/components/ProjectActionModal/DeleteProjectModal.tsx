@@ -2,11 +2,11 @@ import { ExclamationCircleFilled } from '@ant-design/icons'
 import type { ModalProps } from 'antd'
 import { Form, Input, Modal, message } from 'antd'
 import { useEffect, useState } from 'react'
-import { deleteProjects, type ProjectInfo } from '@/apis'
+import { deleteProjects, type Project } from '@/apis'
 
 export interface DeleteProjectModalProps extends Pick<ModalProps, 'open' | 'onCancel'> {
   /** 要删除的项目信息 */
-  project?: ProjectInfo
+  project?: Project
   /** 删除成功的回调 */
   onSuccess: () => void
 }

@@ -1,5 +1,6 @@
 import { Layout } from 'antd'
 import clsx from 'classnames'
+import { useEffect, useState } from 'react'
 import type { SiderType } from '@/routes/types'
 import BaseSider from './BaseSider'
 import HomeSider from './HomeSider'
@@ -23,10 +24,18 @@ interface SiderProps {
  * 根据 type 选择渲染 BaseSider（store/studio）或 MicroAppSider（micro-app）
  */
 const Sider = ({ collapsed, onCollapse, topOffset = 0, type = 'home' }: SiderProps) => {
+  const [transitionEnabled, setTransitionEnabled] = useState(false)
+  useEffect(() => {
+    const t = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setTransitionEnabled(true))
+    })
+    return () => cancelAnimationFrame(t)
+  }, [])
+
   return (
     <AntdSider
-      width={240}
-      collapsedWidth={60}
+      width="100%"
+      collapsedWidth="100%"
       collapsible
       collapsed={collapsed}
       trigger={null}
@@ -34,6 +43,7 @@ const Sider = ({ collapsed, onCollapse, topOffset = 0, type = 'home' }: SiderPro
         'bg-white backdrop-blur-[6px] shadow-[inset_-1px_0_0_rgba(0,0,0,0.1)]',
         styles.siderContainer,
         collapsed && styles.collapsed,
+        !transitionEnabled && styles.siderNoTransition,
       )}
       style={{
         left: 0,

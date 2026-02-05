@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import logoImage from '@/assets/images/brand/logo.png'
-import InfoIcon from '@/assets/info.svg?react'
+import InfoIcon from '@/assets/images/info.svg?react'
 import type { HeaderType } from '@/routes/types'
 import { getParentRoute, getRouteByPath } from '@/routes/utils'
 import { useLanguageStore, useOEMConfigStore, useProjectStore } from '@/stores'
@@ -159,6 +159,9 @@ const BaseHeader = ({ headerType }: { headerType: HeaderType }) => {
                 }}
                 onClose={() => {
                   setProjectInfoOpen(false)
+                }}
+                styles={{
+                  container: { padding: '24px 0' },
                 }}
               >
                 <button

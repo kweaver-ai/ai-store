@@ -9,7 +9,7 @@ import './index.less'
 import { StarterKit } from './extensions/starter-kit'
 
 export interface TiptapEditorProps {
-  content?: any
+  initialContent?: any
   onChange?: (content: string) => void
   onUpdate?: (content: any) => void
   readOnly?: boolean
@@ -18,14 +18,14 @@ export interface TiptapEditorProps {
 }
 
 export const TiptapEditor: React.FC<TiptapEditorProps> = ({
-  content = {},
+  initialContent = {},
   onChange,
   onUpdate,
   readOnly = false,
   className = '',
   placeholder = 'Start writing...',
 }) => {
-  const initialContent = useRef(content)
+  const initialContentRef = useRef(initialContent)
 
   const editor = useEditor({
     extensions: [
@@ -34,10 +34,10 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
         details: false,
         detailsContent: false,
         detailsSummary: false,
-        // table: false,
-        // tableRow: false,
-        // tableCell: false,
-        // tableHeader: false,
+        table: false,
+        tableRow: false,
+        tableCell: false,
+        tableHeader: false,
         emoji: false,
         embed: false,
         image: false,
@@ -53,7 +53,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
         },
       }),
     ],
-    content: initialContent.current,
+    content: initialContentRef.current,
     editable: !readOnly,
     editorProps: {
       attributes: {
@@ -61,16 +61,19 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
       },
     },
     onCreate: ({ editor }) => {
-      if (initialContent.current) {
+      if (initialContentRef.current) {
         // 判断 content 类型：如果是字符串则用 markdown 解析，如果是对象则直接使用
-        if (typeof initialContent.current === 'string' && (editor.storage as any).markdown) {
-          const doc = (editor.storage as any).markdown.parse(initialContent.current)
+        if (typeof initialContentRef.current === 'string' && (editor.storage as any).markdown) {
+          const doc = (editor.storage as any).markdown.parse(initialContentRef.current)
           if (doc) {
             editor.commands.setContent(doc.toJSON())
           }
-        } else if (typeof initialContent.current === 'object' && initialContent.current !== null) {
+        } else if (
+          typeof initialContentRef.current === 'object' &&
+          initialContentRef.current !== null
+        ) {
           // 如果是 JSON 对象，直接设置内容
-          editor.commands.setContent(initialContent.current)
+          editor.commands.setContent(initialContentRef.current)
         }
       }
       // // 编辑器创建后，将光标聚焦到文档最前面
@@ -92,42 +95,42 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
     },
   })
 
-  useEffect(() => {
-    if (editor && content !== initialContent.current) {
-      // 判断 content 类型：如果是字符串则用 markdown 解析，如果是对象则直接使用
-      if (typeof content === 'string' && (editor.storage as any).markdown) {
-        const currentMarkdown = (editor.storage as any).markdown?.get()
-        if (currentMarkdown !== content) {
-          const doc = (editor.storage as any).markdown?.parse(content)
-          if (doc) {
-            editor.commands.setContent(doc.toJSON())
-            // // 内容更新后，将光标聚焦到文档最前面
-            // if (!readOnly) {
-            //   setTimeout(() => {
-            //     editor.commands.setTextSelection(0)
-            //     editor.commands.focus()
-            //   }, 0)
-            // }
-          }
-        }
-      } else if (typeof content === 'object' && content !== null) {
-        // 如果是 JSON 对象，直接设置内容
-        const currentContent = editor.getJSON()
-        // 简单比较，避免不必要的更新
-        if (JSON.stringify(currentContent) !== JSON.stringify(content)) {
-          editor.commands.setContent(content)
-          // // 内容更新后，将光标聚焦到文档最前面
-          // if (!readOnly) {
-          //   setTimeout(() => {
-          //     editor.commands.setTextSelection(0)
-          //     editor.commands.focus()
-          //   }, 0)
-          // }
-        }
-      }
-      initialContent.current = content
-    }
-  }, [content, editor, readOnly])
+  // useEffect(() => {
+  //   if (editor && content !== initialContent.current) {
+  //     // 判断 content 类型：如果是字符串则用 markdown 解析，如果是对象则直接使用
+  //     if (typeof content === 'string' && (editor.storage as any).markdown) {
+  //       const currentMarkdown = (editor.storage as any).markdown?.get()
+  //       if (currentMarkdown !== content) {
+  //         const doc = (editor.storage as any).markdown?.parse(content)
+  //         if (doc) {
+  //           editor.commands.setContent(doc.toJSON())
+  //           // // 内容更新后，将光标聚焦到文档最前面
+  //           // if (!readOnly) {
+  //           //   setTimeout(() => {
+  //           //     editor.commands.setTextSelection(0)
+  //           //     editor.commands.focus()
+  //           //   }, 0)
+  //           // }
+  //         }
+  //       }
+  //     } else if (typeof content === 'object' && content !== null) {
+  //       // 如果是 JSON 对象，直接设置内容
+  //       const currentContent = editor.getJSON()
+  //       // 简单比较，避免不必要的更新
+  //       if (JSON.stringify(currentContent) !== JSON.stringify(content)) {
+  //         editor.commands.setContent(content)
+  //         // // 内容更新后，将光标聚焦到文档最前面
+  //         // if (!readOnly) {
+  //         //   setTimeout(() => {
+  //         //     editor.commands.setTextSelection(0)
+  //         //     editor.commands.focus()
+  //         //   }, 0)
+  //         // }
+  //       }
+  //     }
+  //     initialContent.current = content
+  //   }
+  // }, [content, editor, readOnly])
 
   useEffect(() => {
     if (editor) {
@@ -137,9 +140,9 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
 
   useEffect(() => {
     if (editor) {
-      editor.commands.setContent(initialContent.current)
+      editor.commands.setContent(initialContentRef.current)
     }
-  }, [initialContent.current, editor])
+  }, [initialContentRef.current, editor])
 
   return (
     <div className="tiptap-editor-wrapper">

@@ -79,6 +79,7 @@ export default defineConfig({
           return undefined // 其他路由继续使用代理
         },
       },
+      '/api/dip-studio':proxyBase,      
       '/api/mdl-data-model': proxyBase,
       '/api/agent-factory': proxyBase,
       '/api/deploy-web-service': proxyBase,
