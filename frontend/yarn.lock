@@ -1237,10 +1237,10 @@
   dependencies:
     tslib "^2.8.0"
 
-"@tiptap/core@^3.17.1":
-  version "3.17.1"
-  resolved "https://registry.npmjs.org/@tiptap/core/-/core-3.17.1.tgz#43f0bbaa21eb80b3149ccc28d276f6560bd62a03"
-  integrity sha512-f8hB9MzXqsuXoF9qXEDEH5Fb3VgwhEFMBMfk9EKN88l5adri6oM8mt2XOWVxVVssjpEW0177zXSLPKWzoS/vrw==
+"@tiptap/core@^3.19.0":
+  version "3.19.0"
+  resolved "https://registry.npmjs.org/@tiptap/core/-/core-3.19.0.tgz#dca483b50e1b8a596f695aecde387a79fe7da717"
+  integrity sha512-bpqELwPW+DG8gWiD8iiFtSl4vIBooG5uVJod92Qxn3rA9nFatyXRr4kNbMJmOZ66ezUvmCjXVe/5/G4i5cyzKA==
 
 "@tiptap/extension-blockquote@^3.0.0":
   version "3.16.0"
@@ -1279,9 +1279,9 @@
   resolved "https://registry.npmjs.org/@tiptap/extension-code/-/extension-code-3.16.0.tgz#f5e58a5a833510e7ebf63149bac86d778b5e1956"
   integrity sha512-U8/bz/1BhQ39LJgUqJ8u1HzLcYdtubUWVAVC8seteLz1vIhXkTyfAC8478KQ+YdIDkMzAs+0vxk5BsWcWG16zQ==
 
-"@tiptap/extension-collaboration@^3.0.0":
+"@tiptap/extension-collaboration@^3.19.0":
   version "3.19.0"
-  resolved "https://registry.yarnpkg.com/@tiptap/extension-collaboration/-/extension-collaboration-3.19.0.tgz#390e50cc48fd7e7baa7ee20e75b709cc060d443d"
+  resolved "https://registry.npmjs.org/@tiptap/extension-collaboration/-/extension-collaboration-3.19.0.tgz#390e50cc48fd7e7baa7ee20e75b709cc060d443d"
   integrity sha512-Cb4RXo2C05w44OsT22weLYqf2mnyTacvtz3iWYswgq1slMOl4Gs5RQE+jHgyvjVbhj34yPS6ghoWBBrriX9a1w==
 
 "@tiptap/extension-document@^3.0.0":
@@ -1289,9 +1289,9 @@
   resolved "https://registry.npmjs.org/@tiptap/extension-document/-/extension-document-3.16.0.tgz#b6d5122a0f2a46163095deb62d955f273e47062d"
   integrity sha512-vOwBnJIonYmmFVMEnnE1jwoUMq0P/9BcaUocIG9o5iFRTV38I8YGn8n6DiE1pjSeLXRpLrXl6LLwdOMBJewhBg==
 
-"@tiptap/extension-drag-handle@^3.17.1":
+"@tiptap/extension-drag-handle@^3.19.0":
   version "3.19.0"
-  resolved "https://registry.yarnpkg.com/@tiptap/extension-drag-handle/-/extension-drag-handle-3.19.0.tgz#3d4c62b22ae1d35556436c953b8df6148d975e4d"
+  resolved "https://registry.npmjs.org/@tiptap/extension-drag-handle/-/extension-drag-handle-3.19.0.tgz#3d4c62b22ae1d35556436c953b8df6148d975e4d"
   integrity sha512-bNvqwj5hmQyWBq8oyFUGa5HcK0edyMmFd7cgGiCRSR/H2DrT34zB286+C0dyksk1n5CjmO0wGxQ3qmjdfzzkQg==
   dependencies:
     "@floating-ui/dom" "^1.6.13"
@@ -1358,10 +1358,10 @@
   resolved "https://registry.npmjs.org/@tiptap/extension-list/-/extension-list-3.16.0.tgz#6619ee3269557ded0814bcaf5d1a7a8ad02aa5e2"
   integrity sha512-tpjWGugfI0XYR9iG/QlYYtCY35TFWHNwGKc94wN4s7NmAjB4xlwdTkTZQ6PdZ39x1SeHkRjxAka+6GcBIoOHGQ==
 
-"@tiptap/extension-node-range@^3.0.0":
-  version "3.17.1"
-  resolved "https://registry.npmjs.org/@tiptap/extension-node-range/-/extension-node-range-3.17.1.tgz#0d79b531f3baf8dd75aa8459fd3bee6abdc705f7"
-  integrity sha512-tGt/Yr7aALKsrerAldQG5iBUFmml2i25nrjLIU+SR1Bzm+OWxTSXxOWunkowdquh2f/Lft5GnnSIs3e3Jr20Bg==
+"@tiptap/extension-node-range@^3.19.0":
+  version "3.19.0"
+  resolved "https://registry.npmjs.org/@tiptap/extension-node-range/-/extension-node-range-3.19.0.tgz#182a5fc0b42d6a3230d61a1a1330d88e8acb569c"
+  integrity sha512-rIq1e+jTzdtHrGyWKZgRUJc8Phz5Crh1WqBL71QPJgLZqGbcCeGTHBFBOrU2AWwQNa8lYEbGD+FTFxVfvxegUA==
 
 "@tiptap/extension-ordered-list@^3.0.0":
   version "3.16.0"
@@ -1413,10 +1413,10 @@
   resolved "https://registry.npmjs.org/@tiptap/extensions/-/extensions-3.16.0.tgz#acc65c856d77464c20ab9780e0d164b064cc41c5"
   integrity sha512-0iVrn0FHcHIRMdsQLQbf16NgYrKz+Sup/8dDMVBy1QoHn5Hb51QZABqXJTZ6u7My34b4fNZrSggzBAE7l7N/pA==
 
-"@tiptap/pm@^3.17.1":
-  version "3.18.0"
-  resolved "https://registry.npmjs.org/@tiptap/pm/-/pm-3.18.0.tgz#5fd911fbbca41687ac1dd180ba32552b54634129"
-  integrity sha512-8RoI5gW0xBVCsuxahpK8vx7onAw6k2/uR3hbGBBnH+HocDMaAZKot3nTyY546ij8ospIC1mnQ7k4BhVUZesZDQ==
+"@tiptap/pm@^3.19.0":
+  version "3.19.0"
+  resolved "https://registry.npmjs.org/@tiptap/pm/-/pm-3.19.0.tgz#5cb499c7b2603ec6550d0c7a70b924f27fdb7692"
+  integrity sha512-789zcnM4a8OWzvbD2DL31d0wbSm9BVeO/R7PLQwLIGysDI3qzrcclyZ8yhqOEVuvPitRRwYLq+mY14jz7kY4cw==
   dependencies:
     prosemirror-changeset "^2.3.0"
     prosemirror-collab "^1.3.1"
