@@ -153,11 +153,11 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
       if (process.env.NODE_ENV === 'development') {
         ssoSearchParams.set(
           'token',
-          'ory_at_wcvCk-4wVGgVqi9ptqhr9l2r5e_s13hNWtwlJJzdIds.mWrGfQxvWmt1ZSgZS8MHryUu1Z9TiMrAGZM8HN9tIog',
+          'ory_at_1Ol1cd_wZVPwYNCr50AiR9dctvUvM1_mI2C-f481n6Y.uikVUF3c1Rf5KFBivT8JbYDE6VDFLplv_1KRiihWqWU',
         )
         ssoSearchParams.set(
           'refreshToken',
-          'ory_rt_690Swjha9IGgPc66WCVr8rGDRNgHy22P4BsyeO1tYgg.c9_qewseT_AbXQw7Pj4-GyWKDg3F-Musj5E6lqrbWOg',
+          'ory_rt_b1VBSySehSNQro5ZPZPTxScOEYVkNwaVpzTVk0tgCZI.8lJkppPN97yZSGWTlZOSxqz3fpoTg0dKTR8MwCWr5Uo',
         )
       } else {
         ssoSearchParams.set('token', token)

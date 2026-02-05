@@ -20,8 +20,12 @@ export function getAccessToken(): string {
   return Cookies.get(ACCESS_TOKEN_KEY) || ''
 }
 
-export function setAccessToken(token: string): void {
+export function setAccessToken(token: string, refreshToken: string): void {
   Cookies.set(ACCESS_TOKEN_KEY, token, {
+    domain: window.location.hostname,
+    path: '/',
+  })
+  Cookies.set(REFRESH_TOKEN_KEY, refreshToken, {
     domain: window.location.hostname,
     path: '/',
   })

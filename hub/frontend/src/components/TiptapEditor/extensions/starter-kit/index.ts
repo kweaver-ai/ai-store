@@ -13,37 +13,37 @@ import { Subscript, type SubscriptOptions } from '../../marks/sub'
 import { Superscript, type SuperscriptOptions } from '../../marks/sup'
 import { Underline, type UnderlineOptions } from '../../marks/underline'
 import { Agent, type AgentOptions } from '../../nodes/agent'
-import { Audio, type AudioOptions } from '../../nodes/audio'
+// import { Audio, type AudioOptions } from '../../nodes/audio'
 import { Blockquote, type BlockquoteOptions } from '../../nodes/blockquote'
 import { BulletList, type BulletListOptions } from '../../nodes/bullet-list'
 import { CodeBlock, type CodeBlockOptions } from '../../nodes/code-block'
-import { Details, type DetailsOptions } from '../../nodes/details'
-import { DetailsContent, type DetailsContentOptions } from '../../nodes/details-content'
-import { DetailsSummary, type DetailsSummaryOptions } from '../../nodes/details-summary'
+// import { Details, type DetailsOptions } from '../../nodes/details'
+// import { DetailsContent, type DetailsContentOptions } from '../../nodes/details-content'
+// import { DetailsSummary, type DetailsSummaryOptions } from '../../nodes/details-summary'
 import { Document } from '../../nodes/document'
-import { Embed, type EmbedOptions } from '../../nodes/embed'
-import { Emoji, type EmojiOptions } from '../../nodes/emoji'
+// import { Embed, type EmbedOptions } from '../../nodes/embed'
+// import { Emoji, type EmojiOptions } from '../../nodes/emoji'
 import { HardBreak, type HardBreakOptions } from '../../nodes/hard-break'
 import { Heading, type HeadingOptions } from '../../nodes/heading'
 import { HorizontalRule, type HorizontalRuleOptions } from '../../nodes/horizontal-rule'
-import { Image, type ImageOptions } from '../../nodes/image'
+// import { Image, type ImageOptions } from '../../nodes/image'
 import { Knowledge, type KnowledgeOptions } from '../../nodes/knowledge'
 import { ListItem, type ListItemOptions } from '../../nodes/list-item'
-import { MathBlock, type MathBlockOptions } from '../../nodes/math-block'
-import { MathInline, type MathInlineOptions } from '../../nodes/math-inline'
+// import { MathBlock, type MathBlockOptions } from '../../nodes/math-block'
+// import { MathInline, type MathInlineOptions } from '../../nodes/math-inline'
 import { Mermaid, type MermaidOptions } from '../../nodes/mermaid'
 import { Metric, type MetricOptions } from '../../nodes/metric'
 import { OrderedList, type OrderedListOptions } from '../../nodes/ordered-list'
 import { Paragraph, type ParagraphOptions } from '../../nodes/paragraph'
-import { Plantuml, type PlantumlOptions } from '../../nodes/plantuml'
-import { Table, type TableOptions } from '../../nodes/table'
-import { TableCell, type TableCellOptions } from '../../nodes/table-cell'
-import { TableHeader, type TableHeaderOptions } from '../../nodes/table-header'
-import { TableRow, type TableRowOptions } from '../../nodes/table-row'
+// import { Plantuml, type PlantumlOptions } from '../../nodes/plantuml'
+// import { Table, type TableOptions } from '../../nodes/table'
+// import { TableCell, type TableCellOptions } from '../../nodes/table-cell'
+// import { TableHeader, type TableHeaderOptions } from '../../nodes/table-header'
+// import { TableRow, type TableRowOptions } from '../../nodes/table-row'
 import { TaskItem, type TaskItemOptions } from '../../nodes/task-item'
 import { TaskList, type TaskListOptions } from '../../nodes/task-list'
 import { Text } from '../../nodes/text'
-import { Video, type VideoOptions } from '../../nodes/video'
+// import { Video, type VideoOptions } from '../../nodes/video'
 import { configure } from '../../utils/functions'
 import { BlockMenu, type BlockMenuOptions } from '../block-menu'
 // import { ClearFormat } from '../clear-format'
@@ -52,10 +52,10 @@ import { Clipboard, type ClipboardOptions } from '../clipboard'
 import { CopyBlock } from '../copy-block'
 import { DeleteBlock } from '../delete-block'
 import { CustomDragHandle, type DragHandleOptions } from '../drag-handle'
-import { DuplicateBlock } from '../duplicate-block'
+// import { DuplicateBlock } from '../duplicate-block'
 import { FloatMenu, type FloatMenuOptions } from '../float-menu'
 import { Markdown, type MarkdownOptions } from '../markdown'
-import { Uploader, type UploaderOptions } from '../uploader'
+// import { Uploader, type UploaderOptions } from '../uploader'
 
 export interface StarterKitOptions {
   // marks
@@ -82,27 +82,27 @@ export interface StarterKitOptions {
   listItem?: Partial<ListItemOptions> | boolean
   taskList?: Partial<TaskListOptions> | boolean
   taskItem?: Partial<TaskItemOptions> | boolean
-  details?: Partial<DetailsOptions> | boolean
-  detailsContent?: Partial<DetailsContentOptions> | boolean
-  detailsSummary?: Partial<DetailsSummaryOptions> | boolean
-  table?: Partial<TableOptions> | boolean
-  tableRow?: Partial<TableRowOptions> | boolean
-  tableCell?: Partial<TableCellOptions> | boolean
-  tableHeader?: Partial<TableHeaderOptions> | boolean
-  emoji?: Partial<EmojiOptions> | boolean
-  embed?: Partial<EmbedOptions> | boolean
-  image?: Partial<ImageOptions> | boolean
-  audio?: Partial<AudioOptions> | boolean
-  video?: Partial<VideoOptions> | boolean
+  // details?: Partial<DetailsOptions> | boolean
+  // detailsContent?: Partial<DetailsContentOptions> | boolean
+  // detailsSummary?: Partial<DetailsSummaryOptions> | boolean
+  // table?: Partial<TableOptions> | boolean
+  // tableRow?: Partial<TableRowOptions> | boolean
+  // tableCell?: Partial<TableCellOptions> | boolean
+  // tableHeader?: Partial<TableHeaderOptions> | boolean
+  // emoji?: Partial<EmojiOptions> | boolean
+  // embed?: Partial<EmbedOptions> | boolean
+  // image?: Partial<ImageOptions> | boolean
+  // audio?: Partial<AudioOptions> | boolean
+  // video?: Partial<VideoOptions> | boolean
   mermaid?: Partial<MermaidOptions> | boolean
-  plantuml?: Partial<PlantumlOptions> | boolean
-  mathBlock?: Partial<MathBlockOptions> | boolean
-  mathInline?: Partial<MathInlineOptions> | boolean
+  // plantuml?: Partial<PlantumlOptions> | boolean
+  // mathBlock?: Partial<MathBlockOptions> | boolean
+  // mathInline?: Partial<MathInlineOptions> | boolean
   knowledge?: Partial<KnowledgeOptions> | boolean
   agent?: Partial<AgentOptions> | boolean
   metric?: Partial<MetricOptions> | boolean
   // extensions
-  uploader?: Partial<UploaderOptions> | boolean
+  // uploader?: Partial<UploaderOptions> | boolean
   markdown?: Partial<MarkdownOptions> | boolean
   clipboard?: Partial<ClipboardOptions> | boolean
   blockMenu?: Partial<BlockMenuOptions> | boolean
@@ -111,7 +111,7 @@ export interface StarterKitOptions {
   customDragHandle?: Partial<DragHandleOptions> | boolean
   clickInBottom?: boolean
   copyBlock?: boolean
-  duplicateBlock?: boolean
+  // duplicateBlock?: boolean
   deleteBlock?: boolean
   clearFormat?: boolean
   // tiptap
@@ -150,27 +150,27 @@ export const StarterKit = Extension.create<StarterKitOptions>({
     configure(extensions, ListItem, this.options.listItem) // ☑️
     configure(extensions, TaskList, this.options.taskList) // ☑️
     configure(extensions, TaskItem, this.options.taskItem) // ☑️
-    configure(extensions, Details, this.options.details)
-    configure(extensions, DetailsContent, this.options.detailsContent)
-    configure(extensions, DetailsSummary, this.options.detailsSummary)
-    configure(extensions, Table, this.options.table)
-    configure(extensions, TableRow, this.options.tableRow)
-    configure(extensions, TableCell, this.options.tableCell)
-    configure(extensions, TableHeader, this.options.tableHeader)
-    configure(extensions, Emoji, this.options.emoji)
-    configure(extensions, Embed, this.options.embed)
-    configure(extensions, Image, this.options.image)
-    configure(extensions, Audio, this.options.audio)
-    configure(extensions, Video, this.options.video)
+    // configure(extensions, Details, this.options.details)
+    // configure(extensions, DetailsContent, this.options.detailsContent)
+    // configure(extensions, DetailsSummary, this.options.detailsSummary)
+    // configure(extensions, Table, this.options.table)
+    // configure(extensions, TableRow, this.options.tableRow)
+    // configure(extensions, TableCell, this.options.tableCell)
+    // configure(extensions, TableHeader, this.options.tableHeader)
+    // configure(extensions, Emoji, this.options.emoji)
+    // configure(extensions, Embed, this.options.embed)
+    // configure(extensions, Image, this.options.image)
+    // configure(extensions, Audio, this.options.audio)
+    // configure(extensions, Video, this.options.video)
     configure(extensions, Mermaid, this.options.mermaid) // ☑️
-    configure(extensions, Plantuml, this.options.plantuml)
-    configure(extensions, MathBlock, this.options.mathBlock)
-    configure(extensions, MathInline, this.options.mathInline)
+    // configure(extensions, Plantuml, this.options.plantuml)
+    // configure(extensions, MathBlock, this.options.mathBlock)
+    // configure(extensions, MathInline, this.options.mathInline)
     configure(extensions, Knowledge, this.options.knowledge)
     configure(extensions, Agent, this.options.agent)
     configure(extensions, Metric, this.options.metric)
     // extensions
-    configure(extensions, Uploader, this.options.uploader)
+    // configure(extensions, Uploader, this.options.uploader)
     configure(extensions, Markdown, this.options.markdown) // ☑️
     configure(extensions, Clipboard, this.options.clipboard) // ☑️
     configure(extensions, BlockMenu, this.options.blockMenu) // ☑️
@@ -179,7 +179,7 @@ export const StarterKit = Extension.create<StarterKitOptions>({
     configure(extensions, CustomDragHandle, this.options.customDragHandle) // ☑️
     configure(extensions, ClickInBottom, this.options.clickInBottom) // ☑️
     configure(extensions, CopyBlock, this.options.copyBlock) // ☑️
-    configure(extensions, DuplicateBlock, this.options.duplicateBlock)
+    // configure(extensions, DuplicateBlock, this.options.duplicateBlock)
     configure(extensions, DeleteBlock, this.options.deleteBlock) // ☑️
     // configure(extensions, ClearFormat, this.options.clearFormat)
     // tiptap
