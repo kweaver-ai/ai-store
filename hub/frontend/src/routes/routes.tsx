@@ -2,6 +2,7 @@ import { lazy } from 'react'
 import { SYSTEM_FIXED_APP_ADMIN_USER_ID, SYSTEM_FIXED_NORMAL_USER_ID } from '@/apis/types'
 import applicationsUrl from '@/assets/images/sider/applications.svg'
 import appStoreUrl from '@/assets/images/sider/appStore.svg'
+import projectUrl from '@/assets/images/sider/project.svg'
 import type { RouteConfig } from './types'
 
 const MyApp = lazy(() => import('../pages/MyApp'))
@@ -55,6 +56,7 @@ export const routeConfigs: RouteConfig[] = [
     path: 'studio/project-management',
     key: 'project-management',
     label: '项目管理',
+    iconUrl: projectUrl,
     requiredRoleIds: [SYSTEM_FIXED_NORMAL_USER_ID],
     element: <ProjectManagement />,
     showInSidebar: true,

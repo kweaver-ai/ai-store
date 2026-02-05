@@ -2,17 +2,16 @@ import type { ModalProps } from 'antd'
 import { Form, Input, Modal, message } from 'antd'
 import { useEffect, useState } from 'react'
 import {
-  type CreateNodeParams,
+  type CreateNodeRequest,
   type ObjectType,
-  type ProjectInfo,
+  type Project,
   postApplicationNode,
   postFunctionNode,
   postPageNode,
   postProjects,
-  putApplicationNode,
-  putFunctionNode,
-  putPageNode,
+  putNode,
   putProjects,
+  type UpdateNameDescRequest,
 } from '@/apis'
 import {
   objectDescPlaceholderMap,
@@ -26,9 +25,9 @@ export interface ActionModalProps extends Pick<ModalProps, 'open' | 'onCancel'> 
 
   /** 要编辑的对象信息 */
   objectInfo?: {
-    id: string
+    id: string | number
     name: string
-    description: string
+    description?: string
   }
 
   /** 操作类型 */
@@ -44,7 +43,7 @@ export interface ActionModalProps extends Pick<ModalProps, 'open' | 'onCancel'> 
   parentId?: string | null
 
   /** 项目信息 */
-  projectInfo?: ProjectInfo
+  projectInfo?: Project
 }
 
 /** 新建 编辑 弹窗 */
@@ -88,124 +87,64 @@ const ActionModal = ({
   const handleOk = async () => {
     try {
       const values = await form.validateFields()
-      const baseParams = {
-        name: values.name?.trim(),
-        description: values.description?.trim(),
-      }
-      const params: CreateNodeParams = {
-        ...baseParams,
-        project_id: projectId || '',
-        parent_id: parentId || '',
-      }
+      const name = values.name?.trim() ?? ''
+      const description = values.description?.trim()
+      const updateParams: UpdateNameDescRequest = { name, description }
+      const projectIdNum = projectId ? Number(projectId) : 0
+      const parentIdNum = parentId ? Number(parentId) : undefined
       setLoading(true)
       let result: any
-      // TODO: 调用 API 创建/编辑节点
       if (objectType === 'project') {
         if (operationType === 'add') {
-          // result = await postProjects(baseParams)
-          result = {
-            id: `project_${Math.random().toString(36).substring(2, 15)}`,
-            name: values.name,
-            description: values.description,
-            type: objectType,
-            parent_id: parentId || null,
-            creator: '123',
-            created_at: new Date().toISOString(),
-            editor: '123',
-            edited_at: new Date().toISOString(),
-          }
+          const projectResult = await postProjects({ name, description })
+          await postApplicationNode({
+            project_id: projectResult.id,
+            name,
+            description,
+          })
+          result = projectResult
         } else if (operationType === 'edit' && objectInfo) {
-          result = await putProjects(objectInfo.id, baseParams)
+          result = await putProjects(objectInfo.id, updateParams)
         }
       } else if (objectType === 'application') {
         if (operationType === 'add') {
-          // result = await postApplicationNode(params)
-          result = {
-            id: `app_${Math.random().toString(36).substring(2, 15)}`,
-            name: values.name,
-            type: objectType,
-            parent_id: parentId || null,
-            description: values.description,
-            creator: '123',
-            created_at: new Date().toISOString(),
-            editor: '123',
-            edited_at: new Date().toISOString(),
+          const params: CreateNodeRequest = {
+            project_id: projectIdNum,
+            name,
+            description,
           }
+          result = await postApplicationNode(params)
         } else if (operationType === 'edit' && objectInfo) {
-          // result = await putApplicationNode(objectInfo.id, params)
-          result = {
-            id: objectInfo.id,
-            name: values.name,
-            type: objectType,
-            parent_id: parentId || null,
-            description: values.description,
-            creator: '123',
-            created_at: new Date().toISOString(),
-            editor: '123',
-            edited_at: new Date().toISOString(),
-          }
+          result = await putNode(objectInfo.id, updateParams)
         }
       } else if (objectType === 'page') {
-        if (operationType === 'add') {
-          // result = await postPageNode(params)
-          result = {
-            id: `page_${Math.random().toString(36).substring(2, 15)}`,
-            name: values.name,
-            type: objectType,
-            parent_id: parentId || null,
-            description: values.description,
-            creator: '123',
-            created_at: new Date().toISOString(),
-            editor: '123',
-            edited_at: new Date().toISOString(),
+        if (operationType === 'add' && parentIdNum != null) {
+          const params: CreateNodeRequest = {
+            project_id: projectIdNum,
+            parent_id: parentIdNum,
+            name,
+            description,
           }
+          result = await postPageNode(params)
         } else if (operationType === 'edit' && objectInfo) {
-          // result = await putPageNode(objectInfo.id, params)
-          result = {
-            id: objectInfo.id,
-            name: values.name,
-            type: objectType,
-            parent_id: parentId || null,
-            description: values.description,
-            creator: '123',
-            created_at: new Date().toISOString(),
-            editor: '123',
-            edited_at: new Date().toISOString(),
-          }
+          result = await putNode(objectInfo.id, updateParams)
         }
       } else if (objectType === 'function') {
-        if (operationType === 'add') {
-          // result = await postFunctionNode(params)
-          result = {
-            id: `func_${Math.random().toString(36).substring(2, 15)}`,
-            name: values.name,
-            type: objectType,
-            parent_id: parentId || null,
-            description: values.description,
-            creator: '123',
-            created_at: new Date().toISOString(),
-            editor: '123',
-            edited_at: new Date().toISOString(),
+        if (operationType === 'add' && parentIdNum != null) {
+          const params: CreateNodeRequest = {
+            project_id: projectIdNum,
+            parent_id: parentIdNum,
+            name,
+            description,
           }
+          result = await postFunctionNode(params)
         } else if (operationType === 'edit' && objectInfo) {
-          // result = await putFunctionNode(objectInfo.id, params)
-          result = {
-            id: objectInfo.id,
-            name: values.name,
-            type: objectType,
-            parent_id: parentId || null,
-            description: values.description,
-            creator: '123',
-            created_at: new Date().toISOString(),
-            editor: '123',
-            edited_at: new Date().toISOString(),
-          }
+          result = await putNode(objectInfo.id, updateParams)
         }
       }
       messageApi.success(
         `${operationType === 'add' ? '新建' : '编辑'}${objectTypeNameMap(objectType)}成功`,
       )
-      // 传递完整的节点信息（包含 id、name、description）
       onSuccess(result)
       onCancel?.(undefined as any)
     } catch (err: any) {

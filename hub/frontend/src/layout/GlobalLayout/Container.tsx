@@ -16,6 +16,9 @@ interface ContainerProps {
   children: ReactNode
 }
 
+const SIDER_WIDTH = 240
+const SIDER_COLLAPSED_WIDTH = 60
+
 const Container = ({ children }: ContainerProps) => {
   const [collapsed, setCollapsed] = useState(false)
   const matches = useMatches()
@@ -65,23 +68,57 @@ const Container = ({ children }: ContainerProps) => {
       {/* Header 决策 */}
       {hasHeader && <Header headerType={headerType} />}
 
-      <Layout style={{ backgroundImage: `url(${bg})` }} className="bg-no-repeat bg-cover">
-        {hasSider && (
-          <Sider
-            collapsed={collapsed}
-            onCollapse={setCollapsed}
-            topOffset={hasHeader ? headerHeight : 0}
-            type={siderType}
-          />
-        )}
-        <Layout
-          className="transition-all duration-200 overflow-auto bg-transparent"
+      <Layout
+        style={{
+          backgroundImage: `url(${bg})`,
+          // display: 'flex',
+          // flexDirection: 'row',
+          // flex: 1,
+          // minHeight: 0,
+        }}
+        className="bg-no-repeat bg-cover"
+      >
+        {/* 主内容区首帧即预留左侧空间，避免 Sider 挂载后产生 CLS */}
+        <div
           style={{
-            height: hasHeader ? `calc(100vh - ${headerHeight}px)` : '100vh',
+            position: 'relative',
+            flex: 1,
+            minWidth: 0,
+            minHeight: 0,
           }}
         >
-          <Content className="relative bg-transparent min-w-[1040px] m-0">{children}</Content>
-        </Layout>
+          {hasSider && (
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: collapsed ? SIDER_COLLAPSED_WIDTH : SIDER_WIDTH,
+                transition: 'width 0.2s',
+              }}
+            >
+              <Sider
+                collapsed={collapsed}
+                onCollapse={setCollapsed}
+                topOffset={hasHeader ? headerHeight : 0}
+                type={siderType}
+              />
+            </div>
+          )}
+          <div
+            style={{
+              marginLeft: hasSider ? (collapsed ? SIDER_COLLAPSED_WIDTH : SIDER_WIDTH) : 0,
+              height: hasHeader ? `calc(100vh - ${headerHeight}px)` : '100vh',
+              transition: 'margin-left 0.2s',
+            }}
+            className="overflow-auto bg-transparent"
+          >
+            <Layout className="h-full overflow-auto bg-transparent">
+              <Content className="relative bg-transparent min-w-[1040px] m-0">{children}</Content>
+            </Layout>
+          </div>
+        </div>
       </Layout>
     </Layout>
   )

@@ -21,14 +21,7 @@ import { Layout, Menu, Modal, message } from 'antd'
 import clsx from 'clsx'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import {
-  deleteApplicationNode,
-  deleteFunctionNode,
-  deletePageNode,
-  moveNode,
-  type NodeInfo,
-  type NodeType,
-} from '@/apis'
+import { deleteNode, moveNode, type Node, type NodeType } from '@/apis'
 import DictionaryIcon from '@/assets/images/project/dictionary.svg?react'
 import ActionModal from '@/components/ProjectActionModal/ActionModal'
 import { hasAnyDevMode, isNodeInDevMode } from '@/pages/ProjectManagement/devMode'
@@ -305,12 +298,6 @@ const ProjectSider = ({
         return
       }
 
-      const deleteApiMap: Record<NodeType, (nodeId: string) => Promise<void>> = {
-        application: deleteApplicationNode,
-        page: deletePageNode,
-        function: deleteFunctionNode,
-      }
-
       modal.confirm({
         title: '确认删除',
         content: `确定要删除${objectTypeNameMap(item.type)} "${item.name}" 吗？删除后无法恢复。`,
@@ -326,7 +313,7 @@ const ProjectSider = ({
         ),
         onOk: async () => {
           try {
-            await deleteApiMap[item.type](item.id)
+            await deleteNode(item.id)
             messageApi.success('删除成功')
 
             // 从 store 中移除节点
@@ -352,14 +339,11 @@ const ProjectSider = ({
       const parentItem = parentId ? findItemDeep(newItems, parentId) : null
       const list = parentItem ? parentItem.children : newItems
       const itemIndex = list.findIndex((c) => c.id === id)
-      let next_id = ''
-      if (itemIndex < list.length - 1) {
-        next_id = list[itemIndex + 1].id
-      }
+      const predecessorId = itemIndex > 0 ? list[itemIndex - 1].id : null
       await moveNode({
-        node_id: id,
-        target_parent_id: parentId,
-        next_id,
+        node_id: Number(id),
+        new_parent_id: parentId ? Number(parentId) : null,
+        predecessor_node_id: predecessorId ? Number(predecessorId) : null,
       })
       setTreeData(newItems)
     } catch (error: any) {
@@ -369,25 +353,18 @@ const ProjectSider = ({
 
   /** 处理 ActionModal 成功回调 */
   const handleActionModalSuccess = useCallback(
-    (result: NodeInfo) => {
+    (result: Node) => {
       if (actionModalType === 'add') {
         // 新建节点
 
         if (actionParentId) {
-          // 创建新的 NodeInfo（简化版，实际应该从 API 返回中获取完整信息）
-          const newNodeInfo: NodeInfo = {
-            ...result,
-            project_id: projectId,
-            parent_id: actionParentId,
-          }
+          addNode(result)
 
-          // 添加到 store
-          addNode(newNodeInfo)
-
-          // 自动选中新创建的节点
           const parentItem = flattenedItems.find((item) => item.id === actionParentId)
           const newItem: FlattenedItem = {
-            ...result,
+            id: String(result.id),
+            name: result.name,
+            type: result.node_type,
             parentId: actionParentId,
             depth: parentItem ? parentItem.depth + 1 : 0,
             collapsed: false,
@@ -398,11 +375,11 @@ const ProjectSider = ({
         }
       } else if (actionModalType === 'edit') {
         // 编辑节点
-        updateNodeInfo(result.id, result)
+        updateNodeInfo(String(result.id), result)
 
         // 如果当前节点是选中状态，同步更新 store（updateNodeInfo 已更新 nodeMap，直接传 id 即可）
-        if (selectedNode?.nodeId === result.id) {
-          setSelectedNode(result.id)
+        if (selectedNode?.nodeId === String(result.id)) {
+          setSelectedNode(String(result.id))
         }
       }
     },
@@ -755,6 +732,8 @@ const ProjectSider = ({
           operationType={actionModalType}
           objectType={actionObjectType}
           objectInfo={actionObjectInfo || undefined}
+          parentId={actionParentId || undefined}
+          projectId={projectId || undefined}
         />
       </div>
     </AntdSider>

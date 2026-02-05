@@ -17,7 +17,7 @@ const MyApp = () => {
     useApplicationsService()
   const { togglePin } = usePreferenceStore()
   const navigate = useNavigate()
-  const [messageApi, messageContextHolder] = message.useMessage()
+  const [, messageContextHolder] = message.useMessage()
   const [hasLoadedData, setHasLoadedData] = useState(false) // 记录是否已经成功加载过数据（有数据的情况）
   const hasEverHadDataRef = useRef(false) // 使用 ref 追踪是否曾经有过数据，避免循环依赖
   const prevSearchValueRef = useRef('') // 追踪上一次的搜索值，用于判断是否是从搜索状态清空
@@ -146,7 +146,8 @@ const MyApp = () => {
           </div>
         )}
       </div>
-      {renderContent()}
+      {/* 预留占位，避免 loading→列表 切换时产生 CLS */}
+      <div className="flex-1 min-h-0 relative flex flex-col">{renderContent()}</div>
     </div>
   )
 }

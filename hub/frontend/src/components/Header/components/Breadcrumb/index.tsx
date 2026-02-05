@@ -92,22 +92,26 @@ export const Breadcrumb = ({ type, items = [], onNavigate, lastItemSuffix }: Bre
                   <Button
                     size="small"
                     type="text"
-                    className={`font-medium hover:!bg-transparent hover:!cursor-default ${type === 'micro-app' ? '' : 'px-1'}`}
+                    className={`max-w-[200px] font-medium hover:!bg-transparent hover:!cursor-default ${type === 'micro-app' ? '' : 'px-1'}`}
                     disabled={isDisabled}
                   >
                     {hasIcon && renderIcon(item.icon, item.name)}
-                    {item.name}
+                    <span className="truncate" title={item.name}>
+                      {item.name}
+                    </span>
                   </Button>
                 ) : (
                   <Button
                     size="small"
                     type="text"
-                    className={`${type === 'micro-app' ? '' : 'px-1'}`}
+                    className={`max-w-[200px] ${type === 'micro-app' ? '' : 'px-1'}`}
                     onClick={(e) => !isDisabled && handleNavigate(item, e)}
                     disabled={isDisabled}
                   >
                     {hasIcon && renderIcon(item.icon, item.name)}
-                    {item.name}
+                    <span className="truncate" title={item.name}>
+                      {item.name}
+                    </span>
                   </Button>
                 )}
                 {/* 最后一项后面的自定义内容 */}

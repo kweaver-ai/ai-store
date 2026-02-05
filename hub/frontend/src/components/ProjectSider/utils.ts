@@ -1,7 +1,7 @@
 /* eslint-disable no-continue */
 /* eslint-disable no-restricted-syntax */
 import { arrayMove } from '@dnd-kit/sortable'
-import type { NodeInfo, NodeType } from '@/apis'
+import type { Node, NodeType } from '@/apis'
 
 export interface TreeItem {
   id: string
@@ -155,46 +155,43 @@ export function findItemDeep(items: TreeItems, itemId: string): TreeItem | undef
   return undefined
 }
 
+/** 将节点 id 转为 string（TreeItem/React key 使用） */
+function toIdStr(id: number | string): string {
+  return String(id)
+}
+
 /**
- * 将 NodeInfo 数组转换为树结构
+ * 将 Node 数组转换为树结构
  */
-export function convertNodeInfoToTree(nodes: NodeInfo[]): TreeItems {
-  // 构建节点映射
-  const nodeMap = new Map<string, NodeInfo>()
+export function convertNodeInfoToTree(nodes: Node[]): TreeItems {
+  const nodeMap = new Map<string, Node>()
   nodes.forEach((node) => {
-    nodeMap.set(node.id, node)
+    nodeMap.set(toIdStr(node.id), node)
   })
 
-  // 构建树结构
   const treeMap = new Map<string, TreeItem>()
   const rootNodes: TreeItem[] = []
 
-  // 第一遍：创建所有节点
   nodes.forEach((node) => {
-    treeMap.set(node.id, {
-      id: node.id,
+    treeMap.set(toIdStr(node.id), {
+      id: toIdStr(node.id),
       name: node.name,
-      type: node.type,
+      type: node.node_type,
       children: [],
     })
   })
 
-  // 第二遍：建立父子关系
   nodes.forEach((node) => {
-    const treeNode = treeMap.get(node.id)
-    if (!treeNode) {
-      return
-    }
-    if (node.parent_id) {
-      const parent = treeMap.get(node.parent_id)
+    const treeNode = treeMap.get(toIdStr(node.id))
+    if (!treeNode) return
+    if (node.parent_id != null) {
+      const parent = treeMap.get(toIdStr(node.parent_id))
       if (parent) {
         parent.children.push(treeNode)
       } else {
-        // 父节点不存在，作为根节点
         rootNodes.push(treeNode)
       }
     } else {
-      // 没有父节点，作为根节点
       rootNodes.push(treeNode)
     }
   })

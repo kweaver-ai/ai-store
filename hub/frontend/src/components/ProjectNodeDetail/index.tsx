@@ -34,9 +34,10 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
   const [devMode, setDevMode] = useState<boolean>(false)
   const [activeTab, setActiveTab] = useState<NodeDetailTabKey>(NodeDetailTabKey.Detail)
   const [loadStatus, setLoadStatus] = useState<LoadStatus>(LoadStatus.Empty)
+  const [initialContent, setInitialContent] = useState<any>({})
   const [content, setContent] = useState<any>({})
-  /** 加载根节点时保存初始内容 */
-  const initialContent = useRef<any>({})
+  const contentRef = useRef(content)
+  contentRef.current = content
 
   /** 节点是否处于开发模式 */
   const nodeInDevMode = useMemo(() => {
@@ -73,20 +74,27 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
 
   const fetchDocument = useCallback(async () => {
     if (loadStatus === LoadStatus.Loading) return
+    const documentId = nodeInfo?.document_id
+    if (!documentId) {
+      setContent({})
+      setInitialContent({})
+      setLoadStatus(LoadStatus.Normal)
+      return
+    }
     try {
       setLoadStatus(LoadStatus.Loading)
-      const res = await getDocument(nodeId)
-      const docContent = res.content || {}
-      setContent(docContent)
+      const res = await getDocument(documentId)
+      setContent(res || {})
+      setInitialContent(res || {})
     } catch {
       setLoadStatus(LoadStatus.Failed)
     } finally {
       setLoadStatus(LoadStatus.Normal)
     }
-  }, [nodeId])
+  }, [nodeId, nodeInfo?.document_id])
 
   useEffect(() => {
-    if (!nodeInfo || nodeInfo.type !== 'function') return
+    if (!nodeInfo || nodeInfo.node_type !== 'function') return
     fetchDocument()
   }, [nodeId, nodeInfo, fetchDocument])
 
@@ -113,49 +121,69 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
     }
   }
 
-  const saveDocument = async (newContent: any) => {
-    if (nodeInDevMode) return
-    // 计算差分（patches）
-    const patches = jsonpatch.compare(content || {}, newContent)
-    if (patches.length === 0) return // 没有变化
-    // 发送增量指令
-    try {
-      await putDocument(nodeId, patches)
-      setContent(newContent)
-    } catch (error: any) {
-      if (error?.description) {
-        messageApi.error(error.description)
-      } else {
-        messageApi.error('保存失败')
-      }
-    }
-  }
+  const saveDocument = useCallback(
+    async (newContent: any) => {
+      if (nodeInDevMode) return
+      const documentId = nodeInfo?.document_id
+      if (!documentId) return
+      const baseContent = contentRef.current
+      const patches = jsonpatch.compare(baseContent || {}, newContent)
+      if (patches.length === 0) return
 
-  const scheduleSaveDocument = debounce(async (newContent: any) => {
-    saveDocument(newContent)
-  }, 800)
+      const maxRetries = 3
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          await putDocument(documentId, patches as any)
+          setContent(newContent)
+          return
+        } catch {
+          if (attempt === maxRetries) {
+            messageApi.error('保存失败，请稍后重试')
+          } else {
+            await new Promise((r) => setTimeout(r, 500 * attempt))
+          }
+        }
+      }
+    },
+    [nodeInDevMode, nodeInfo?.document_id, messageApi],
+  )
+
+  const scheduleSaveDocument = useMemo(
+    () =>
+      debounce((newContent: any) => {
+        saveDocument(newContent)
+      }, 800),
+    [saveDocument],
+  )
+
+  useEffect(() => {
+    return () => {
+      scheduleSaveDocument.flush()
+      scheduleSaveDocument.cancel()
+    }
+  }, [scheduleSaveDocument])
 
   const handleUpdate = (newContent: any) => {
-    /** 如果初始内容为空，则保存初始内容 */
-    if (!initialContent.current?.type) {
-      initialContent.current = newContent
-      saveDocument(newContent)
-      return
-    }
+    // /** 如果初始内容为空，则保存初始内容 */
+    // if (!initialContent.current?.type) {
+    //   initialContent.current = newContent
+    //   saveDocument(newContent)
+    //   return
+    // }
     /** 如果初始内容不为空，则进行差分保存 */
     scheduleSaveDocument(newContent)
   }
 
   /** 获取节点详情tabs */
   const tabItems = useMemo(() => {
-    if (nodeInfo?.type === 'function') {
+    if (nodeInfo?.node_type === 'function') {
       return [
         { label: '详情', key: NodeDetailTabKey.Detail },
         { label: '设计文档', key: NodeDetailTabKey.Document },
       ]
     }
     return [{ label: '详情', key: NodeDetailTabKey.Detail }]
-  }, [nodeInfo?.type])
+  }, [nodeInfo?.node_type])
 
   if (!nodeInfo) {
     return (
@@ -165,7 +193,9 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
     )
   }
 
-  const prompt = `你是「${nodeInfo.name}」能力的专家，请结合项目上下文，输出清晰、可执行的方案或建议。`
+  const prompt = `读取当前 DIP Studio 节点下的设计文档和上下文，完成下面的开发任务。
+
+node_id: ${nodeId}`
 
   const handleCopy = () => {
     navigator.clipboard.writeText(prompt)
@@ -217,7 +247,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
         <div className="flex gap-2">
           <div className="text-base font-medium text-[--dip-text-color]">{nodeInfo.name}</div>
           <div className="border-[#BAE0FF] border text-[#1677FF] rounded bg-[#E6F4FF] text-xs flex justify-center items-center px-2 h-6 shrink-0">
-            {objectTypeNameMap(nodeInfo.type)}
+            {objectTypeNameMap(nodeInfo.node_type)}
           </div>
         </div>
         <div className="flex gap-2 shrink-0 items-center h-6">
@@ -279,7 +309,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
                 },
                 {
                   label: '创建者',
-                  children: nodeInfo.creator || '--',
+                  children: nodeInfo.creator_name || '--',
                 },
                 {
                   label: '创建时间',
@@ -287,7 +317,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
                 },
                 {
                   label: '编辑者',
-                  children: nodeInfo.editor || '--',
+                  children: nodeInfo.editor_name || '--',
                 },
                 {
                   label: '编辑时间',
@@ -303,7 +333,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
           {activeTab === NodeDetailTabKey.Document &&
             (loadStatus === LoadStatus.Normal ? (
               <TiptapEditor
-                content={content}
+                initialContent={initialContent}
                 onUpdate={handleUpdate}
                 readOnly={nodeInDevMode}
                 placeholder="请描述该功能...（输入/ 可引用 业务知识网络、决策智能体、指标）"
