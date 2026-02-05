@@ -122,7 +122,7 @@ def create_refresh_token_router(
                     refresh_result.refresh_token,
                     max_age=settings.cookie_timeout,
                     domain=settings.cookie_domain if settings.cookie_domain else None,
-                    httponly=True,
+                    httponly=False,  # 允许前端访问 refresh_token
                 )
 
             logger.info(f"Token 刷新成功: {session_id}")
