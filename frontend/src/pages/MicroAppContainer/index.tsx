@@ -1,40 +1,62 @@
 import { Spin } from 'antd'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getApplicationsBasicInfo } from '@/apis'
 import Empty from '@/components/Empty'
+import { getFirstVisibleRouteBySiderType } from '@/routes/utils'
 import { getFullPath } from '@/utils/config'
 import { setMicroAppGlobalState } from '@/utils/micro-app/globalState'
 import MicroAppComponent from '../../components/MicroAppComponent'
-import { type CurrentMicroAppInfo, useMicroAppStore } from '../../stores/microAppStore'
+import { useMicroAppStore } from '../../stores/microAppStore'
 
 const MicroAppContainer = () => {
   const { appId } = useParams<{ appId: string }>()
-  const [appBasicInfo, setAppBasicInfo] = useState<CurrentMicroAppInfo | null>(null)
+  const idNum = useMemo(() => (appId ? Number(appId) : NaN), [appId])
+  // 移除对 URL 参数的读取，改由纯 Store 驱动，防止微应用篡改
+  const currentMicroApp = useMicroAppStore((state) => state.currentMicroApp)
+  const setCurrentMicroApp = useMicroAppStore((state) => state.setCurrentMicroApp)
+  const clearCurrentMicroApp = useMicroAppStore((state) => state.clearCurrentMicroApp)
+  const appSourceMap = useMicroAppStore((state) => state.appSourceMap)
+
+  // 这里的优先级是：Store 记录 > 默认 'home'
+  // 不再信任 URL 中的 ?type= 动态参数
+  const type = (!Number.isNaN(idNum) ? appSourceMap[idNum] : null) || 'home'
+
+  // 根据 type 计算 homeRoute
+  const homeRoute = useMemo(() => {
+    if (type === 'home') {
+      return getFullPath('/')
+    }
+
+    // 对于 store 或 studio，获取第一个可见路由
+    const roleIds = new Set<string>([]) // TODO: 从实际角色系统获取
+    const firstRoute = getFirstVisibleRouteBySiderType(type, roleIds)
+    if (firstRoute?.path) {
+      return getFullPath(`/${firstRoute.path}`)
+    }
+
+    // 兜底逻辑
+    return getFullPath(`/${type === 'store' ? 'store/my-app' : 'studio/project-management'}`)
+  }, [type])
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { setCurrentMicroApp, clearCurrentMicroApp } = useMicroAppStore()
 
   useEffect(() => {
     const fetchApp = async () => {
-      if (!appId) {
+      if (Number.isNaN(idNum)) {
         setError('获取应用失败')
         setLoading(false)
         return
       }
 
       try {
-        const appData = await getApplicationsBasicInfo(Number(appId))
+        setLoading(true)
+        const appData = await getApplicationsBasicInfo(idNum)
         if (!appData) {
           setError('获取应用配置失败')
         } else {
-          setAppBasicInfo({
-            ...appData,
-            routeBasename: getFullPath(`/application/${appData.id}`),
-          })
-          // 设置微应用信息到 store
-          // routeBasename 需要包含 BASE_PATH 前缀，因为微应用的路由系统是独立的
-          // 需要知道浏览器中的完整路径才能正确匹配路由
+          // 统一保存在全局 Store 中，组件直接从 Store 读取
           setCurrentMicroApp({
             ...appData,
             routeBasename: getFullPath(`/application/${appData.id}`),
@@ -55,7 +77,6 @@ const MicroAppContainer = () => {
 
     // 清理函数
     return () => {
-      setAppBasicInfo(null)
       setError(null)
       setLoading(false)
       // 清理微应用信息和面包屑
@@ -67,8 +88,7 @@ const MicroAppContainer = () => {
         { allowAllFields: true },
       )
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appId])
+  }, [idNum, clearCurrentMicroApp, setCurrentMicroApp])
 
   const renderContent = () => {
     if (loading) {
@@ -78,14 +98,14 @@ const MicroAppContainer = () => {
         </div>
       )
     }
-    if (error || !appBasicInfo) {
+    if (error || !currentMicroApp) {
       return (
         <div className="absolute inset-0 flex justify-center items-center">
           <Empty type="failed" title="加载失败" subDesc={error ?? ''} />
         </div>
       )
     }
-    return <MicroAppComponent appBasicInfo={appBasicInfo} />
+    return <MicroAppComponent appBasicInfo={currentMicroApp} homeRoute={homeRoute} />
   }
 
   return (

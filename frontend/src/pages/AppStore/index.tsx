@@ -11,7 +11,7 @@ import Empty from '@/components/Empty'
 import IconFont from '@/components/IconFont'
 import SearchInput from '@/components/SearchInput'
 import { useApplicationsService } from '@/hooks/useApplicationsService'
-import { usePreferenceStore } from '@/stores'
+import { useMicroAppStore, usePreferenceStore } from '@/stores'
 import styles from './index.module.less'
 import { AppStoreActionEnum } from './types'
 import { getAppStoreMenuItems } from './utils'
@@ -20,6 +20,7 @@ const AppStore = () => {
   const { apps, loading, error, searchValue, handleSearch, handleRefresh } =
     useApplicationsService()
   const { unpinMicroApp } = usePreferenceStore()
+  const { setAppSource } = useMicroAppStore()
   const navigate = useNavigate()
   const [messageApi, messageContextHolder] = message.useMessage()
   const [installModalVisible, setInstallModalVisible] = useState(false)
@@ -102,6 +103,7 @@ const AppStore = () => {
 
           /** 运行应用 */
           case AppStoreActionEnum.Run:
+            setAppSource(_app.id, 'store')
             navigate(`/application/${_app.id}`)
             break
 

@@ -193,12 +193,32 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
     )
   }
 
-  const prompt = `读取当前 DIP Studio 节点下的设计文档和上下文，完成下面的开发任务。
+  const prompt = `读取当前 DIP Studio 节点下的设计文档和上下文，完成下面的开发任务。node_id: ${nodeId}`
 
-node_id: ${nodeId}`
+  // 判断 host 是否为 IP 地址（IPv4 或 IPv6）
+  const isIPAddress = (host: string): boolean => {
+    // IPv6 地址通常包含方括号，如 [::1] 或 [2001:db8::1]
+    if (host.startsWith('[') && host.includes(']')) {
+      return true
+    }
+    // IPv4 地址正则：匹配 0.0.0.0 到 255.255.255.255
+    const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/
+    if (ipv4Regex.test(host)) {
+      // 验证每个数字段是否在 0-255 范围内
+      const parts = host.split('.')
+      return parts.every((part) => {
+        const num = parseInt(part, 10)
+        return num >= 0 && num <= 255
+      })
+    }
+    return false
+  }
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(prompt)
+  const protocol = isIPAddress(window.location.host) ? 'http' : 'https'
+  const url = `"url" : "${protocol}://${window.location.host}/dip-studio/mcp"`
+
+  const handleCopy = (value: string) => {
+    navigator.clipboard.writeText(value)
     messageApi.success('复制成功')
   }
 
@@ -211,11 +231,19 @@ node_id: ${nodeId}`
       </div>
       <div className="text-xs leading-5 text-[--dip-text-color] bg-[#779EEA1A] border border-dashed border-[#779EEA] px-2.5 py-2 mb-6">
         {prompt}
+        <div className="flex justify-end">
+          <Button type="primary" onClick={() => handleCopy(prompt)} size="small">
+            一键复制
+          </Button>
+        </div>
       </div>
-      <div className="flex justify-end">
-        <Button type="primary" onClick={handleCopy}>
-          一键复制
-        </Button>
+      <div className="text-xs leading-5 text-[--dip-text-color] bg-[#779EEA1A] border border-dashed border-[#779EEA] px-2.5 py-2 mb-6">
+        {url}
+        <div className="flex justify-end">
+          <Button type="primary" onClick={() => handleCopy(url)} size="small">
+            一键复制
+          </Button>
+        </div>
       </div>
     </div>
   )

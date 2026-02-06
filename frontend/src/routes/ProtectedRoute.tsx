@@ -132,9 +132,21 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }, [token, isLoginPage, fetchUserInfo, skipAuth])
 
   // 用户已登录且通过路由守卫时，确保刷新后拉取一次 pinned 列表（带内部去重）
+  // 增加 focus 监听，确保在多标签页场景下（如在 AI Store 标签页操作后回到首页）能及时同步状态
   useEffect(() => {
-    if (!skipAuth && token && userInfo) {
-      fetchPinnedMicroApps()
+    const refresh = () => {
+      if (!skipAuth && token && userInfo) {
+        fetchPinnedMicroApps()
+      }
+    }
+
+    // 初次加载
+    refresh()
+
+    // 监听窗口聚焦
+    window.addEventListener('focus', refresh)
+    return () => {
+      window.removeEventListener('focus', refresh)
     }
   }, [skipAuth, token, userInfo, fetchPinnedMicroApps])
 

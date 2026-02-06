@@ -1,8 +1,7 @@
 import { PushpinOutlined } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
-import { Dropdown, Menu, message, Tooltip } from 'antd'
+import { Menu, message, Popover, Tooltip } from 'antd'
 import clsx from 'classnames'
-import type React from 'react'
 import { useCallback, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import logoImage from '@/assets/images/brand/logo.png'
@@ -10,7 +9,7 @@ import SidebarAiStoreIcon from '@/assets/images/sider/aiStore.svg?react'
 import SidebarDipStudioIcon from '@/assets/images/sider/dipStudio.svg?react'
 import SidebarSystemIcon from '@/assets/images/sider/proton.svg?react'
 import { getFirstVisibleRouteBySiderType } from '@/routes/utils'
-import { usePreferenceStore } from '@/stores'
+import { useMicroAppStore, usePreferenceStore } from '@/stores'
 import { useLanguageStore } from '@/stores/languageStore'
 import { useOEMConfigStore } from '@/stores/oemConfigStore'
 import { getFullPath } from '@/utils/config'
@@ -37,15 +36,21 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
   const location = useLocation()
   const [messageApi, messageContextHolder] = message.useMessage()
   const { pinnedMicroApps, unpinMicroApp, wenshuAppInfo } = usePreferenceStore()
+  const { setAppSource } = useMicroAppStore()
   const { language } = useLanguageStore()
   const { getOEMResourceConfig } = useOEMConfigStore()
   const oemResourceConfig = getOEMResourceConfig(language)
   // TODO: 角色信息需要从其他地方获取，暂时使用空数组
   const roleIds = useMemo(() => new Set<string>([]), [])
 
-  const handleOpenApp = useCallback((appId: number) => {
-    navigate(`/application/${appId}`)
-  }, [])
+  const handleOpenApp = useCallback(
+    (appId: number) => {
+      // 记录来源类型，并在容器中根据 Store 读取，不再依赖 URL 参数
+      setAppSource(appId, 'home')
+      navigate(`/application/${appId}`)
+    },
+    [navigate, setAppSource],
+  )
 
   const handleUnpin = useCallback(
     async (appId: number) => {
@@ -60,18 +65,6 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
     [unpinMicroApp],
   )
 
-  const handleNavLinkClick = useCallback(
-    (event: React.MouseEvent<HTMLAnchorElement>, path: string) => {
-      // 支持浏览器新标签页/新窗口（Ctrl+Click / Cmd+Click / 中键等）由浏览器接管
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.button === 1) {
-        return
-      }
-      // 默认行为改为 SPA 内部跳转
-      event.preventDefault()
-      navigate(path)
-    },
-    [navigate],
-  )
 
   const menuItems = useMemo<MenuProps['items']>(() => {
     const items: MenuProps['items'] = []
@@ -97,27 +90,15 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
           label: (
             <div className="w-full h-full flex justify-between items-center">
               {app.name}
-              <Dropdown
-                menu={{
-                  items: [
-                    {
-                      key: 'unpin',
-                      label: '取消固定',
-                      onClick: (e: any) => {
-                        e.domEvent.stopPropagation()
-                        handleUnpin(app.id)
-                      },
-                      icon: <PushpinOutlined className="text-[var(--dip-warning-color)]" />,
-                    },
-                  ],
-                }}
-                trigger={['click']}
-              >
+              <Popover content="取消固定">
                 <PushpinOutlined
                   className="w-6 h-6 text-base flex items-center justify-center rounded text-[var(--dip-warning-color)] pin-icon opacity-0 hover:bg-[rgba(0,0,0,0.04)]"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleUnpin(app.id)
+                  }}
                 />
-              </Dropdown>
+              </Popover>
             </div>
           ),
           icon: <AppIcon icon={app.icon} name={app.name} size={16} shape="square" />,
@@ -131,8 +112,7 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
   const externalMenuItems = useMemo<MenuProps['items']>(() => {
     const firstStoreRoute = getFirstVisibleRouteBySiderType('store', roleIds)
     const firstStudioRoute = getFirstVisibleRouteBySiderType('studio', roleIds)
-    const baseOrigin =
-      process.env.NODE_ENV === 'development' ? 'https://10.4.134.26' : window.location.origin
+    const baseOrigin = window.location.origin
     const getExternalUrl = (path: string) => `${baseOrigin}${path}`
 
     const storePath = `/${firstStoreRoute?.path || 'store/my-app'}`
@@ -170,7 +150,7 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
       {
         key: 'ai-store',
         label: (
-          <a href={storeHref} onClick={(e) => handleNavLinkClick(e, storePath)}>
+          <a href={storeHref} target="_blank" rel="noopener noreferrer">
             AI Store
           </a>
         ),
@@ -179,7 +159,7 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
       {
         key: 'dip-studio',
         label: (
-          <a href={studioHref} onClick={(e) => handleNavLinkClick(e, studioPath)}>
+          <a href={studioHref} target="_blank" rel="noopener noreferrer">
             DIP Studio
           </a>
         ),
@@ -188,7 +168,7 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
       {
         key: 'data-platform',
         label: (
-          <a href={ssoUrl} target="_self" rel="noopener noreferrer">
+          <a href={ssoUrl} target="_blank" rel="noopener noreferrer">
             业务知识网络
           </a>
         ),
@@ -204,7 +184,7 @@ const HomeSider = ({ collapsed, onCollapse }: HomeSiderProps) => {
         icon: <SidebarSystemIcon />,
       },
     ]
-  }, [roleIds, handleNavLinkClick])
+  }, [roleIds])
 
   // 获取 OEM logo，如果获取不到则使用默认 logo
   const logoUrl = useMemo(() => {
