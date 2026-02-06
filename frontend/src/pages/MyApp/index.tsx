@@ -8,7 +8,7 @@ import { ModeEnum } from '@/components/AppList/types'
 import Empty from '@/components/Empty'
 import SearchInput from '@/components/SearchInput'
 import { useApplicationsService } from '@/hooks/useApplicationsService'
-import { usePreferenceStore } from '@/stores'
+import { useMicroAppStore, usePreferenceStore } from '@/stores'
 import { MyAppActionEnum } from './types'
 import { getMyAppMenuItems } from './utils'
 
@@ -16,6 +16,7 @@ const MyApp = () => {
   const { apps, updateApp, loading, error, searchValue, handleSearch, handleRefresh } =
     useApplicationsService()
   const { togglePin } = usePreferenceStore()
+  const { setAppSource } = useMicroAppStore()
   const navigate = useNavigate()
   const [, messageContextHolder] = message.useMessage()
   const [hasLoadedData, setHasLoadedData] = useState(false) // 记录是否已经成功加载过数据（有数据的情况）
@@ -69,6 +70,7 @@ const MyApp = () => {
           break
         }
         case MyAppActionEnum.Use:
+          setAppSource(_app.id, 'store')
           navigate(`/application/${_app.id}`)
           break
         default:

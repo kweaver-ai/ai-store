@@ -1,12 +1,18 @@
-import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons'
+import { MenuFoldOutlined, MenuUnfoldOutlined, PushpinOutlined } from '@ant-design/icons'
 import type { MenuProps } from 'antd'
-import { Menu, Tooltip } from 'antd'
+import { Menu, message, Popover, Tooltip } from 'antd'
 import clsx from 'clsx'
 import { useCallback, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import AppIcon from '@/components/AppIcon'
 import { routeConfigs } from '@/routes/routes'
 import type { RouteConfig, SiderType } from '@/routes/types'
-import { getFirstVisibleSidebarRoute, getRouteByPath, isRouteVisibleForRoles } from '@/routes/utils'
+import {
+  getFirstVisibleRouteBySiderType,
+  getRouteByPath,
+  isRouteVisibleForRoles,
+} from '@/routes/utils'
+import { useMicroAppStore, usePreferenceStore } from '@/stores'
 import { MaskIcon } from '../components/GradientMaskIcon'
 
 interface BaseSiderProps {
@@ -25,10 +31,39 @@ interface BaseSiderProps {
 const BaseSider = ({ collapsed, onCollapse, type }: BaseSiderProps) => {
   const navigate = useNavigate()
   const location = useLocation()
+  const [messageApi, messageContextHolder] = message.useMessage()
+  const { pinnedMicroApps, unpinMicroApp, wenshuAppInfo } = usePreferenceStore()
 
   // TODO: 角色信息需要从其他地方获取，暂时使用空数组
   const roleIds = useMemo(() => new Set<string>([]), [])
-  const firstVisibleRoute = useMemo(() => getFirstVisibleSidebarRoute(roleIds), [roleIds])
+  const firstVisibleRoute = useMemo(
+    () => getFirstVisibleRouteBySiderType(type, roleIds),
+    [type, roleIds],
+  )
+
+  const { setAppSource } = useMicroAppStore()
+  const handleOpenApp = useCallback(
+    (appId: number) => {
+      // 记录来源类型，针对特定 appId 进行持久化
+      setAppSource(appId, type)
+      // 移除 URL 中的 type 参数，完全依赖 Store 持久化
+      navigate(`/application/${appId}`)
+    },
+    [navigate, type, setAppSource],
+  )
+
+  const handleUnpin = useCallback(
+    async (appId: number) => {
+      try {
+        await unpinMicroApp(appId)
+        messageApi.success('已取消钉住')
+      } catch (error) {
+        console.error('Failed to unpin micro app:', error)
+        messageApi.error('取消钉住失败，请稍后重试')
+      }
+    },
+    [unpinMicroApp, messageApi],
+  )
 
   // 根据当前路由确定选中的菜单项
   const getSelectedKey = useCallback(() => {
@@ -36,13 +71,15 @@ const BaseSider = ({ collapsed, onCollapse, type }: BaseSiderProps) => {
     if (pathname === '/') {
       return firstVisibleRoute?.key || 'my-app'
     }
+
+    // 检查是否是应用路由（/application/:appId）
+    const appMatch = pathname.match(/^\/application\/(\d+)/)
+    if (appMatch) {
+      const appId = Number(appMatch[1])
+      return `micro-app-${appId}`
+    }
+
     const route = getRouteByPath(pathname)
-
-    // if (pathname.startsWith('/application/')) {
-    //   const appId = pathname.split('/')[2]
-    //   return `micro-app-${appId}`
-    // }
-
     return route?.key || 'my-app'
   }, [location.pathname, firstVisibleRoute])
 
@@ -83,9 +120,38 @@ const BaseSider = ({ collapsed, onCollapse, type }: BaseSiderProps) => {
               }
             />
           ) : null,
-          onClick: () => navigate(`/${myApp.path}`),
+          onClick: () => {
+            // MyApp 点击时不再显式传递 type 参数，容器会从 Store 读取
+            navigate(`/${myApp.path}`)
+          },
         })
       }
+
+      // 2. 钉住的应用（显示在 MyApp 下面，排除问数，避免重复）
+      pinnedMicroApps
+        .filter((app) => app.id !== wenshuAppInfo?.id)
+        .forEach((app) => {
+          items.push({
+            key: `micro-app-${app.id}`,
+            label: (
+              <div className="w-full h-full flex justify-between items-center">
+                {app.name}
+                <Popover content="取消固定">
+                  <PushpinOutlined
+                    className="w-6 h-6 text-base flex items-center justify-center rounded text-[var(--dip-warning-color)] pin-icon opacity-0 hover:bg-[rgba(0,0,0,0.04)]"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleUnpin(app.id)
+                    }}
+                  />
+                </Popover>
+              </div>
+            ),
+            icon: <AppIcon icon={app.icon} name={app.name} size={16} shape="square" />,
+            onClick: () => handleOpenApp(app.id),
+          })
+        })
+
       if (visibleSidebarRoutes.length > 1) {
         items.push({ type: 'divider' })
       }
@@ -113,15 +179,31 @@ const BaseSider = ({ collapsed, onCollapse, type }: BaseSiderProps) => {
             }
           />
         ) : null,
-        onClick: () => route.path && navigate(`/${route.path}`),
+        onClick: () => {
+          if (route.path) {
+            // 普通常规页面跳转，统一移除 URL 参数
+            navigate(`/${route.path}`)
+          }
+        },
       })
     })
 
     return items
-  }, [type, roleIds, selectedKey, navigate])
+  }, [
+    type,
+    roleIds,
+    selectedKey,
+    navigate,
+    pinnedMicroApps,
+    wenshuAppInfo,
+    handleOpenApp,
+    handleUnpin,
+    firstVisibleRoute,
+  ])
 
   return (
     <div className="flex flex-col h-full px-0 pt-4 pb-2 overflow-hidden min-h-0">
+      {messageContextHolder}
       {/* 菜单内容：min-h-0 保证 flex 子项正确收缩，避免撑开导致底部块位移引发 CLS */}
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden dip-hideScrollbar">
         <Menu
@@ -142,15 +224,15 @@ const BaseSider = ({ collapsed, onCollapse, type }: BaseSiderProps) => {
             collapsed ? 'justify-center' : 'justify-between pl-2 pr-2',
           )}
         >
-        <Tooltip title={collapsed ? '展开' : '收起'} placement="right">
-          <button
-            type="button"
-            className="text-sm cursor-pointer flex items-center justify-center w-8 h-8 rounded-md text-[--dip-text-color] hover:text-[--dip-primary-color]"
-            onClick={() => onCollapse(!collapsed)}
-          >
-            {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-          </button>
-        </Tooltip>
+          <Tooltip title={collapsed ? '展开' : '收起'} placement="right">
+            <button
+              type="button"
+              className="text-sm cursor-pointer flex items-center justify-center w-8 h-8 rounded-md text-[--dip-text-color] hover:text-[--dip-primary-color]"
+              onClick={() => onCollapse(!collapsed)}
+            >
+              {collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            </button>
+          </Tooltip>
         </div>
       </div>
     </div>

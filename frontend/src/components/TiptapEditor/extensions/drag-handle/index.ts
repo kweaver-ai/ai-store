@@ -136,8 +136,14 @@ export const CustomDragHandle = Extension.create<DragHandleOptions>({
         let filteredItems = options.items
         const nodeType = node.type.name
 
-        // 分割线只保留复制和删除
-        if (nodeType === 'horizontalRule') {
+        // 对于 atom 节点（agent、knowledge、metric）和 horizontalRule，只保留复制和删除
+        // 因为这些节点不应该被转换为其他类型（如 paragraph、heading 等）
+        if (
+          nodeType === 'horizontalRule' ||
+          nodeType === 'agent' ||
+          nodeType === 'knowledge' ||
+          nodeType === 'metric'
+        ) {
           filteredItems = ['copyBlock', 'deleteBlock']
         }
 
@@ -248,14 +254,40 @@ export const CustomDragHandle = Extension.create<DragHandleOptions>({
           // 检查是否是有效的编辑节点
           const pos = editor.view.posAtDOM(nodeElement, 0)
           if (pos !== null && pos >= 0) {
-            const $pos = editor.state.doc.resolve(pos)
-            const node = $pos.node()
-            // 只对块级节点显示拖拽手柄
-            if (node?.isBlock) {
+            const { doc } = editor.state
+            const $pos = doc.resolve(pos)
+
+            let node = doc.nodeAt(pos)
+            let nodePos = pos
+
+            // 如果当前位置没有节点（例如在段落内部），或者不是块级节点，向上查找最近的块级节点
+            if (!node?.isBlock || node?.type?.name === 'doc') {
+              let depth = $pos.depth
+              node = $pos.node(depth)
+
+              // 向上查找，直到找到一个块级节点，且不是 doc
+              while (depth >= 0 && (node.type.name === 'doc' || !node.isBlock)) {
+                depth--
+                if (depth >= 0) {
+                  node = $pos.node(depth)
+                } else {
+                  node = null
+                  break
+                }
+              }
+
+              if (node) {
+                // $pos.before(depth + 1) 给出了该层级节点的起始位置
+                nodePos = $pos.before(depth + 1)
+              }
+            }
+
+            // 确保找到了有效的块级节点（非文档根节点）
+            if (node?.isBlock && node?.type?.name !== 'doc') {
               currentHoveredNode = nodeElement
-              // 更新storage以匹配当前悬浮的节点
+              // 更新 storage 以匹配当前悬浮的节点及其正确位置
               storage.node = node
-              storage.pos = $pos.start($pos.depth)
+              storage.pos = nodePos
               showElement()
               return
             }
