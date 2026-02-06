@@ -12,6 +12,8 @@ interface BreadcrumbProps {
   type: HeaderType
   /** 面包屑项列表，由外部传入 */
   items?: BreadcrumbItem[]
+  /** 首页（返回按钮）跳转路径，不同平台可指定各自首路由，默认 / */
+  homePath?: string
   /** 导航回调函数，如果不传则使用内部的 navigate */
   onNavigate?: (item: BreadcrumbItem) => void
   /** 最后一项后面的自定义内容 */
@@ -41,7 +43,7 @@ const renderIcon = (icon: string | ReactNode | undefined, name: string) => {
  * - 外部传入 items 数组，组件负责渲染
  * - 如果传入 onNavigate，使用回调函数；否则使用内部的 navigate
  */
-export const Breadcrumb = ({ type, items = [], onNavigate, lastItemSuffix }: BreadcrumbProps) => {
+export const Breadcrumb = ({ type, items = [], homePath = '/', onNavigate, lastItemSuffix }: BreadcrumbProps) => {
   const navigate = useNavigate()
 
   // 统一的跳转处理函数
@@ -57,8 +59,8 @@ export const Breadcrumb = ({ type, items = [], onNavigate, lastItemSuffix }: Bre
     [navigate, onNavigate],
   )
 
-  // 所有面包屑项（包含首页）
-  const allItems: Array<BreadcrumbItem> = [{ key: 'main-home', name: '', path: '/' }, ...items]
+  // 所有面包屑项（包含首页，homePath 由调用方按平台传入各自首路由）
+  const allItems: Array<BreadcrumbItem> = [{ key: 'main-home', name: '', path: homePath }, ...items]
 
   return (
     <div className="h-6 flex items-center">

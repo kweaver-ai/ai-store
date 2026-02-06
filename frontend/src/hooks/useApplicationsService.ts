@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { type ApplicationInfo, getApplications } from '@/apis'
+import { WENSHU_APP_KEY } from '@/routes/types'
 import { useListService } from './useListService'
 
 interface UseApplicationsServiceOptions {
@@ -30,7 +31,7 @@ export const useApplicationsService = (options: UseApplicationsServiceOptions = 
     })
   const [apps, setApps] = useState<ApplicationInfo[]>([])
   useEffect(() => {
-    setApps(items)
+    setApps(items.map((item) => ({ ...item, isBuiltIn: item.key === WENSHU_APP_KEY })))
   }, [items])
 
   const updateApp = useCallback(

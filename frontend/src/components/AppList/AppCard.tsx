@@ -19,6 +19,8 @@ interface AppCardProps {
   onCardClick?: (app: ApplicationInfo) => void
   /** 卡片菜单右上角按钮点击回调 */
   onMenuButtonClick?: (app: ApplicationInfo) => void
+  /** 更多操作按钮 */
+  moreBtn?: React.ReactNode
 }
 
 const AppCard: React.FC<AppCardProps> = ({
@@ -26,6 +28,7 @@ const AppCard: React.FC<AppCardProps> = ({
   mode,
   width,
   menuItems,
+  moreBtn,
   onCardClick,
   onMenuButtonClick,
 }) => {
@@ -55,8 +58,15 @@ const AppCard: React.FC<AppCardProps> = ({
     >
       <div className="flex gap-4 mb-2 flex-shrink-0">
         {/* 应用图标 */}
-        <div className="w-16 h-16 flex-shrink-0 rounded-full flex overflow-hidden">
-          <AppIcon icon={app.icon} name={app.name} size={64} className="w-full h-full" hasBorder />
+        <div className="w-16 h-16 flex-shrink-0 flex overflow-hidden">
+          <AppIcon
+            icon={app.icon}
+            name={app.name}
+            size={64}
+            className="w-full h-full"
+            hasBorder
+            isBuiltIn={app.isBuiltIn}
+          />
         </div>
         {/* 名称 + 版本号 + 描述 */}
         <div className="flex-1 min-w-0">
@@ -136,6 +146,19 @@ const AppCard: React.FC<AppCardProps> = ({
                 <IconFont type="icon-dip-gengduo" />
               </button>
             </Dropdown>
+          )}
+          {moreBtn && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
+              className={classNames(
+                'w-6 h-6 flex items-center justify-center rounded text-[var(--dip-text-color-45)] hover:text-[var(--dip-text-color-85)] hover:bg-[--dip-hover-bg-color] transition-opacity',
+              )}
+            >
+              {moreBtn}
+            </button>
           )}
         </div>
       </div>

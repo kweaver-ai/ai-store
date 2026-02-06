@@ -23,7 +23,7 @@ const MicroAppHeader = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const { currentMicroApp } = useMicroAppStore()
+  const { currentMicroApp, homeRoute } = useMicroAppStore()
 
   const [microAppBreadcrumb, setMicroAppBreadcrumb] = useState<BreadcrumbItem[]>([])
 
@@ -138,6 +138,7 @@ const MicroAppHeader = () => {
         <Breadcrumb
           type="micro-app"
           items={breadcrumbItems}
+          homePath={homeRoute ?? '/'}
           onNavigate={handleBreadcrumbNavigate}
         />
       </div>

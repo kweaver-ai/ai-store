@@ -5,9 +5,8 @@ import type { ApplicationInfo } from '@/apis'
 import ScrollBarContainer from '../ScrollBarContainer'
 import AppCard from './AppCard'
 import styles from './index.module.less'
-import { ALL_TAB_KEY, ModeEnum } from './types'
+import { ALL_TAB_KEY, type ModeEnum } from './types'
 import { computeColumnCount, gap } from './utils'
-import { WENSHU_APP_KEY } from '@/routes/types'
 
 interface AppListProps {
   /** 组件模式：我的应用 或 应用商店 */
@@ -16,6 +15,8 @@ interface AppListProps {
   apps: ApplicationInfo[]
   /** 卡片菜单项生成函数 */
   menuItems?: (app: ApplicationInfo) => MenuProps['items']
+  /** 更多操作按钮 */
+  moreBtn?: (app: ApplicationInfo) => React.ReactNode
   /** 卡片菜单右上角按钮点击回调 */
   onMenuButtonClick?: (app: ApplicationInfo) => void
   /** 卡片菜单点击回调 */
@@ -31,6 +32,7 @@ const AppList: React.FC<AppListProps> = ({
   menuItems,
   onMenuButtonClick,
   onCardClick,
+  moreBtn,
 }) => {
   const [activeTab, setActiveTab] = useState<string>(ALL_TAB_KEY)
 
@@ -92,16 +94,16 @@ const AppList: React.FC<AppListProps> = ({
   /** 渲染应用卡片 */
   const renderCard = useCallback(
     (app: ApplicationInfo, width: number) => {
-      const isWenshuApp = app.key === WENSHU_APP_KEY
       return (
         <Col key={app.id} style={{ width, minWidth: width }}>
           <AppCard
             app={app}
             mode={mode}
             width={width}
-            menuItems={isWenshuApp && mode === ModeEnum.MyApp ? undefined : menuItems?.(app)}
+            menuItems={menuItems?.(app)}
             onMenuButtonClick={onMenuButtonClick}
             onCardClick={onCardClick}
+            moreBtn={moreBtn?.(app)}
           />
         </Col>
       )

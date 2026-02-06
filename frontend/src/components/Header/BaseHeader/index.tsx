@@ -2,8 +2,8 @@ import { useCallback, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import logoImage from '@/assets/images/brand/logo.png'
 import InfoIcon from '@/assets/images/info.svg?react'
-import type { HeaderType } from '@/routes/types'
-import { getParentRoute, getRouteByPath } from '@/routes/utils'
+import type { HeaderType, SiderType } from '@/routes/types'
+import { getFirstVisibleRouteBySiderType, getParentRoute, getRouteByPath } from '@/routes/utils'
 import { useLanguageStore, useOEMConfigStore, useProjectStore } from '@/stores'
 import type { BreadcrumbItem } from '@/utils/micro-app/globalState'
 import { Breadcrumb } from '../components/Breadcrumb'
@@ -57,6 +57,15 @@ const BaseHeader = ({ headerType }: { headerType: HeaderType }) => {
   // 从 store 中获取项目信息
   const projectInfo = useProjectStore((state) => state.currentProjectInfo)
   const [projectInfoOpen, setProjectInfoOpen] = useState(false)
+
+  // 不同平台（store/studio）各自的首路由，用于面包屑首页返回
+  const roleIds = useMemo(() => new Set<string>([]), [])
+  const homePath = useMemo(() => {
+    const firstRoute = getFirstVisibleRouteBySiderType(headerType as SiderType, roleIds)
+    const path =
+      firstRoute?.path ?? (headerType === 'store' ? 'store/my-app' : 'studio/project-management')
+    return `/${path}`
+  }, [headerType, roleIds])
 
   // 面包屑导航跳转
   const handleBreadcrumbNavigate = useCallback(
@@ -148,6 +157,7 @@ const BaseHeader = ({ headerType }: { headerType: HeaderType }) => {
         <Breadcrumb
           type={headerType}
           items={breadcrumbItems}
+          homePath={homePath}
           onNavigate={handleBreadcrumbNavigate}
           lastItemSuffix={
             isProjectDetailRoute && projectInfo ? (

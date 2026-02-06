@@ -15,6 +15,7 @@ const MicroAppContainer = () => {
   // 移除对 URL 参数的读取，改由纯 Store 驱动，防止微应用篡改
   const currentMicroApp = useMicroAppStore((state) => state.currentMicroApp)
   const setCurrentMicroApp = useMicroAppStore((state) => state.setCurrentMicroApp)
+  const setHomeRoute = useMicroAppStore((state) => state.setHomeRoute)
   const clearCurrentMicroApp = useMicroAppStore((state) => state.clearCurrentMicroApp)
   const appSourceMap = useMicroAppStore((state) => state.appSourceMap)
 
@@ -25,18 +26,18 @@ const MicroAppContainer = () => {
   // 根据 type 计算 homeRoute
   const homeRoute = useMemo(() => {
     if (type === 'home') {
-      return getFullPath('/')
+      return '/'
     }
 
     // 对于 store 或 studio，获取第一个可见路由
     const roleIds = new Set<string>([]) // TODO: 从实际角色系统获取
     const firstRoute = getFirstVisibleRouteBySiderType(type, roleIds)
     if (firstRoute?.path) {
-      return getFullPath(`/${firstRoute.path}`)
+      return `/${firstRoute.path}`
     }
 
     // 兜底逻辑
-    return getFullPath(`/${type === 'store' ? 'store/my-app' : 'studio/project-management'}`)
+    return `/${type === 'store' ? 'store/my-app' : 'studio/project-management'}`
   }, [type])
 
   const [loading, setLoading] = useState(true)
@@ -56,11 +57,12 @@ const MicroAppContainer = () => {
         if (!appData) {
           setError('获取应用配置失败')
         } else {
-          // 统一保存在全局 Store 中，组件直接从 Store 读取
+          // 统一保存在全局 Store 中，组件直接从 Store 读取（含 homeRoute，供 MicroAppHeader 面包屑等使用）
           setCurrentMicroApp({
             ...appData,
             routeBasename: getFullPath(`/application/${appData.id}`),
           })
+          setHomeRoute(homeRoute)
         }
       } catch (err: any) {
         if (err?.description) {
@@ -88,7 +90,7 @@ const MicroAppContainer = () => {
         { allowAllFields: true },
       )
     }
-  }, [idNum, clearCurrentMicroApp, setCurrentMicroApp])
+  }, [idNum, clearCurrentMicroApp, setCurrentMicroApp, setHomeRoute, homeRoute])
 
   const renderContent = () => {
     if (loading) {
@@ -105,7 +107,7 @@ const MicroAppContainer = () => {
         </div>
       )
     }
-    return <MicroAppComponent appBasicInfo={currentMicroApp} homeRoute={homeRoute} />
+    return <MicroAppComponent appBasicInfo={currentMicroApp} homeRoute={getFullPath(homeRoute)} />
   }
 
   return (

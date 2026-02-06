@@ -229,9 +229,9 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
       <div className="mb-3 text-[13px] leading-5 text-[--dip-text-color-45]">
         将以下 Prompt 复制到开发 Agent 中，即可快速读取当前页面的设计文档。
       </div>
-      <div className="text-xs leading-5 text-[--dip-text-color] bg-[#779EEA1A] border border-dashed border-[#779EEA] px-2.5 py-2 mb-6">
+      <div className="text-xs leading-5 text-[--dip-text-color] bg-[#779EEA1A] border border-dashed border-[#779EEA] px-2.5 py-2 mb-3">
         {prompt}
-        <div className="flex justify-end">
+        <div className="flex justify-end mt-4 mr-1 mb-1">
           <Button type="primary" onClick={() => handleCopy(prompt)} size="small">
             一键复制
           </Button>
@@ -239,7 +239,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
       </div>
       <div className="text-xs leading-5 text-[--dip-text-color] bg-[#779EEA1A] border border-dashed border-[#779EEA] px-2.5 py-2 mb-6">
         {url}
-        <div className="flex justify-end">
+        <div className="flex justify-end mt-4 mr-1 mb-1">
           <Button type="primary" onClick={() => handleCopy(url)} size="small">
             一键复制
           </Button>
