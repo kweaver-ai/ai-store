@@ -115,7 +115,7 @@ const MetricView: React.FC<NodeViewProps> = (props) => {
       {!currentMetric ? (
         <>
           <IconFont type="icon-dip-color-metric" className="text-lg" />
-          <span className="text-[rgba(0,0,0,0.65)]">暂无{extension.options.dictionary.name}</span>
+          <span className="text-[rgba(0,0,0,0.65)]">请选择{extension.options.dictionary.name}</span>
         </>
       ) : (
         <div className="max-w-full flex items-center gap-x-2">
