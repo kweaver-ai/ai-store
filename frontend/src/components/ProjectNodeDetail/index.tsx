@@ -253,7 +253,12 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
       </div>
       <div className="text-xs leading-5 text-[--dip-text-color] bg-[#779EEA1A] border border-dashed border-[#779EEA] px-2.5 py-2 mb-4">
         {url}
-        <button type="button" className="ml-2 cursor-pointer" onClick={() => handleCopy(url)}>
+        <button
+          type="button"
+          title="复制"
+          className="ml-2 cursor-pointer"
+          onClick={() => handleCopy(url)}
+        >
           <IconFont type="icon-dip-copy" />
         </button>
       </div>
@@ -262,7 +267,12 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
       </div>
       <div className="text-xs leading-5 text-[--dip-text-color] bg-[#779EEA1A] border border-dashed border-[#779EEA] px-2.5 py-2 mb-2">
         {prompt}
-        <button type="button" className="ml-2 cursor-pointer" onClick={() => handleCopy(prompt)}>
+        <button
+          type="button"
+          title="复制"
+          className="ml-2 cursor-pointer"
+          onClick={() => handleCopy(prompt)}
+        >
           <IconFont type="icon-dip-copy" />
         </button>
       </div>
