@@ -14,7 +14,8 @@ export interface AgentOptions {
 /** 智能体节点 */
 export const Agent = Node.create<AgentOptions>({
   name: 'agent',
-  group: 'block',
+  inline: true,
+  group: 'inline',
   atom: true,
   draggable: true,
 
@@ -69,11 +70,11 @@ export const Agent = Node.create<AgentOptions>({
   },
 
   parseHTML() {
-    return [{ tag: 'div[data-type="agent"]' }]
+    return [{ tag: 'span[data-type="agent"]' }]
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'agent' })]
+    return ['span', mergeAttributes(HTMLAttributes, { 'data-type': 'agent' })]
   },
 
   addNodeView() {
@@ -84,7 +85,7 @@ export const Agent = Node.create<AgentOptions>({
     return {
       markdown: {
         parser: {
-          match: (node) => node.type === 'leafDirective' && node.name === this.name,
+          match: (node) => node.type === 'textDirective' && node.name === this.name,
           apply: (state: any, node: any, type: any) => {
             // 从 markdown 属性中解析 agent 对象
             const attrs: any = {}
@@ -120,7 +121,7 @@ export const Agent = Node.create<AgentOptions>({
               })
             }
             state.addNode({
-              type: 'leafDirective',
+              type: 'textDirective',
               name: this.name,
               attributes,
             })

@@ -10,7 +10,7 @@ export type BlockMenuViewItem =
       name: string
       icon?: string
       shortcut?: string
-      action: (editor: Editor) => void
+      action: (editor: Editor, range?: Range) => void
     }
 
 export interface BlockMenuViewOptions {
@@ -49,6 +49,7 @@ export class BlockMenuView implements ReturnType<NonNullable<SuggestionOptions['
   private _index: number | undefined
   private _nodes: Array<HTMLElement> | undefined
   private _items: Array<BlockMenuViewItem> | undefined
+  private _range: Range | undefined
   private _keyboardNavigating: boolean = false
 
   public static create(options: BlockMenuViewOptions) {
@@ -113,6 +114,10 @@ export class BlockMenuView implements ReturnType<NonNullable<SuggestionOptions['
         }
       },
     })
+
+    // Save range
+    this._range = props.range
+
     this.onUpdate(props)
   }
 
@@ -146,6 +151,9 @@ export class BlockMenuView implements ReturnType<NonNullable<SuggestionOptions['
     // Set client rect
     // @ts-expect-error
     this._popover.setProps({ getReferenceClientRect: props.clientRect })
+
+    // Save range
+    this._range = props.range
   }
 
   public onKeyDown(props: SuggestionKeyDownProps) {
@@ -169,7 +177,7 @@ export class BlockMenuView implements ReturnType<NonNullable<SuggestionOptions['
       const item = this._items[this._index]
       const node = this._nodes[this._index]
       if (item && node && typeof item !== 'string' && item.action) {
-        item.action(this.editor)
+        item.action(this.editor, this._range)
       }
       return true
     }
@@ -318,7 +326,7 @@ export class BlockMenuView implements ReturnType<NonNullable<SuggestionOptions['
           }
           root.addEventListener('click', () => {
             if (this._element) {
-              item.action(this.editor)
+              item.action(this.editor, this._range)
             }
           })
           root.addEventListener('mouseover', () => {

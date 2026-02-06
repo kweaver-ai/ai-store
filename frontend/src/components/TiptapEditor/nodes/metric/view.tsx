@@ -14,9 +14,9 @@ export interface SimplifiedMetricType {
 }
 
 const MetricView: React.FC<NodeViewProps> = (props) => {
-  const { node, updateAttributes, editor, selected, extension } = props
-  const { metrics } = node.attrs
-  const metricsArray: Array<SimplifiedMetricType> = Array.isArray(metrics) ? metrics : []
+  const { node, updateAttributes, editor, selected, extension, getPos } = props
+  const { metric } = node.attrs as { metric?: SimplifiedMetricType | null }
+  const currentMetric: SimplifiedMetricType | null = metric ?? null
   const [modalOpen, setModalOpen] = useState(false)
   const [isEditable, setIsEditable] = useState(editor.isEditable)
 
@@ -39,15 +39,50 @@ const MetricView: React.FC<NodeViewProps> = (props) => {
     }
   }, [editor])
 
-  // 选择指标确认 - 只保存 id 和 name
+  // 选择指标确认
   const handleConfirm = (selectedMetrics: Array<MetricModelType>) => {
+    // 没选任何指标：仅清空当前节点内容
+    if (!selectedMetrics.length) {
+      updateAttributes({ metric: null })
+      setModalOpen(false)
+      return
+    }
+
+    const pos = typeof getPos === 'function' ? getPos() : null
     const simplified = selectedMetrics.map((metric) => ({
       id: metric.id,
       name: metric.name,
     }))
-    updateAttributes({
-      metrics: simplified,
-    })
+
+    // 若获取不到位置，或者只选中了一个，就保持单节点行为：当前节点展示一个指标
+    if (typeof pos !== 'number' || simplified.length === 1) {
+      updateAttributes({
+        metric: simplified[0],
+      })
+      setModalOpen(false)
+      return
+    }
+
+    // 多选：将当前节点替换为多个 metric 节点（每个节点只包含一个指标）
+    const insertContent = simplified.map((metric) => ({
+      type: extension.name,
+      attrs: {
+        metric,
+      },
+    }))
+
+    editor
+      .chain()
+      .focus()
+      .insertContentAt(
+        {
+          from: pos,
+          to: pos + node.nodeSize,
+        },
+        insertContent,
+      )
+      .run()
+
     setModalOpen(false)
   }
 
@@ -70,35 +105,34 @@ const MetricView: React.FC<NodeViewProps> = (props) => {
 
   // 展示视图
   const displayView = (
-    <div
+    <span
       className={clsx(
-        'flex min-h-8 h-fit w-fit max-w-full flex-wrap items-center py-1 px-2 border rounded-md text-muted-foreground text-sm gap-x-3 gap-y-1',
-        metricsArray.length === 0 ? 'border-dashed' : 'bg-[#779EEA1A] border-[#779EEA8C]',
+        'inline-flex min-h-8 h-fit w-fit max-w-full flex-wrap items-center py-1 px-2 border rounded-md text-muted-foreground text-sm gap-x-3 gap-y-1',
+        !currentMetric ? 'border-dashed' : 'bg-[#779EEA1A] border-[#779EEA8C]',
         selected && isEditable && 'border-[--dip-link-color]',
       )}
     >
-      {metricsArray.length === 0 ? (
+      {!currentMetric ? (
         <>
           <IconFont type="icon-dip-color-metric" className="text-lg" />
           <span className="text-[rgba(0,0,0,0.65)]">暂无{extension.options.dictionary.name}</span>
         </>
       ) : (
-        metricsArray.map((metric) => (
-          <div key={metric.id} className="max-w-full flex items-center gap-x-2">
-            <IconFont type="icon-dip-color-metric" className="text-lg" />
-            <span className="truncate w-fit max-w-full">{metric.name}</span>
-          </div>
-        ))
+        <div className="max-w-full flex items-center gap-x-2">
+          <IconFont type="icon-dip-color-metric" className="text-lg" />
+          <span className="truncate w-fit max-w-full">{currentMetric.name}</span>
+        </div>
       )}
-    </div>
+    </span>
   )
+
   return (
-    <NodeViewWrapper className="max-w-full">
+    <NodeViewWrapper as="span" className="max-w-full">
       {isEditable ? (
         <>
           <button
             type="button"
-            className="w-fit max-w-full text-left"
+            className="w-fit max-w-full text-left cursor-pointer inline-block"
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
@@ -109,14 +143,16 @@ const MetricView: React.FC<NodeViewProps> = (props) => {
           </button>
           {modalOpen && (
             <MetricSelector
-              initialSelectedMetrics={convertToMetricModelType(metricsArray)}
+              initialSelectedMetrics={
+                currentMetric ? convertToMetricModelType([currentMetric]) : []
+              }
               onConfirm={handleConfirm}
               onCancel={handleCancel}
             />
           )}
         </>
       ) : (
-        <div>{displayView}</div>
+        <span className="inline-block">{displayView}</span>
       )}
     </NodeViewWrapper>
   )

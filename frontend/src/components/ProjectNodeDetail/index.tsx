@@ -14,6 +14,7 @@ import { useProjectStore } from '@/stores'
 import { LoadStatus } from '@/types/enums'
 import { formatTime } from '@/utils/handle-function/FormatTime'
 import Empty from '../Empty'
+import IconFont from '../IconFont'
 import { flattenTree } from '../ProjectSider/utils'
 import ScrollBarContainer from '../ScrollBarContainer'
 import TiptapEditor from '../TiptapEditor'
@@ -38,6 +39,8 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
   const [content, setContent] = useState<any>({})
   const contentRef = useRef(content)
   contentRef.current = content
+  // 记录当前详情面板对应的文档 ID，用于避免跨节点的保存/回写串扰
+  const currentDocumentIdRef = useRef<number | string | null>(nodeInfo?.document_id ?? null)
 
   /** 节点是否处于开发模式 */
   const nodeInDevMode = useMemo(() => {
@@ -50,7 +53,9 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
 
   useEffect(() => {
     if (nodeInfo) {
-      setActiveTab(NodeDetailTabKey.Detail)
+      setActiveTab(
+        nodeInfo.node_type === 'function' ? NodeDetailTabKey.Document : NodeDetailTabKey.Detail,
+      )
     }
   }, [nodeInfo])
 
@@ -71,6 +76,11 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
       window.removeEventListener('devModeChanged', handleDevModeChanged as EventListener)
     }
   }, [projectId, nodeId])
+
+  // 节点变化时同步当前文档 ID
+  useEffect(() => {
+    currentDocumentIdRef.current = nodeInfo?.document_id ?? null
+  }, [nodeInfo?.document_id])
 
   const fetchDocument = useCallback(async () => {
     if (loadStatus === LoadStatus.Loading) return
@@ -121,12 +131,14 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
     }
   }
 
+  /**
+   * 实际保存函数：
+   * - 与触发时的 documentId 和 baseContent 绑定，避免在节点切换后错把内容写到新节点文档上
+   */
   const saveDocument = useCallback(
-    async (newContent: any) => {
+    async (documentId: number | string, baseContent: any, newContent: any) => {
       if (nodeInDevMode) return
-      const documentId = nodeInfo?.document_id
-      if (!documentId) return
-      const baseContent = contentRef.current
+
       const patches = jsonpatch.compare(baseContent || {}, newContent)
       if (patches.length === 0) return
 
@@ -134,7 +146,11 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
           await putDocument(documentId, patches as any)
-          setContent(newContent)
+
+          // 只有当当前面板仍然展示同一个文档时，才回写到本地 state，防止跨节点覆盖 UI
+          if (currentDocumentIdRef.current === documentId) {
+            setContent(newContent)
+          }
           return
         } catch {
           if (attempt === maxRetries) {
@@ -145,41 +161,47 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
         }
       }
     },
-    [nodeInDevMode, nodeInfo?.document_id, messageApi],
+    [nodeInDevMode, messageApi],
   )
 
   const scheduleSaveDocument = useMemo(
     () =>
-      debounce((newContent: any) => {
-        saveDocument(newContent)
+      debounce((params: { documentId: number | string; baseContent: any; newContent: any }) => {
+        const { documentId, baseContent, newContent } = params
+        // 如果此时已经没有有效文档，直接跳过
+        if (!documentId) return
+        saveDocument(documentId, baseContent, newContent)
       }, 800),
     [saveDocument],
   )
 
+  // 节点切换时，刷新并取消前一个节点的待保存任务，避免在新节点上“补发”旧节点的保存请求
   useEffect(() => {
-    return () => {
-      scheduleSaveDocument.flush()
-      scheduleSaveDocument.cancel()
-    }
-  }, [scheduleSaveDocument])
+    scheduleSaveDocument.flush()
+    scheduleSaveDocument.cancel()
+  }, [nodeId, scheduleSaveDocument])
 
   const handleUpdate = (newContent: any) => {
-    // /** 如果初始内容为空，则保存初始内容 */
-    // if (!initialContent.current?.type) {
-    //   initialContent.current = newContent
-    //   saveDocument(newContent)
-    //   return
-    // }
-    /** 如果初始内容不为空，则进行差分保存 */
-    scheduleSaveDocument(newContent)
+    const documentId = nodeInfo?.document_id
+    if (!documentId || nodeInDevMode) {
+      return
+    }
+
+    // 与当前文档的快照绑定，后续保存时不会受其他节点切换影响
+    const baseContent = contentRef.current
+    scheduleSaveDocument({
+      documentId,
+      baseContent,
+      newContent,
+    })
   }
 
   /** 获取节点详情tabs */
   const tabItems = useMemo(() => {
     if (nodeInfo?.node_type === 'function') {
       return [
-        { label: '详情', key: NodeDetailTabKey.Detail },
         { label: '设计文档', key: NodeDetailTabKey.Document },
+        { label: '详情', key: NodeDetailTabKey.Detail },
       ]
     }
     return [{ label: '详情', key: NodeDetailTabKey.Detail }]
@@ -215,7 +237,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
   }
 
   const protocol = isIPAddress(window.location.host) ? 'http' : 'https'
-  const url = `"url" : "${protocol}://${window.location.host}/dip-studio/mcp"`
+  const url = `${protocol}://${window.location.host}/dip-studio/mcp`
 
   const handleCopy = (value: string) => {
     navigator.clipboard.writeText(value)
@@ -224,26 +246,25 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
 
   /** Promot 弹窗内容 */
   const promotContent = () => (
-    <div className="w-[360px]">
-      <div className="mb-2 text-base font-medium">复制Prompt</div>
-      <div className="mb-3 text-[13px] leading-5 text-[--dip-text-color-45]">
-        将以下 Prompt 复制到开发 Agent 中，即可快速读取当前页面的设计文档。
+    <div className="w-[400px]">
+      <div className="mb-2 text-base font-medium">复制提示词</div>
+      <div className="mb-2 text-[13px] leading-5 text-[--dip-text-color-45]">
+        请先在代码编辑器中配置以下 MCP Server 地址：
       </div>
-      <div className="text-xs leading-5 text-[--dip-text-color] bg-[#779EEA1A] border border-dashed border-[#779EEA] px-2.5 py-2 mb-3">
-        {prompt}
-        <div className="flex justify-end mt-4 mr-1 mb-1">
-          <Button type="primary" onClick={() => handleCopy(prompt)} size="small">
-            一键复制
-          </Button>
-        </div>
-      </div>
-      <div className="text-xs leading-5 text-[--dip-text-color] bg-[#779EEA1A] border border-dashed border-[#779EEA] px-2.5 py-2 mb-6">
+      <div className="text-xs leading-5 text-[--dip-text-color] bg-[#779EEA1A] border border-dashed border-[#779EEA] px-2.5 py-2 mb-4">
         {url}
-        <div className="flex justify-end mt-4 mr-1 mb-1">
-          <Button type="primary" onClick={() => handleCopy(url)} size="small">
-            一键复制
-          </Button>
-        </div>
+        <button type="button" className="ml-2 cursor-pointer" onClick={() => handleCopy(url)}>
+          <IconFont type="icon-dip-copy" />
+        </button>
+      </div>
+      <div className="mb-2 text-[13px] leading-5 text-[--dip-text-color-45]">
+        复制以下提示词，粘贴到代码编辑器的 Al 对话框中：
+      </div>
+      <div className="text-xs leading-5 text-[--dip-text-color] bg-[#779EEA1A] border border-dashed border-[#779EEA] px-2.5 py-2 mb-2">
+        {prompt}
+        <button type="button" className="ml-2 cursor-pointer" onClick={() => handleCopy(prompt)}>
+          <IconFont type="icon-dip-copy" />
+        </button>
       </div>
     </div>
   )
@@ -291,7 +312,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
                 type="button"
                 className="h-full text-sm text-[--dip-white] bg-[#4096FF] rounded px-2"
               >
-                查看Promot
+                查看提示词
               </button>
             </Popover>
           )}
@@ -367,8 +388,13 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
                 placeholder="请描述该功能...（输入/ 可引用 业务知识网络、决策智能体、指标）"
               />
             ) : (
-              renderStateContent()
+              <div className="h-full flex items-center justify-center">{renderStateContent()}</div>
             ))}
+          {activeTab === NodeDetailTabKey.Document && nodeInDevMode && (
+            <div className="w-full h-fit text-center text-xs bg-[--dip-hover-bg-color] text-[--dip-text-color-45] absolute top-0 left-0">
+              开发模式下设计文档为只读状态
+            </div>
+          )}
         </ScrollBarContainer>
       </div>
     </div>
