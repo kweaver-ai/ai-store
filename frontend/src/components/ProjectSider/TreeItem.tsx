@@ -1,4 +1,4 @@
-import { BorderlessTableOutlined, FolderOutlined, HolderOutlined } from '@ant-design/icons'
+import { BorderlessTableOutlined, HolderOutlined } from '@ant-design/icons'
 import { Dropdown, type MenuProps } from 'antd'
 import clsx from 'clsx'
 import { forwardRef, type HTMLAttributes, useState } from 'react'

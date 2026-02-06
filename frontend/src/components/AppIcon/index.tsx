@@ -1,4 +1,4 @@
-import { Avatar } from 'antd'
+import { Avatar, Tooltip } from 'antd'
 import clsx from 'clsx'
 import { useState } from 'react'
 import BuiltInIcon from '@/assets/images/project/builtIn.svg?react'
@@ -88,10 +88,11 @@ const AppIcon = ({
         />
       )}
       {isBuiltIn && (
-        <SystemIcon
-          className="absolute bottom-[-1px] right-[-1px] "
-          style={{ width: size / 3, height: size / 3 }}
-        />
+        <Tooltip title="内置应用">
+          <div className="absolute bottom-[-1px] right-[-1px]">
+            <SystemIcon style={{ width: size / 3, height: size / 3 }} />
+          </div>
+        </Tooltip>
       )}
     </div>
   )
