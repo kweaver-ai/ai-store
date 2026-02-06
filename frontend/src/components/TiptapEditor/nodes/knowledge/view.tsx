@@ -148,7 +148,7 @@ const KnowledgeView: React.FC<NodeViewProps> = (props) => {
     >
       <IconFont type="icon-yewuzhishiwangluo" className="text-lg" />
       {!id ? (
-        <span className="text-[rgba(0,0,0,0.65)]">暂无{extension.options.dictionary.name}</span>
+        <span className="text-[rgba(0,0,0,0.65)]">请选择{extension.options.dictionary.name}</span>
       ) : (
         <span>{name}</span>
       )}
