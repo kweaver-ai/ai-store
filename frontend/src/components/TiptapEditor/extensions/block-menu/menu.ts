@@ -1,4 +1,4 @@
-import { type Editor, Extension, findParentNode } from '@tiptap/core'
+import { type Editor, Extension, findParentNode, type Range } from '@tiptap/core'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
 import { Suggestion } from '@tiptap/suggestion'
@@ -117,12 +117,13 @@ export const BlockMenu = Extension.create<BlockMenuOptions>({
               name: item.name,
               icon: item.icon,
               shortcut: item.shortcut,
-              action: (editor) => {
+              action: (editor: Editor, range?: Range) => {
                 // clear search
                 const { state, dispatch } = editor.view
-                const from = state.selection.$from
-                const tr = state.tr.deleteRange(from.start(), from.pos)
-                dispatch(tr)
+                if (range) {
+                  const tr = state.tr.deleteRange(range.from, range.to)
+                  dispatch(tr)
+                }
                 // command
                 item.action(editor)
                 // focus

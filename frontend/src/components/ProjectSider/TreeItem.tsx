@@ -1,4 +1,4 @@
-import { FolderOutlined, HolderOutlined } from '@ant-design/icons'
+import { BorderlessTableOutlined, FolderOutlined, HolderOutlined } from '@ant-design/icons'
 import { Dropdown, type MenuProps } from 'antd'
 import clsx from 'clsx'
 import { forwardRef, type HTMLAttributes, useState } from 'react'
@@ -70,9 +70,9 @@ export const TreeItem = forwardRef<HTMLDivElement, TreeItemProps>(
         case 'application':
           return <IconFont type="icon-dip-yingyong" />
         case 'page':
-          return <FolderOutlined />
+          return <IconFont type="icon-dip-UserAgreement" />
         case 'function':
-          return <IconFont type="icon-dip-yewuyuguanli" />
+          return <BorderlessTableOutlined />
         default:
           return null
       }
