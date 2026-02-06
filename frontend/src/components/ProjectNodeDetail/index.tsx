@@ -215,7 +215,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
     )
   }
 
-  const prompt = `读取当前 DIP Studio 节点下的设计文档和上下文，完成下面的开发任务。node_id: ${nodeId}`
+  const prompt = `从 DIP Studio 获取设计文档并开发应用，\nnode_id: ${nodeId}`
 
   // 判断 host 是否为 IP 地址（IPv4 或 IPv6）
   const isIPAddress = (host: string): boolean => {
