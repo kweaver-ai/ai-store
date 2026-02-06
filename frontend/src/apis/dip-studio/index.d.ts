@@ -41,9 +41,9 @@ export type ObjectType = NodeType | 'project'
 
 /** 项目节点（Node） */
 export interface Node {
-  id: number
+  id: string
   project_id: number
-  parent_id: number | null
+  parent_id: string | null
   node_type: NodeType
   name: string
   description?: string
@@ -61,9 +61,9 @@ export interface Node {
 
 /** 节点树（NodeTree，递归结构） */
 export interface NodeTree {
-  id: number
+  id: string
   project_id: number
-  parent_id: number | null
+  parent_id: string | null
   node_type: NodeType
   name: string
   description?: string
@@ -80,16 +80,16 @@ export interface NodeTree {
 /** 创建节点请求（application 无 parent_id，page/function 需 parent_id） */
 export interface CreateNodeRequest {
   project_id: number
-  parent_id?: number
+  parent_id?: string
   name: string
   description?: string
 }
 
 /** 移动节点请求（MoveNodeRequest） */
 export interface MoveNodeRequest {
-  node_id: number
-  new_parent_id?: number | null
-  predecessor_node_id?: number | null
+  node_id: string
+  new_parent_id?: string | null
+  predecessor_node_id?: string | null
 }
 
 // ============ 词典 ============
@@ -156,7 +156,7 @@ export interface DocumentContent {
 /** 功能设计文档（FunctionDocument） */
 export interface FunctionDocument {
   id: number
-  function_node_id: number
+  function_node_id: string
   creator: number
   created_at: string
   editor: number

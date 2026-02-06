@@ -101,6 +101,7 @@ const MetricView: React.FC<NodeViewProps> = (props) => {
             className="w-fit max-w-full text-left"
             onClick={(e) => {
               e.preventDefault()
+              e.stopPropagation()
               setModalOpen(true)
             }}
           >

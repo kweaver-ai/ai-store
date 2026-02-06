@@ -91,7 +91,7 @@ const ActionModal = ({
       const description = values.description?.trim()
       const updateParams: UpdateNameDescRequest = { name, description }
       const projectIdNum = projectId ? Number(projectId) : 0
-      const parentIdNum = parentId ? Number(parentId) : undefined
+      const parentIdStr = parentId ?? undefined
       setLoading(true)
       let result: any
       if (objectType === 'project') {
@@ -118,10 +118,10 @@ const ActionModal = ({
           result = await putNode(objectInfo.id, updateParams)
         }
       } else if (objectType === 'page') {
-        if (operationType === 'add' && parentIdNum != null) {
+        if (operationType === 'add' && parentIdStr != null) {
           const params: CreateNodeRequest = {
             project_id: projectIdNum,
-            parent_id: parentIdNum,
+            parent_id: parentIdStr,
             name,
             description,
           }
@@ -130,10 +130,10 @@ const ActionModal = ({
           result = await putNode(objectInfo.id, updateParams)
         }
       } else if (objectType === 'function') {
-        if (operationType === 'add' && parentIdNum != null) {
+        if (operationType === 'add' && parentIdStr != null) {
           const params: CreateNodeRequest = {
             project_id: projectIdNum,
-            parent_id: parentIdNum,
+            parent_id: parentIdStr,
             name,
             description,
           }

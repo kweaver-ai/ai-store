@@ -1,5 +1,5 @@
 import { PushpinOutlined } from '@ant-design/icons'
-import type { MenuProps } from 'antd'
+import { Popover, type MenuProps } from 'antd'
 import type { ApplicationInfo } from '@/apis'
 import { usePreferenceStore } from '@/stores'
 import { MyAppActionEnum } from './types'
@@ -30,4 +30,13 @@ export const getMyAppMenuItems = (
       onClick: () => onMenuClick(MyAppActionEnum.Fix),
     },
   ]
+}
+
+export const getMyAppMoreBtn = (app: ApplicationInfo, onMenuClick: (key: MyAppActionEnum) => void) => {
+  const { isPinned } = usePreferenceStore.getState()
+  const pinned = isPinned(app.id)
+  if (pinned) {
+    return <Popover content="取消固定"><PushpinOutlined className="w-6 h-6 flex items-center justify-center rounded hover:bg-[--dip-hover-bg-color] text-[var(--dip-warning-color)]" onClick={() => onMenuClick(MyAppActionEnum.Unfix)} /></Popover>
+  }
+  return <Popover content="固定"><PushpinOutlined className="w-6 h-6 flex items-center justify-center rounded text-[var(--dip-text-color-45)] hover:bg-[--dip-hover-bg-color]" onClick={() => onMenuClick(MyAppActionEnum.Fix)} /></Popover>
 }

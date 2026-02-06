@@ -125,7 +125,11 @@ export const CustomDragHandle = Extension.create<DragHandleOptions>({
       // Select the node before showing menu
       try {
         const selection = NodeSelection.create(editor.state.doc, safePos)
-        editor.view.dispatch(editor.state.tr.setSelection(selection))
+        // Ensure we are selecting the block node, especially if focus was inside an inner editor
+        editor.view.dispatch(
+          editor.state.tr.setSelection(selection).setStoredMarks([]).scrollIntoView(),
+        )
+        editor.view.focus()
 
         const root = document.createElement('div')
         root.classList.add('dip-prose-mirror-cm-menu')
@@ -239,58 +243,57 @@ export const CustomDragHandle = Extension.create<DragHandleOptions>({
       const target = e.target as HTMLElement
       if (!target) return
 
-      // 查找最近的块级节点
+      // Find the closest block-level node element
       let nodeElement: HTMLElement | null = target
       while (nodeElement && nodeElement !== editorDOM) {
-        // 检查是否是块级元素（段落、标题等）
+        // Check if the element is considered a "block" in our context
         const computedStyle = window.getComputedStyle(nodeElement)
         const display = computedStyle.display
-        if (
+        const isBlock =
           display === 'block' ||
           display === 'flex' ||
-          nodeElement.classList.contains('ProseMirror') ||
-          nodeElement.hasAttribute('data-type')
-        ) {
-          // 检查是否是有效的编辑节点
+          display === 'grid' ||
+          display === 'list-item' || // Correctly handle list items
+          nodeElement.tagName === 'LI' ||
+          nodeElement.hasAttribute('data-type') ||
+          nodeElement.classList.contains('ProseMirror-selectednode')
+
+        if (isBlock) {
           const pos = editor.view.posAtDOM(nodeElement, 0)
           if (pos !== null && pos >= 0) {
             const { doc } = editor.state
             const $pos = doc.resolve(pos)
 
-            let node = doc.nodeAt(pos)
-            let nodePos = pos
+            // Get the block node at the appropriate depth
+            let depth = $pos.depth
+            let node = $pos.node(depth)
 
-            // 如果当前位置没有节点（例如在段落内部），或者不是块级节点，向上查找最近的块级节点
-            if (!node?.isBlock || node?.type?.name === 'doc') {
-              let depth = $pos.depth
-              node = $pos.node(depth)
-
-              // 向上查找，直到找到一个块级节点，且不是 doc
-              while (depth >= 0 && (node.type.name === 'doc' || !node.isBlock)) {
-                depth--
-                if (depth >= 0) {
-                  node = $pos.node(depth)
-                } else {
-                  node = null
-                  break
-                }
-              }
-
-              if (node) {
-                // $pos.before(depth + 1) 给出了该层级节点的起始位置
-                nodePos = $pos.before(depth + 1)
-              }
-            }
-
-            // 确保找到了有效的块级节点（非文档根节点）
-            if (node?.isBlock && node?.type?.name !== 'doc') {
-              currentHoveredNode = nodeElement
-              // 更新 storage 以匹配当前悬浮的节点及其正确位置
+            // If we are hovering an atom node or a node with data-type,
+            // we might want that specific node.
+            if (node.type.name === 'doc' && $pos.nodeAfter) {
+              node = $pos.nodeAfter
               storage.node = node
-              storage.pos = nodePos
-              showElement()
-              return
+              storage.pos = pos
+            } else {
+              // Traverse up to find the closest block node that is not the document
+              while (depth > 0 && !node.isBlock) {
+                depth--
+                node = $pos.node(depth)
+              }
+
+              if (node && node.type.name !== 'doc') {
+                storage.node = node
+                // Use .before(depth) to get the position before the block node
+                storage.pos = $pos.before(depth)
+              } else {
+                storage.node = node
+                storage.pos = pos
+              }
             }
+
+            currentHoveredNode = nodeElement
+            showElement()
+            return
           }
         }
         nodeElement = nodeElement.parentElement

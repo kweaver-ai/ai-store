@@ -341,9 +341,9 @@ const ProjectSider = ({
       const itemIndex = list.findIndex((c) => c.id === id)
       const predecessorId = itemIndex > 0 ? list[itemIndex - 1].id : null
       await moveNode({
-        node_id: Number(id),
-        new_parent_id: parentId ? Number(parentId) : null,
-        predecessor_node_id: predecessorId ? Number(predecessorId) : null,
+        node_id: id,
+        new_parent_id: parentId,
+        predecessor_node_id: predecessorId,
       })
       setTreeData(newItems)
     } catch (error: any) {

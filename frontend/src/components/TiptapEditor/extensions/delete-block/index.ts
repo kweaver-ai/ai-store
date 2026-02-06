@@ -22,8 +22,13 @@ export const DeleteBlock = Extension.create({
             id: this.name,
             name: this.options.dictionary.name,
             icon: icon('remove'),
-            action: (editor: any) => {
-              editor.chain().deleteSelection().focus().run()
+            action: (editor: any, context?: any) => {
+              const selection = context?.selection
+              if (selection) {
+                editor.chain().deleteRange({ from: selection.from, to: selection.to }).focus().run()
+              } else {
+                editor.chain().deleteSelection().focus().run()
+              }
             },
           },
         ],
