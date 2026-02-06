@@ -137,6 +137,8 @@ interface MicroAppProps {
   route: {
     /** 应用路由基础路径，包含 BASE_PATH 前缀（如 `/dip-hub/application/:appId`） */
     basename: string
+    /** 应用首页路由（主应用根据来源侧边栏等规则计算后的完整路径） */
+    homeRoute: string
   }
 
   /** ========== 用户信息 ========== */
@@ -216,6 +218,7 @@ export async function mount(props) {
 
   // 访问路由信息
   const routeBasename = route.basename
+  const homeRoute = route.homeRoute
 
   // 访问用户信息
   const userId = user.id

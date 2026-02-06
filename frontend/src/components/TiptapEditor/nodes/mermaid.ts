@@ -101,14 +101,14 @@ export const Mermaid = Node.create<MermaidOptions>({
   parseHTML() {
     return [
       {
-        tag: `span[data-type="${this.name}"]`,
+        tag: `div[data-type="${this.name}"]`,
         preserveWhitespace: 'full',
       },
     ]
   },
   renderHTML({ node, HTMLAttributes }) {
     return [
-      'span',
+      'div',
       mergeAttributes({ 'data-type': this.name }, this.options.HTMLAttributes, HTMLAttributes),
       node.textContent,
     ]

@@ -31,6 +31,8 @@ export interface ApplicationBasicInfo {
   }
   /** 是否钉住 */
   pinned: boolean
+  /** 是否内置 */
+  isBuiltIn: boolean
 }
 
 /** 应用信息 */

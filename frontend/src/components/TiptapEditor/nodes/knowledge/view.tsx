@@ -173,6 +173,7 @@ const KnowledgeView: React.FC<NodeViewProps> = (props) => {
             className="w-fit text-left cursor-pointer"
             onClick={(e) => {
               e.preventDefault()
+              e.stopPropagation()
               setPopoverOpen(!popoverOpen)
             }}
             // onKeyDown={(e) => {
