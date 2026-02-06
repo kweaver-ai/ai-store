@@ -139,9 +139,9 @@ const KnowledgeView: React.FC<NodeViewProps> = (props) => {
 
   // 展示视图
   const displayView = (
-    <div
+    <span
       className={clsx(
-        'flex h-8 w-fit items-center py-1 px-2 border rounded-md text-muted-foreground text-sm gap-x-2',
+        'inline-flex min-h-8 h-fit w-fit items-center py-1 px-2 border rounded-md text-muted-foreground text-sm gap-x-2',
         !id ? 'border-dashed' : 'bg-[#779EEA1A] border-[#779EEA8C]',
         selected && isEditable && 'border-[--dip-link-color]',
       )}
@@ -152,10 +152,10 @@ const KnowledgeView: React.FC<NodeViewProps> = (props) => {
       ) : (
         <span>{name}</span>
       )}
-    </div>
+    </span>
   )
   return (
-    <NodeViewWrapper className="max-w-full">
+    <NodeViewWrapper as="span" className="max-w-full">
       {isEditable ? (
         <Popover
           content={popoverContent}
@@ -170,7 +170,7 @@ const KnowledgeView: React.FC<NodeViewProps> = (props) => {
         >
           <button
             type="button"
-            className="w-fit text-left cursor-pointer"
+            className="w-fit text-left cursor-pointer inline-block"
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
@@ -187,7 +187,7 @@ const KnowledgeView: React.FC<NodeViewProps> = (props) => {
           </button>
         </Popover>
       ) : (
-        <div>{displayView}</div>
+        <span className="inline-block">{displayView}</span>
       )}
     </NodeViewWrapper>
   )

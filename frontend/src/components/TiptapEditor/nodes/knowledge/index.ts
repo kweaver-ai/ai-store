@@ -14,7 +14,8 @@ export interface KnowledgeOptions {
 /** 知识网络节点 */
 export const Knowledge = Node.create<KnowledgeOptions>({
   name: 'knowledge',
-  group: 'block',
+  inline: true,
+  group: 'inline',
   atom: true,
   draggable: true,
 
@@ -69,11 +70,11 @@ export const Knowledge = Node.create<KnowledgeOptions>({
   },
 
   parseHTML() {
-    return [{ tag: 'div[data-type="knowledge"]' }]
+    return [{ tag: 'span[data-type="knowledge"]' }]
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'knowledge' })]
+    return ['span', mergeAttributes(HTMLAttributes, { 'data-type': 'knowledge' })]
   },
 
   addNodeView() {
@@ -84,7 +85,7 @@ export const Knowledge = Node.create<KnowledgeOptions>({
     return {
       markdown: {
         parser: {
-          match: (node) => node.type === 'leafDirective' && node.name === this.name,
+          match: (node) => node.type === 'textDirective' && node.name === this.name,
           apply: (state: any, node: any, type: any) => {
             // 从 markdown 属性中解析 knowledge 对象
             const attrs: any = {}
@@ -120,7 +121,7 @@ export const Knowledge = Node.create<KnowledgeOptions>({
               })
             }
             state.addNode({
-              type: 'leafDirective',
+              type: 'textDirective',
               name: this.name,
               attributes,
             })

@@ -14,45 +14,46 @@ export interface MetricOptions {
 /** 指标节点 */
 export const Metric = Node.create<MetricOptions>({
   name: 'metric',
-  group: 'block',
+  inline: true,
+  group: 'inline',
   atom: true,
   draggable: true,
 
   addAttributes() {
     return {
-      metrics: {
-        default: [],
+      metric: {
+        default: null,
         parseHTML: (element) => {
-          const metricsAttr = element.getAttribute('data-metrics')
-          if (metricsAttr) {
+          const metricAttr = element.getAttribute('data-metric')
+          if (metricAttr) {
             try {
-              const parsed = JSON.parse(metricsAttr)
+              const parsed = JSON.parse(metricAttr)
               // 确保只保留 id 和 name
-              if (Array.isArray(parsed)) {
-                return parsed.map((item: any) => ({
-                  id: item.id || '',
-                  name: item.name || '',
-                }))
+              if (parsed && typeof parsed === 'object') {
+                return {
+                  id: parsed.id || '',
+                  name: parsed.name || '',
+                }
               }
-              return []
+              return null
             } catch {
-              return []
+              return null
             }
           }
-          return []
+          return null
         },
         renderHTML: (attributes) => {
-          const metrics = attributes.metrics
-          if (!Array.isArray(metrics) || metrics.length === 0) {
+          const metric = attributes.metric
+          if (!metric?.id) {
             return {}
           }
           // 只保存 id 和 name
-          const simplified = metrics.map((item: any) => ({
-            id: item.id || '',
-            name: item.name || '',
-          }))
+          const simplified = {
+            id: metric.id || '',
+            name: metric.name || '',
+          }
           return {
-            'data-metrics': JSON.stringify(simplified),
+            'data-metric': JSON.stringify(simplified),
           }
         },
       },
@@ -69,11 +70,11 @@ export const Metric = Node.create<MetricOptions>({
   },
 
   parseHTML() {
-    return [{ tag: 'div[data-type="metric"]' }]
+    return [{ tag: 'span[data-type="metric"]' }]
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'metric' })]
+    return ['span', mergeAttributes(HTMLAttributes, { 'data-type': 'metric' })]
   },
 
   addNodeView() {
@@ -84,26 +85,26 @@ export const Metric = Node.create<MetricOptions>({
     return {
       markdown: {
         parser: {
-          match: (node) => node.type === 'leafDirective' && node.name === this.name,
+          match: (node) => node.type === 'textDirective' && node.name === this.name,
           apply: (state: any, node: any, type: any) => {
-            // 从 markdown 属性中解析 metrics 数组
+            // 从 markdown 属性中解析 metric 对象
             const attrs: any = {}
-            if (node.attributes?.metrics) {
+            if (node.attributes?.metric) {
               try {
-                const parsed = JSON.parse(node.attributes.metrics)
-                if (Array.isArray(parsed)) {
-                  attrs.metrics = parsed.map((item: any) => ({
-                    id: item.id || '',
-                    name: item.name || '',
-                  }))
+                const parsed = JSON.parse(node.attributes.metric)
+                if (parsed && typeof parsed === 'object') {
+                  attrs.metric = {
+                    id: parsed.id || '',
+                    name: parsed.name || '',
+                  }
                 } else {
-                  attrs.metrics = []
+                  attrs.metric = null
                 }
               } catch {
-                attrs.metrics = []
+                attrs.metric = null
               }
             } else {
-              attrs.metrics = []
+              attrs.metric = null
             }
             state.addNode(type, attrs)
           },
@@ -111,13 +112,16 @@ export const Metric = Node.create<MetricOptions>({
         serializer: {
           match: (node) => node.type.name === this.name,
           apply: (state: any, node: any) => {
-            // 将 metrics 数组转换为 JSON 字符串，以便在 markdown 中正确序列化
+            // 将 metric 对象转换为 JSON 字符串，以便在 markdown 中正确序列化
             const attributes: Record<string, string> = {}
-            if (Array.isArray(node.attrs.metrics) && node.attrs.metrics.length > 0) {
-              attributes.metrics = JSON.stringify(node.attrs.metrics)
+            if (node.attrs.metric?.id) {
+              attributes.metric = JSON.stringify({
+                id: node.attrs.metric.id,
+                name: node.attrs.metric.name || '',
+              })
             }
             state.addNode({
-              type: 'leafDirective',
+              type: 'textDirective',
               name: this.name,
               attributes,
             })
