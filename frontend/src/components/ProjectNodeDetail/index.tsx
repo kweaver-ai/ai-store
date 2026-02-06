@@ -132,29 +132,55 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
   }
 
   /**
+   * 当前保存“世代”标记：
+   * - 每次触发新的保存请求时自增
+   * - 旧世代的重试在发现自己不是最新世代时会自动停止，避免“老 diff 覆盖新内容”
+   */
+  const latestSaveIdRef = useRef(0)
+
+  interface SaveParams {
+    documentId: number | string
+    baseContent: any
+    newContent: any
+    saveId: number
+  }
+
+  /**
    * 实际保存函数：
    * - 与触发时的 documentId 和 baseContent 绑定，避免在节点切换后错把内容写到新节点文档上
+   * - 通过 saveId 与 latestSaveIdRef 协作，保证“只重试当前最新的那一轮保存”
    */
   const saveDocument = useCallback(
-    async (documentId: number | string, baseContent: any, newContent: any) => {
+    async ({ documentId, baseContent, newContent, saveId }: SaveParams) => {
       if (nodeInDevMode) return
+
+      // 如果这次保存已经不是最新一代，直接放弃（可能用户又改了内容）
+      if (saveId !== latestSaveIdRef.current) return
 
       const patches = jsonpatch.compare(baseContent || {}, newContent)
       if (patches.length === 0) return
 
       const maxRetries = 3
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        // 每次重试前再次确认自己仍是最新一代，否则放弃重试
+        if (saveId !== latestSaveIdRef.current) {
+          return
+        }
+
         try {
           await putDocument(documentId, patches as any)
 
-          // 只有当当前面板仍然展示同一个文档时，才回写到本地 state，防止跨节点覆盖 UI
-          if (currentDocumentIdRef.current === documentId) {
+          // 写回本地 state 前也要确认自己仍是最新一代，防止老请求覆盖新内容
+          if (saveId === latestSaveIdRef.current && currentDocumentIdRef.current === documentId) {
             setContent(newContent)
           }
           return
         } catch {
           if (attempt === maxRetries) {
-            messageApi.error('保存失败，请稍后重试')
+            // 到了最大重试次数才真正报错
+            if (saveId === latestSaveIdRef.current) {
+              // messageApi.error('保存失败，请稍后重试')
+            }
           } else {
             await new Promise((r) => setTimeout(r, 500 * attempt))
           }
@@ -166,11 +192,11 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
 
   const scheduleSaveDocument = useMemo(
     () =>
-      debounce((params: { documentId: number | string; baseContent: any; newContent: any }) => {
-        const { documentId, baseContent, newContent } = params
+      debounce((params: SaveParams) => {
+        const { documentId } = params
         // 如果此时已经没有有效文档，直接跳过
         if (!documentId) return
-        saveDocument(documentId, baseContent, newContent)
+        saveDocument(params)
       }, 800),
     [saveDocument],
   )
@@ -189,10 +215,13 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
 
     // 与当前文档的快照绑定，后续保存时不会受其他节点切换影响
     const baseContent = contentRef.current
+    const saveId = latestSaveIdRef.current + 1
+    latestSaveIdRef.current = saveId
     scheduleSaveDocument({
       documentId,
       baseContent,
       newContent,
+      saveId,
     })
   }
 
