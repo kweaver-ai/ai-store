@@ -16,9 +16,11 @@ import { AppMenu } from '../Header/components/AppMenu'
 interface MicroAppComponentProps {
   /** 应用基础信息 */
   appBasicInfo: CurrentMicroAppInfo
+  /** 首页路由 */
+  homeRoute: string
 }
 
-const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
+const MicroAppComponent = ({ appBasicInfo, homeRoute }: MicroAppComponentProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const microAppRef = useRef<QiankunMicroApp | null>(null)
   const [loading, setLoading] = useState(true)
@@ -51,6 +53,7 @@ const MicroAppComponent = ({ appBasicInfo }: MicroAppComponentProps) => {
       // ========== 路由信息 ==========
       route: {
         basename: appBasicInfo.routeBasename,
+        homeRoute: homeRoute,
       },
 
       // ========== 用户信息 ==========
