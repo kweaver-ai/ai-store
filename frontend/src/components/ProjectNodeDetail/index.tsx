@@ -37,6 +37,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
   const [loadStatus, setLoadStatus] = useState<LoadStatus>(LoadStatus.Empty)
   const [initialContent, setInitialContent] = useState<any>({})
   const [content, setContent] = useState<any>({})
+  const [editorLoading, setEditorLoading] = useState<boolean>(true)
   const contentRef = useRef(content)
   contentRef.current = content
   // 记录当前详情面板对应的文档 ID，用于避免跨节点的保存/回写串扰
@@ -94,6 +95,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
   const fetchDocument = useCallback(async () => {
     if (loadStatus === LoadStatus.Loading) return
     const documentId = nodeInfo?.document_id
+    setEditorLoading(true)
     if (!documentId) {
       pendingContentRef.current = null
       pendingDocumentIdRef.current = null
@@ -121,6 +123,10 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
     fetchDocument()
   }, [nodeId, nodeInfo, fetchDocument])
 
+  useEffect(() => {
+    setEditorLoading(true)
+  }, [nodeId, nodeInfo?.document_id])
+
   /** 处理开发模式切换 */
   const handleDevModeChange = (checked: boolean) => {
     try {
@@ -145,7 +151,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
   }
 
   const flushPendingSave = useCallback(async () => {
-    if (nodeInDevMode) return
+    if (nodeInDevMode || editorLoading) return
 
     const documentId = pendingDocumentIdRef.current || currentDocumentIdRef.current
     if (!documentId) return
@@ -201,7 +207,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
       needRescheduleRef.current = false
       scheduleSaveDocumentRef.current?.()
     }
-  }, [nodeInDevMode])
+  }, [nodeInDevMode, editorLoading])
 
   const scheduleSaveDocument = useMemo(
     () =>
@@ -223,6 +229,14 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
     }
   }, [scheduleSaveDocument])
 
+  useEffect(() => {
+    if (!editorLoading) return
+    scheduleSaveDocument.cancel()
+    pendingContentRef.current = null
+    pendingDocumentIdRef.current = null
+    needRescheduleRef.current = false
+  }, [editorLoading, scheduleSaveDocument])
+
   // 离开当前节点前检查并执行一次立即保存
   useEffect(() => {
     return () => {
@@ -239,7 +253,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
 
   const handleUpdate = (newContent: any) => {
     const documentId = nodeInfo?.document_id
-    if (!documentId || nodeInDevMode) {
+    if (!documentId || nodeInDevMode || editorLoading) {
       return
     }
 
@@ -248,6 +262,10 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
     pendingDocumentIdRef.current = documentId
     scheduleSaveDocument()
   }
+
+  const handleEditorLoadingStateChange = useCallback((loading: boolean) => {
+    setEditorLoading(loading)
+  }, [])
 
   /** 获取节点详情tabs */
   const tabItems = useMemo(() => {
@@ -447,7 +465,8 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
               <TiptapEditor
                 initialContent={initialContent}
                 onUpdate={handleUpdate}
-                readOnly={nodeInDevMode}
+                onLoadingStateChange={handleEditorLoadingStateChange}
+                readOnly={nodeInDevMode || editorLoading}
                 placeholder="请描述该功能...（输入/ 可引用 业务知识网络、决策智能体、指标）"
               />
             ) : (
