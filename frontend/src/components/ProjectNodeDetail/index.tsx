@@ -41,6 +41,13 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
   contentRef.current = content
   // 记录当前详情面板对应的文档 ID，用于避免跨节点的保存/回写串扰
   const currentDocumentIdRef = useRef<number | string | null>(nodeInfo?.document_id ?? null)
+  // 始终保存最近一次用户输入版本
+  const pendingContentRef = useRef<any | null>(null)
+  // 同一时刻仅允许一个保存请求在途
+  const isSavingRef = useRef(false)
+  // 请求在途期间若有新输入，保存结束后重新调度
+  const needRescheduleRef = useRef(false)
+  const scheduleSaveDocumentRef = useRef<(() => void) | null>(null)
 
   /** 节点是否处于开发模式 */
   const nodeInDevMode = useMemo(() => {
@@ -86,6 +93,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
     if (loadStatus === LoadStatus.Loading) return
     const documentId = nodeInfo?.document_id
     if (!documentId) {
+      pendingContentRef.current = null
       setContent({})
       setInitialContent({})
       setLoadStatus(LoadStatus.Normal)
@@ -94,6 +102,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
     try {
       setLoadStatus(LoadStatus.Loading)
       const res = await getDocument(documentId)
+      pendingContentRef.current = null
       setContent(res || {})
       setInitialContent(res || {})
     } catch {
@@ -131,80 +140,83 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
     }
   }
 
-  /**
-   * 当前保存“世代”标记：
-   * - 每次触发新的保存请求时自增
-   * - 旧世代的重试在发现自己不是最新世代时会自动停止，避免“老 diff 覆盖新内容”
-   */
-  const latestSaveIdRef = useRef(0)
+  const flushPendingSave = useCallback(async () => {
+    if (nodeInDevMode) return
 
-  interface SaveParams {
-    documentId: number | string
-    baseContent: any
-    newContent: any
-    saveId: number
-  }
+    const documentId = currentDocumentIdRef.current
+    if (!documentId) return
 
-  /**
-   * 实际保存函数：
-   * - 与触发时的 documentId 和 baseContent 绑定，避免在节点切换后错把内容写到新节点文档上
-   * - 通过 saveId 与 latestSaveIdRef 协作，保证“只重试当前最新的那一轮保存”
-   */
-  const saveDocument = useCallback(
-    async ({ documentId, baseContent, newContent, saveId }: SaveParams) => {
-      if (nodeInDevMode) return
+    if (isSavingRef.current) {
+      needRescheduleRef.current = true
+      return
+    }
 
-      // 如果这次保存已经不是最新一代，直接放弃（可能用户又改了内容）
-      if (saveId !== latestSaveIdRef.current) return
+    const currentPending = pendingContentRef.current
+    if (!currentPending) return
 
-      const patches = jsonpatch.compare(baseContent || {}, newContent)
-      if (patches.length === 0) return
+    const saveOnce = async (nextContent: any): Promise<boolean> => {
+      if (currentDocumentIdRef.current !== documentId) return false
+      const patches = jsonpatch.compare(contentRef.current || {}, nextContent || {})
+      if (patches.length === 0) return true
 
-      const maxRetries = 3
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        // 每次重试前再次确认自己仍是最新一代，否则放弃重试
-        if (saveId !== latestSaveIdRef.current) {
-          return
+      try {
+        await putDocument(documentId, patches as any)
+        if (currentDocumentIdRef.current === documentId) {
+          contentRef.current = nextContent
+          setContent(nextContent)
         }
-
-        try {
-          await putDocument(documentId, patches as any)
-
-          // 写回本地 state 前也要确认自己仍是最新一代，防止老请求覆盖新内容
-          if (saveId === latestSaveIdRef.current && currentDocumentIdRef.current === documentId) {
-            setContent(newContent)
-          }
-          return
-        } catch {
-          if (attempt === maxRetries) {
-            // 到了最大重试次数才真正报错
-            if (saveId === latestSaveIdRef.current) {
-              // messageApi.error('保存失败，请稍后重试')
-            }
-          } else {
-            await new Promise((r) => setTimeout(r, 500 * attempt))
-          }
-        }
+        return true
+      } catch {
+        return false
       }
-    },
-    [nodeInDevMode, messageApi],
-  )
+    }
+
+    isSavingRef.current = true
+    pendingContentRef.current = null
+
+    // 第一次发送：当前待保存版本
+    let success = await saveOnce(currentPending)
+
+    // 失败后：基于最近已保存版本重新比较并补发一次
+    if (!success && currentDocumentIdRef.current === documentId) {
+      const retryTarget = pendingContentRef.current || currentPending
+      pendingContentRef.current = null
+      success = await saveOnce(retryTarget)
+
+      if (!success && currentDocumentIdRef.current === documentId && !pendingContentRef.current) {
+        pendingContentRef.current = retryTarget
+      }
+    }
+
+    isSavingRef.current = false
+
+    if (pendingContentRef.current || needRescheduleRef.current) {
+      needRescheduleRef.current = false
+      scheduleSaveDocumentRef.current?.()
+    }
+  }, [nodeInDevMode])
 
   const scheduleSaveDocument = useMemo(
     () =>
-      debounce((params: SaveParams) => {
-        const { documentId } = params
-        // 如果此时已经没有有效文档，直接跳过
-        if (!documentId) return
-        saveDocument(params)
-      }, 800),
-    [saveDocument],
+      debounce(() => {
+        void flushPendingSave()
+      }, 3000),
+    [flushPendingSave],
   )
 
-  // 节点切换时，刷新并取消前一个节点的待保存任务，避免在新节点上“补发”旧节点的保存请求
   useEffect(() => {
-    scheduleSaveDocument.flush()
+    scheduleSaveDocumentRef.current = scheduleSaveDocument
+    return () => {
+      scheduleSaveDocumentRef.current = null
+    }
+  }, [scheduleSaveDocument])
+
+  // 节点切换时取消旧节点待保存任务，避免跨节点补发
+  useEffect(() => {
     scheduleSaveDocument.cancel()
+    isSavingRef.current = false
+    pendingContentRef.current = null
+    needRescheduleRef.current = false
   }, [nodeId, scheduleSaveDocument])
 
   const handleUpdate = (newContent: any) => {
@@ -213,16 +225,9 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
       return
     }
 
-    // 与当前文档的快照绑定，后续保存时不会受其他节点切换影响
-    const baseContent = contentRef.current
-    const saveId = latestSaveIdRef.current + 1
-    latestSaveIdRef.current = saveId
-    scheduleSaveDocument({
-      documentId,
-      baseContent,
-      newContent,
-      saveId,
-    })
+    // 每次输入都及时更新待保存版本
+    pendingContentRef.current = newContent
+    scheduleSaveDocument()
   }
 
   /** 获取节点详情tabs */
