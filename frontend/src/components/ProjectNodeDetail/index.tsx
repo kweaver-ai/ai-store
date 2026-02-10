@@ -43,6 +43,8 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
   const currentDocumentIdRef = useRef<number | string | null>(nodeInfo?.document_id ?? null)
   // 始终保存最近一次用户输入版本
   const pendingContentRef = useRef<any | null>(null)
+  // pendingContent 对应的文档 ID，避免切节点时丢失待保存目标
+  const pendingDocumentIdRef = useRef<number | string | null>(null)
   // 同一时刻仅允许一个保存请求在途
   const isSavingRef = useRef(false)
   // 请求在途期间若有新输入，保存结束后重新调度
@@ -94,6 +96,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
     const documentId = nodeInfo?.document_id
     if (!documentId) {
       pendingContentRef.current = null
+      pendingDocumentIdRef.current = null
       setContent({})
       setInitialContent({})
       setLoadStatus(LoadStatus.Normal)
@@ -103,6 +106,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
       setLoadStatus(LoadStatus.Loading)
       const res = await getDocument(documentId)
       pendingContentRef.current = null
+      pendingDocumentIdRef.current = null
       setContent(res || {})
       setInitialContent(res || {})
     } catch {
@@ -143,7 +147,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
   const flushPendingSave = useCallback(async () => {
     if (nodeInDevMode) return
 
-    const documentId = currentDocumentIdRef.current
+    const documentId = pendingDocumentIdRef.current || currentDocumentIdRef.current
     if (!documentId) return
 
     if (isSavingRef.current) {
@@ -189,6 +193,9 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
     }
 
     isSavingRef.current = false
+    if (!pendingContentRef.current) {
+      pendingDocumentIdRef.current = null
+    }
 
     if (pendingContentRef.current || needRescheduleRef.current) {
       needRescheduleRef.current = false
@@ -200,9 +207,14 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
     () =>
       debounce(() => {
         void flushPendingSave()
-      }, 3000),
+      }, 1000),
     [flushPendingSave],
   )
+
+  const flushBeforeLeaveEditor = useCallback(() => {
+    scheduleSaveDocument.cancel()
+    void flushPendingSave()
+  }, [scheduleSaveDocument, flushPendingSave])
 
   useEffect(() => {
     scheduleSaveDocumentRef.current = scheduleSaveDocument
@@ -211,13 +223,19 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
     }
   }, [scheduleSaveDocument])
 
-  // 节点切换时取消旧节点待保存任务，避免跨节点补发
+  // 离开当前节点前检查并执行一次立即保存
   useEffect(() => {
-    scheduleSaveDocument.cancel()
-    isSavingRef.current = false
-    pendingContentRef.current = null
-    needRescheduleRef.current = false
-  }, [nodeId, scheduleSaveDocument])
+    return () => {
+      flushBeforeLeaveEditor()
+    }
+  }, [nodeId, flushBeforeLeaveEditor])
+
+  // 切出“设计文档”tab 前检查并执行一次立即保存
+  useEffect(() => {
+    if (activeTab !== NodeDetailTabKey.Document) {
+      flushBeforeLeaveEditor()
+    }
+  }, [activeTab, flushBeforeLeaveEditor])
 
   const handleUpdate = (newContent: any) => {
     const documentId = nodeInfo?.document_id
@@ -227,6 +245,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
 
     // 每次输入都及时更新待保存版本
     pendingContentRef.current = newContent
+    pendingDocumentIdRef.current = documentId
     scheduleSaveDocument()
   }
 
