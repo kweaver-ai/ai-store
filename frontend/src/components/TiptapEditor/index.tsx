@@ -26,6 +26,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
   placeholder = 'Start writing...',
 }) => {
   const initialContentRef = useRef(initialContent)
+  const isProgrammaticUpdateRef = useRef(false)
 
   const editor = useEditor({
     extensions: [
@@ -66,14 +67,18 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
         if (typeof initialContentRef.current === 'string' && (editor.storage as any).markdown) {
           const doc = (editor.storage as any).markdown.parse(initialContentRef.current)
           if (doc) {
-            editor.commands.setContent(doc.toJSON())
+            isProgrammaticUpdateRef.current = true
+            editor.commands.setContent(doc.toJSON(), false)
+            isProgrammaticUpdateRef.current = false
           }
         } else if (
           typeof initialContentRef.current === 'object' &&
           initialContentRef.current !== null
         ) {
           // 如果是 JSON 对象，直接设置内容
-          editor.commands.setContent(initialContentRef.current)
+          isProgrammaticUpdateRef.current = true
+          editor.commands.setContent(initialContentRef.current, false)
+          isProgrammaticUpdateRef.current = false
         }
       }
       // // 编辑器创建后，将光标聚焦到文档最前面
@@ -86,6 +91,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
       // }
     },
     onUpdate: ({ editor }) => {
+      if (isProgrammaticUpdateRef.current) return
       if ((editor.storage as any).markdown) {
         // const markdown = (editor.storage as any).markdown.get()
         // onUpdate?.(markdown)
@@ -139,10 +145,16 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
   }, [readOnly, editor])
 
   useEffect(() => {
+    initialContentRef.current = initialContent
+  }, [initialContent])
+
+  useEffect(() => {
     if (editor) {
-      editor.commands.setContent(initialContentRef.current)
+      isProgrammaticUpdateRef.current = true
+      editor.commands.setContent(initialContentRef.current, false)
+      isProgrammaticUpdateRef.current = false
     }
-  }, [initialContentRef.current, editor])
+  }, [initialContent, editor])
 
   return (
     <div className="tiptap-editor-wrapper">
