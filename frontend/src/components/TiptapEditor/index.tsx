@@ -12,6 +12,7 @@ export interface TiptapEditorProps {
   initialContent?: any
   onChange?: (content: string) => void
   onUpdate?: (content: any) => void
+  onLoadingStateChange?: (loading: boolean) => void
   readOnly?: boolean
   className?: string
   placeholder?: string
@@ -21,12 +22,36 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
   initialContent = {},
   onChange,
   onUpdate,
+  onLoadingStateChange,
   readOnly = false,
   className = '',
   placeholder = 'Start writing...',
 }) => {
   const initialContentRef = useRef(initialContent)
+  const readOnlyRef = useRef(readOnly)
   const isProgrammaticUpdateRef = useRef(false)
+  const isInitializingRef = useRef(true)
+  const initializeTimerRef = useRef<number | null>(null)
+  const PROGRAMMATIC_UPDATE_GUARD_MS = 120
+
+  const lockEditor = (editor: any) => {
+    isInitializingRef.current = true
+    onLoadingStateChange?.(true)
+    editor.setEditable(false)
+  }
+
+  const unlockEditorWithDelay = (editor: any) => {
+    if (initializeTimerRef.current) {
+      clearTimeout(initializeTimerRef.current)
+      initializeTimerRef.current = null
+    }
+    initializeTimerRef.current = window.setTimeout(() => {
+      isInitializingRef.current = false
+      onLoadingStateChange?.(false)
+      editor.setEditable(!readOnlyRef.current)
+      initializeTimerRef.current = null
+    }, PROGRAMMATIC_UPDATE_GUARD_MS)
+  }
 
   const editor = useEditor({
     extensions: [
@@ -62,6 +87,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
       },
     },
     onCreate: ({ editor }) => {
+      lockEditor(editor)
       if (initialContentRef.current) {
         // 判断 content 类型：如果是字符串则用 markdown 解析，如果是对象则直接使用
         if (typeof initialContentRef.current === 'string' && (editor.storage as any).markdown) {
@@ -81,6 +107,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
           isProgrammaticUpdateRef.current = false
         }
       }
+      unlockEditorWithDelay(editor)
       // // 编辑器创建后，将光标聚焦到文档最前面
       // if (!readOnly) {
       //   // 使用 setTimeout 确保内容已渲染完成
@@ -91,6 +118,7 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
       // }
     },
     onUpdate: ({ editor }) => {
+      if (isInitializingRef.current) return
       if (isProgrammaticUpdateRef.current) return
       if ((editor.storage as any).markdown) {
         // const markdown = (editor.storage as any).markdown.get()
@@ -140,9 +168,13 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
 
   useEffect(() => {
     if (editor) {
-      editor.setEditable(!readOnly)
+      editor.setEditable(!readOnly && !isInitializingRef.current)
     }
   }, [readOnly, editor])
+
+  useEffect(() => {
+    readOnlyRef.current = readOnly
+  }, [readOnly])
 
   useEffect(() => {
     initialContentRef.current = initialContent
@@ -150,11 +182,23 @@ export const TiptapEditor: React.FC<TiptapEditorProps> = ({
 
   useEffect(() => {
     if (editor) {
+      lockEditor(editor)
       isProgrammaticUpdateRef.current = true
       editor.commands.setContent(initialContentRef.current, false)
       isProgrammaticUpdateRef.current = false
+      unlockEditorWithDelay(editor)
     }
   }, [initialContent, editor])
+
+  useEffect(() => {
+    onLoadingStateChange?.(true)
+    return () => {
+      if (initializeTimerRef.current) {
+        clearTimeout(initializeTimerRef.current)
+        initializeTimerRef.current = null
+      }
+    }
+  }, [onLoadingStateChange])
 
   return (
     <div className="tiptap-editor-wrapper">
