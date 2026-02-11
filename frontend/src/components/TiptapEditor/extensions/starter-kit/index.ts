@@ -36,10 +36,10 @@ import { Metric, type MetricOptions } from '../../nodes/metric'
 import { OrderedList, type OrderedListOptions } from '../../nodes/ordered-list'
 import { Paragraph, type ParagraphOptions } from '../../nodes/paragraph'
 // import { Plantuml, type PlantumlOptions } from '../../nodes/plantuml'
-// import { Table, type TableOptions } from '../../nodes/table'
-// import { TableCell, type TableCellOptions } from '../../nodes/table-cell'
-// import { TableHeader, type TableHeaderOptions } from '../../nodes/table-header'
-// import { TableRow, type TableRowOptions } from '../../nodes/table-row'
+import { Table, type TableOptions } from '../../nodes/table'
+import { TableCell, type TableCellOptions } from '../../nodes/table-cell'
+import { TableHeader, type TableHeaderOptions } from '../../nodes/table-header'
+import { TableRow, type TableRowOptions } from '../../nodes/table-row'
 import { TaskItem, type TaskItemOptions } from '../../nodes/task-item'
 import { TaskList, type TaskListOptions } from '../../nodes/task-list'
 import { Text } from '../../nodes/text'
@@ -85,10 +85,10 @@ export interface StarterKitOptions {
   // details?: Partial<DetailsOptions> | boolean
   // detailsContent?: Partial<DetailsContentOptions> | boolean
   // detailsSummary?: Partial<DetailsSummaryOptions> | boolean
-  // table?: Partial<TableOptions> | boolean
-  // tableRow?: Partial<TableRowOptions> | boolean
-  // tableCell?: Partial<TableCellOptions> | boolean
-  // tableHeader?: Partial<TableHeaderOptions> | boolean
+  table?: Partial<TableOptions> | boolean
+  tableRow?: Partial<TableRowOptions> | boolean
+  tableCell?: Partial<TableCellOptions> | boolean
+  tableHeader?: Partial<TableHeaderOptions> | boolean
   // emoji?: Partial<EmojiOptions> | boolean
   // embed?: Partial<EmbedOptions> | boolean
   // image?: Partial<ImageOptions> | boolean
@@ -153,10 +153,10 @@ export const StarterKit = Extension.create<StarterKitOptions>({
     // configure(extensions, Details, this.options.details)
     // configure(extensions, DetailsContent, this.options.detailsContent)
     // configure(extensions, DetailsSummary, this.options.detailsSummary)
-    // configure(extensions, Table, this.options.table)
-    // configure(extensions, TableRow, this.options.tableRow)
-    // configure(extensions, TableCell, this.options.tableCell)
-    // configure(extensions, TableHeader, this.options.tableHeader)
+    configure(extensions, Table, this.options.table)
+    configure(extensions, TableRow, this.options.tableRow)
+    configure(extensions, TableCell, this.options.tableCell)
+    configure(extensions, TableHeader, this.options.tableHeader)
     // configure(extensions, Emoji, this.options.emoji)
     // configure(extensions, Embed, this.options.embed)
     // configure(extensions, Image, this.options.image)

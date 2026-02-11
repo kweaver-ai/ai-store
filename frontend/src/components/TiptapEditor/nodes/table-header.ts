@@ -21,6 +21,7 @@ export interface TableHeaderOptions extends TTableHeaderOptions {
   dictionary: {
     insertLeft: string
     insertRight: string
+    toggleHeaderCol: string
     alignLeft: string
     alignCenter: string
     alignRight: string
@@ -37,6 +38,7 @@ export const TableHeader = TTableHeader.extend<TableHeaderOptions>({
       dictionary: {
         insertLeft: '在左侧插入列',
         insertRight: '在右侧插入列',
+        toggleHeaderCol: '设置/取消表头列',
         alignLeft: '左对齐',
         alignCenter: '居中对齐',
         alignRight: '右对齐',
@@ -126,6 +128,12 @@ export const TableHeader = TTableHeader.extend<TableHeaderOptions>({
               icon: icon('right'),
               onClick: () => editor.chain().addColumnAfter().run(),
             })
+            const toggleHeaderCol = view.createButton({
+              id: 'header-col',
+              name: this.options.dictionary.toggleHeaderCol,
+              icon: icon('header-col'),
+              onClick: () => editor.chain().toggleHeaderColumn().run(),
+            })
             const alignLeft = view.createButton({
               id: 'align-left',
               name: this.options.dictionary.alignLeft,
@@ -153,6 +161,7 @@ export const TableHeader = TTableHeader.extend<TableHeaderOptions>({
 
             root.append(insertLeft)
             root.append(insertRight)
+            root.append(toggleHeaderCol)
             root.append(alignLeft)
             root.append(alignCenter)
             root.append(alignRight)
@@ -161,7 +170,7 @@ export const TableHeader = TTableHeader.extend<TableHeaderOptions>({
         }),
         props: {
           decorations: (state) => {
-            const { tr, doc, selection } = state
+            const { doc, selection } = state
             const decorations: Array<Decoration> = []
             if (this.editor.isEditable) {
               const cells = getCellsInRow(selection, 0)
@@ -185,7 +194,7 @@ export const TableHeader = TTableHeader.extend<TableHeaderOptions>({
                       drag.addEventListener('mousedown', (event) => {
                         event.preventDefault()
                         event.stopImmediatePropagation()
-                        this.editor.view.dispatch(selectColumn(tr, index))
+                        this.editor.view.dispatch(selectColumn(this.editor.view.state.tr, index))
                       })
                       grip.append(drag)
                       return grip
