@@ -21,6 +21,7 @@ export interface TableRowOptions extends TTableRowOptions {
   dictionary: {
     insertTop: string
     insertBottom: string
+    toggleHeaderRow: string
     alignLeft: string
     alignCenter: string
     alignRight: string
@@ -37,6 +38,7 @@ export const TableRow = TTableRow.extend<TableRowOptions>({
       dictionary: {
         insertTop: '在上方插入行',
         insertBottom: '在下方插入行',
+        toggleHeaderRow: '设置/取消表头行',
         alignLeft: '左对齐',
         alignCenter: '居中对齐',
         alignRight: '右对齐',
@@ -124,6 +126,12 @@ export const TableRow = TTableRow.extend<TableRowOptions>({
               icon: icon('down'),
               onClick: () => editor.chain().addRowAfter().run(),
             })
+            const toggleHeaderRow = view.createButton({
+              id: 'header-row',
+              name: this.options.dictionary.toggleHeaderRow,
+              icon: icon('header-row'),
+              onClick: () => editor.chain().toggleHeaderRow().run(),
+            })
             const alignLeft = view.createButton({
               id: 'align-left',
               name: this.options.dictionary.alignLeft,
@@ -151,6 +159,7 @@ export const TableRow = TTableRow.extend<TableRowOptions>({
 
             root.append(insertTop)
             root.append(insertBottom)
+            root.append(toggleHeaderRow)
             root.append(alignLeft)
             root.append(alignCenter)
             root.append(alignRight)
@@ -159,7 +168,7 @@ export const TableRow = TTableRow.extend<TableRowOptions>({
         }),
         props: {
           decorations: (state) => {
-            const { tr, doc, selection } = state
+            const { doc, selection } = state
             const decorations: Array<Decoration> = []
             if (this.editor.isEditable) {
               const cells = getCellsInColumn(selection, 0)
@@ -184,7 +193,7 @@ export const TableRow = TTableRow.extend<TableRowOptions>({
                       drag.addEventListener('mousedown', (event) => {
                         event.preventDefault()
                         event.stopImmediatePropagation()
-                        this.editor.view.dispatch(selectRow(tr, index))
+                        this.editor.view.dispatch(selectRow(this.editor.view.state.tr, index))
                       })
                       grip.append(drag)
                       return grip
