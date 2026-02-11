@@ -21,7 +21,8 @@ coverage/
 *.lcov
 
 # Environment variables
-.env*
+.env.development
+.env.local
 
 # Logs
 *.log*

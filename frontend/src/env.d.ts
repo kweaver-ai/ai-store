@@ -19,4 +19,8 @@ declare module '*.svg?react' {
 interface ImportMetaEnv {
   // 是否跳过登录认证（设置为 'true' 时跳过）
   readonly PUBLIC_SKIP_AUTH?: string
+  // 本地调试时使用的 access token（仅开发模式读取）
+  readonly PUBLIC_TOKEN?: string
+  // 本地调试时使用的 refresh token（仅开发模式读取）
+  readonly PUBLIC_REFRESH_TOKEN?: string
 }

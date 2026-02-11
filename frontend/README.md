@@ -16,6 +16,16 @@ Start the dev server, and the app will be available at [http://localhost:3000](h
 yarn run dev
 ```
 
+For local debugging with backend API proxy, you can provide RSBuild env vars in `.env.local`:
+
+```bash
+DEBUG_ORIGIN=https://your-backend-origin
+PUBLIC_TOKEN=your_access_token
+PUBLIC_REFRESH_TOKEN=your_refresh_token
+```
+
+In dev mode, frontend auth reads Cookie first; if missing, it falls back to `PUBLIC_TOKEN` and `PUBLIC_REFRESH_TOKEN`.
+
 Build the app for production:
 
 ```bash

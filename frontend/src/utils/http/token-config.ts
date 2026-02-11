@@ -12,27 +12,59 @@ export interface HttpConfig {
 // 后端设置的Cookie名称是 dip.oauth2_token
 const ACCESS_TOKEN_KEY = 'dip.oauth2_token'
 const REFRESH_TOKEN_KEY = 'dip.refresh_token'
+const ENV_ACCESS_TOKEN = import.meta.env.PUBLIC_TOKEN || ''
+const ENV_REFRESH_TOKEN = import.meta.env.PUBLIC_REFRESH_TOKEN || ''
+
+function getCookieOptions() {
+  return {
+    domain: window.location.hostname,
+    path: '/',
+  }
+}
+
+function getDevEnvAccessToken(): string {
+  return import.meta.env.DEV ? ENV_ACCESS_TOKEN : ''
+}
+
+function getDevEnvRefreshToken(): string {
+  return import.meta.env.DEV ? ENV_REFRESH_TOKEN : ''
+}
+
+function initDebugTokenFromEnv(): void {
+  if (!import.meta.env.DEV) {
+    return
+  }
+
+  const cookieOptions = getCookieOptions()
+  const currentAccessToken = Cookies.get(ACCESS_TOKEN_KEY)
+  const currentRefreshToken = Cookies.get(REFRESH_TOKEN_KEY)
+  const accessTokenFromEnv = getDevEnvAccessToken()
+  const refreshTokenFromEnv = getDevEnvRefreshToken()
+
+  if (!currentAccessToken && accessTokenFromEnv) {
+    Cookies.set(ACCESS_TOKEN_KEY, accessTokenFromEnv, cookieOptions)
+  }
+
+  if (!currentRefreshToken && refreshTokenFromEnv) {
+    Cookies.set(REFRESH_TOKEN_KEY, refreshTokenFromEnv, cookieOptions)
+  }
+}
 
 /**
  * 获取当前 access token（从 Cookie 读取，保证获取最新值）
  */
 export function getAccessToken(): string {
-  return Cookies.get(ACCESS_TOKEN_KEY) || ''
+  return Cookies.get(ACCESS_TOKEN_KEY) || getDevEnvAccessToken()
 }
 
 export function setAccessToken(token: string, refreshToken: string): void {
-  Cookies.set(ACCESS_TOKEN_KEY, token, {
-    domain: window.location.hostname,
-    path: '/',
-  })
-  Cookies.set(REFRESH_TOKEN_KEY, refreshToken, {
-    domain: window.location.hostname,
-    path: '/',
-  })
+  const cookieOptions = getCookieOptions()
+  Cookies.set(ACCESS_TOKEN_KEY, token, cookieOptions)
+  Cookies.set(REFRESH_TOKEN_KEY, refreshToken, cookieOptions)
 }
 
 export function getRefreshToken(): string {
-  return Cookies.get(REFRESH_TOKEN_KEY) || ''
+  return Cookies.get(REFRESH_TOKEN_KEY) || getDevEnvRefreshToken()
 }
 
 // 刷新中的 Promise，用于实现"第一个 401 触发刷新，其它等待结果"的队列逻辑
@@ -46,10 +78,7 @@ async function doRefreshTokenRequest(): Promise<{ accessToken: string }> {
   if (!newToken) {
     throw new Error('刷新 token 接口未返回 access_token')
   }
-  Cookies.set(ACCESS_TOKEN_KEY, newToken, {
-    domain: window.location.hostname,
-    path: '/',
-  })
+  Cookies.set(ACCESS_TOKEN_KEY, newToken, getCookieOptions())
   return { accessToken: newToken }
 }
 
@@ -73,12 +102,10 @@ export function defaultRefreshToken(): Promise<{ accessToken: string }> {
  * 后端设置的 Cookie：dip.session_id, dip.oauth2_token, dip.userid
  */
 export function clearAuthCookies(): void {
-  const cookieOptions = {
-    domain: window.location.hostname,
-    path: '/',
-  }
+  const cookieOptions = getCookieOptions()
 
   Cookies.remove('dip.oauth2_token', cookieOptions)
+  Cookies.remove('dip.refresh_token', cookieOptions)
   Cookies.remove('dip.session_id', cookieOptions)
   Cookies.remove('dip.userid', cookieOptions)
 }
@@ -122,3 +149,5 @@ export const httpConfig: HttpConfig = {
   refreshToken: defaultRefreshToken,
   onTokenExpired: onTokenExpired,
 }
+
+initDebugTokenFromEnv()
