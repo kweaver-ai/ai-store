@@ -12,8 +12,6 @@ export interface HttpConfig {
 // 后端设置的Cookie名称是 dip.oauth2_token
 const ACCESS_TOKEN_KEY = 'dip.oauth2_token'
 const REFRESH_TOKEN_KEY = 'dip.refresh_token'
-const ENV_ACCESS_TOKEN = import.meta.env.PUBLIC_TOKEN || ''
-const ENV_REFRESH_TOKEN = import.meta.env.PUBLIC_REFRESH_TOKEN || ''
 
 function getCookieOptions() {
   return {
@@ -22,31 +20,18 @@ function getCookieOptions() {
   }
 }
 
-function getDevEnvAccessToken(): string {
-  return import.meta.env.DEV ? ENV_ACCESS_TOKEN : ''
-}
-
-function getDevEnvRefreshToken(): string {
-  return import.meta.env.DEV ? ENV_REFRESH_TOKEN : ''
-}
-
 function initDebugTokenFromEnv(): void {
   if (!import.meta.env.DEV) {
     return
   }
 
   const cookieOptions = getCookieOptions()
-  const currentAccessToken = Cookies.get(ACCESS_TOKEN_KEY)
-  const currentRefreshToken = Cookies.get(REFRESH_TOKEN_KEY)
-  const accessTokenFromEnv = getDevEnvAccessToken()
-  const refreshTokenFromEnv = getDevEnvRefreshToken()
-
-  if (!currentAccessToken && accessTokenFromEnv) {
-    Cookies.set(ACCESS_TOKEN_KEY, accessTokenFromEnv, cookieOptions)
+  if (!Cookies.get(ACCESS_TOKEN_KEY) && import.meta.env.PUBLIC_TOKEN) {
+    Cookies.set(ACCESS_TOKEN_KEY, import.meta.env.PUBLIC_TOKEN, cookieOptions)
   }
 
-  if (!currentRefreshToken && refreshTokenFromEnv) {
-    Cookies.set(REFRESH_TOKEN_KEY, refreshTokenFromEnv, cookieOptions)
+  if (!Cookies.get(REFRESH_TOKEN_KEY) && import.meta.env.PUBLIC_REFRESH_TOKEN) {
+    Cookies.set(REFRESH_TOKEN_KEY, import.meta.env.PUBLIC_REFRESH_TOKEN, cookieOptions)
   }
 }
 
@@ -54,7 +39,7 @@ function initDebugTokenFromEnv(): void {
  * 获取当前 access token（从 Cookie 读取，保证获取最新值）
  */
 export function getAccessToken(): string {
-  return Cookies.get(ACCESS_TOKEN_KEY) || getDevEnvAccessToken()
+  return Cookies.get(ACCESS_TOKEN_KEY) || (import.meta.env.DEV ? import.meta.env.PUBLIC_TOKEN || '' : '')
 }
 
 export function setAccessToken(token: string, refreshToken: string): void {
@@ -64,7 +49,10 @@ export function setAccessToken(token: string, refreshToken: string): void {
 }
 
 export function getRefreshToken(): string {
-  return Cookies.get(REFRESH_TOKEN_KEY) || getDevEnvRefreshToken()
+  return (
+    Cookies.get(REFRESH_TOKEN_KEY) ||
+    (import.meta.env.DEV ? import.meta.env.PUBLIC_REFRESH_TOKEN || '' : '')
+  )
 }
 
 // 刷新中的 Promise，用于实现"第一个 401 触发刷新，其它等待结果"的队列逻辑
@@ -128,9 +116,7 @@ const onTokenExpired = (_code?: number) => {
   // 检查是否是根路径（BASE_PATH 或 BASE_PATH + '/'）
   // 如果是根路径，不传递 asredirect，让后端重定向到 login-success
   const normalizedBasePath = normalizePath(BASE_PATH)
-  const normalizedCurrentPathname = normalizePath(currentPathname)
-
-  const isRootPath = normalizedCurrentPathname === normalizedBasePath
+  const isRootPath = normalizePath(currentPathname) === normalizedBasePath
 
   // 跳转到登录页面，并携带当前路径作为重定向地址（去掉 BASE_PATH 前缀）
   // 注意：如果是根路径，不传递 asredirect，让后端重定向到 login-success，由前端处理首页跳转
