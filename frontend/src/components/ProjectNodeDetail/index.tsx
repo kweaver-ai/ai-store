@@ -20,6 +20,7 @@ import ScrollBarContainer from '../ScrollBarContainer'
 import TiptapEditor from '../TiptapEditor'
 import styles from './index.module.less'
 import { NodeDetailTabKey } from './types'
+import { sanitizeInitialContent } from './utils'
 
 interface ProjectNodeDetailProps {
   nodeId: string
@@ -106,7 +107,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
     }
     try {
       setLoadStatus(LoadStatus.Loading)
-      const res = await getDocument(documentId)
+      const res = sanitizeInitialContent(await getDocument(documentId))
       pendingContentRef.current = null
       pendingDocumentIdRef.current = null
       setContent(res || {})
