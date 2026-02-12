@@ -457,7 +457,7 @@ const ProjectNodeDetail = ({ nodeId, projectId }: ProjectNodeDetailProps) => {
               ]}
               styles={{
                 label: { minWidth: 80 },
-                content: { color: 'var(--dip-text-color)', lineHeight: '28px', fontWeight: 500 },
+                content: { color: 'var(--dip-text-color)', lineHeight: '28px' },
               }}
             />
           )}
